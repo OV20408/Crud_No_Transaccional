@@ -1,0 +1,43 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\RolController;
+use App\Http\Controllers\CapacitacionController;
+use App\Http\Controllers\NecesidadController;
+use App\Http\Controllers\TestController;
+use App\Http\Controllers\UniversidadController;
+use App\Http\Controllers\HistorialClinicoController;
+use App\Http\Controllers\CursoController;
+use App\Http\Controllers\EtapaController;
+use App\Http\Controllers\PreguntaController;
+use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\EvaluacionController;
+use App\Http\Controllers\RespuestaController;
+use App\Http\Controllers\ProgresoVoluntarioController;
+use App\Http\Controllers\UsuarioController;
+
+
+
+Route::resource('roles', RolController::class);
+Route::resource('capacitaciones', CapacitacionController::class);
+Route::resource('necesidades', NecesidadController::class);
+Route::resource('test', TestController::class);
+Route::resource('universidades', UniversidadController::class);
+Route::resource('historial_clinico', HistorialClinicoController::class);
+Route::resource('curso', CursoController::class);
+Route::resource('etapas', EtapaController::class);
+Route::resource('pregunta', PreguntaController::class);
+Route::resource('reportes', ReporteController::class);
+Route::resource('evaluacion', EvaluacionController::class);
+Route::resource('respuesta', RespuestaController::class);
+Route::resource('progreso-voluntario', ProgresoVoluntarioController::class);
+
+
+
+Route::get('/', function () {
+    return view('welcome');
+});
+
+Auth::routes();
+
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
