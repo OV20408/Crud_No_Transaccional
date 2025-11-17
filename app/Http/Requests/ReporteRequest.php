@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 class ReporteRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Determina si el usuario está autorizado para realizar esta solicitud.
      */
     public function authorize(): bool
     {
@@ -15,20 +15,17 @@ class ReporteRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Reglas de validación para la tabla reporte.
      */
     public function rules(): array
     {
         return [
-            'estado_general' => 'required|string|max:255',
-            'fecha_generado' => 'required|date', // ✅ tipo fecha
+            'estado_general' => 'nullable|string|max:255',
+            'fecha_generado' => 'nullable|date',
             'observaciones' => 'nullable|string|max:2000',
             'recomendaciones' => 'nullable|string|max:255',
             'resumen_emocional' => 'nullable|string|max:1000',
             'resumen_fisico' => 'nullable|string|max:1000',
-            'id_historial' => 'required|exists:historial_clinico,id', // ✅ relación
         ];
     }
 }

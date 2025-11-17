@@ -16,11 +16,12 @@ class ReporteController extends Controller
      */
     public function index(Request $request): View
     {
-        $reportes = Reporte::with('historialClinico')->paginate(); // ✅ eager loading
+        $reportes = Reporte::paginate();
 
         return view('reporte.index', compact('reportes'))
             ->with('i', ($request->input('page', 1) - 1) * $reportes->perPage());
     }
+
 
     /**
      * Show the form for creating a new resource.

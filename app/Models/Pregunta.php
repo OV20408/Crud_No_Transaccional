@@ -45,7 +45,8 @@ class Pregunta extends Model
      */
     public function respuestas()
     {
-        return $this->hasMany(\App\Models\Respuestum::class, 'id', 'id_pregunta');
+        return $this->hasMany(\App\Models\Respuesta::class, 'id_pregunta', 'id');
     }
+
     
 }

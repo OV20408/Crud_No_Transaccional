@@ -13,5 +13,12 @@
         </div>
     @endif
 
-    <p>You are logged in!</p>
+    <p>¡Has iniciado sesión correctamente!</p>
+
+    <form id="logout-form" action="{{ route('logout') }}" method="POST">
+        @csrf
+        <button type="submit" class="btn btn-danger mt-3">
+            <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+        </button>
+    </form>
 @stop

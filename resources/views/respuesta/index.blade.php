@@ -39,7 +39,6 @@
 									<th >Respuesta Texto</th>
 									<th >Texto Pregunta</th>
 									<th >Id Evaluacion</th>
-									<th >Id Pregunta</th>
 
                                         <th></th>
                                     </tr>
@@ -52,7 +51,6 @@
 										<td >{{ $respuestum->respuesta_texto }}</td>
 										<td >{{ $respuestum->texto_pregunta }}</td>
 										<td >{{ $respuestum->id_evaluacion }}</td>
-										<td >{{ $respuestum->id_pregunta }}</td>
 
                                             <td>
                                                 <form action="{{ route('respuesta.destroy', $respuestum->id) }}" method="POST">

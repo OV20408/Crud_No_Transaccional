@@ -23,9 +23,8 @@ class RespuestaRequest extends FormRequest
     {
         return [
             'respuesta_texto' => 'required|string|max:255',
-            'texto_pregunta' => 'required|string|max:255',
+            'pregunta_id' => 'required|exists:pregunta,id',
             'id_evaluacion' => 'required|exists:evaluacion,id',
-            'id_pregunta' => 'required|exists:pregunta,id',
         ];
     }
 }

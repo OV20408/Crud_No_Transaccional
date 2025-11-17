@@ -16,7 +16,7 @@ class ProgresoVoluntarioController extends Controller
      */
     public function index(Request $request): View
     {
-        $progresoVoluntarios = ProgresoVoluntario::with(['etapa', 'usuario'])->paginate();
+        $progresoVoluntarios = ProgresoVoluntario::with(['etapa', 'historialClinico'])->paginate();
 
         return view('progreso-voluntario.index', compact('progresoVoluntarios'))
             ->with('i', ($request->input('page', 1) - 1) * $progresoVoluntarios->perPage());
@@ -29,7 +29,7 @@ class ProgresoVoluntarioController extends Controller
     {
         $progresoVoluntario = new ProgresoVoluntario();
         $etapas = \App\Models\Etapa::all();
-        $usuarios = \App\Models\HistorialClinico::all();
+        $usuarios = \App\Models\User::all();  // <-- CORREGIDO
 
         return view('progreso-voluntario.create', compact('progresoVoluntario', 'etapas', 'usuarios'));
     }
@@ -62,7 +62,7 @@ class ProgresoVoluntarioController extends Controller
     {
         $progresoVoluntario = ProgresoVoluntario::findOrFail($id);
         $etapas = \App\Models\Etapa::all();
-        $usuarios = \App\Models\HistorialClinico::all();
+        $usuarios = \App\Models\User::all();  // <-- CORREGIDO
 
         return view('progreso-voluntario.edit', compact('progresoVoluntario', 'etapas', 'usuarios'));
     }

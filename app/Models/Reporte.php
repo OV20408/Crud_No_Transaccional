@@ -14,12 +14,10 @@ use Illuminate\Database\Eloquent\Model;
  * @property $recomendaciones
  * @property $resumen_emocional
  * @property $resumen_fisico
- * @property $id_historial
  *
- * @property HistorialClinico $historialClinico
- * @property Evaluacion[] $evaluacions
- * @property ReporteCapacitacion[] $reporteCapacitacions
- * @property ReporteNecesidad[] $reporteNecesidads
+ * @property Evaluacion[] $evaluaciones
+ * @property ReporteCapacitacion[] $reporteCapacitaciones
+ * @property ReporteNecesidad[] $reporteNecesidades
  * @package App
  * @mixin \Illuminate\Database\Eloquent\Builder
  */
@@ -30,43 +28,43 @@ class Reporte extends Model
     protected $perPage = 20;
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
+     * Campos asignables
      */
-    protected $fillable = ['estado_general', 'fecha_generado', 'observaciones', 'recomendaciones', 'resumen_emocional', 'resumen_fisico', 'id_historial'];
+    protected $fillable = [
+        'estado_general',
+        'fecha_generado',
+        'observaciones',
+        'recomendaciones',
+        'resumen_emocional',
+        'resumen_fisico',
+    ];
 
+    /**
+     * Casts automáticos
+     */
+    protected $casts = [
+        'fecha_generado' => 'datetime',
+    ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * Relaciones
      */
-    public function historialClinico()
+
+    // 🔹 Un reporte puede tener varias evaluaciones
+    public function evaluaciones()
     {
-        return $this->belongsTo(\App\Models\HistorialClinico::class, 'id_historial', 'id');
+        return $this->hasMany(\App\Models\Evaluacion::class, 'id_reporte', 'id');
     }
-    
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function evaluacions()
+
+    // 🔹 Relación con reporte_capacitacion
+    public function reporteCapacitaciones()
     {
-        return $this->hasMany(\App\Models\Evaluacion::class, 'id', 'id_reporte');
+        return $this->hasMany(\App\Models\ReporteCapacitacion::class, 'id_reporte', 'id');
     }
-    
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function reporteCapacitacions()
+
+    // 🔹 Relación con reporte_necesidad
+    public function reporteNecesidades()
     {
-        return $this->hasMany(\App\Models\ReporteCapacitacion::class, 'id', 'id_reporte');
+        return $this->hasMany(\App\Models\ReporteNecesidad::class, 'id_reporte', 'id');
     }
-    
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function reporteNecesidads()
-    {
-        return $this->hasMany(\App\Models\ReporteNecesidad::class, 'id', 'id_reporte');
-    }
-    
 }

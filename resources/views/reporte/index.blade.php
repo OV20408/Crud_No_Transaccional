@@ -42,7 +42,6 @@
 									<th >Recomendaciones</th>
 									<th >Resumen Emocional</th>
 									<th >Resumen Fisico</th>
-									<th >Id Historial</th>
 
                                         <th></th>
                                     </tr>
@@ -58,7 +57,6 @@
 										<td >{{ $reporte->recomendaciones }}</td>
 										<td >{{ $reporte->resumen_emocional }}</td>
 										<td >{{ $reporte->resumen_fisico }}</td>
-										<td >{{ $reporte->id_historial }}</td>
 
                                             <td>
                                                 <form action="{{ route('reportes.destroy', $reporte->id) }}" method="POST">

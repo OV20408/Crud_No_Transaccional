@@ -353,8 +353,8 @@ return [
             'icon' => 'fas fa-fw fa-lock',
         ],
 
-        /* [
-            'text' => 'Transaccionales',
+        [
+            'text' => 'Apartados',
             'icon' => 'fas fa-fw fa-share',
             'submenu' => [
                 [
@@ -377,17 +377,17 @@ return [
                 [
                     'text' => 'Evaluacion',
                     'url' => '/evaluacion',
-                ],
+                ], 
                 [
                     'text' => 'Respuesta',
                     'url' => '/respuesta',
                 ],
                 [
                     'text' => 'Progreso Voluntario',
-                    'url' => '/progresos',
-                ],
+                    'url' => '/progreso-voluntario',
+                ], 
             ],
-        ], */
+        ],
 
         ['header' => 'labels'],
         [

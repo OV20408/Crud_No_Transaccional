@@ -26,7 +26,8 @@ class ProgresoVoluntarioRequest extends FormRequest
             'fecha_inicio' => 'required|date',
             'fecha_finalizacion' => 'nullable|date',
             'id_etapa' => 'required|exists:etapa,id',
-            'id_usuario' => 'required|exists:historial_clinico,id',
+            'id_usuario' => 'required|exists:usuario,id_usuario',  // <-- CORREGIDO
         ];
     }
+
 }

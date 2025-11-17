@@ -30,7 +30,11 @@ class Respuesta extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = ['respuesta_texto', 'texto_pregunta', 'id_evaluacion', 'id_pregunta'];
+    protected $fillable = [
+        'respuesta_texto',
+        'texto_pregunta',
+        'id_evaluacion',
+    ];
 
 
     /**

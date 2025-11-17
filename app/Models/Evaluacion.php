@@ -63,7 +63,7 @@ class Evaluacion extends Model
      */
     public function respuestas()
     {
-        return $this->hasMany(\App\Models\Respuestum::class, 'id', 'id_evaluacion');
+        return $this->hasMany(\App\Models\Respuesta::class, 'id', 'id_evaluacion');
     }
     
 }
