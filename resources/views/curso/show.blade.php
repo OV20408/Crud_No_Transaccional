@@ -28,7 +28,7 @@
                             {{ $curso->nombre }}
                         </div>
                         <div class="form-group mb-2 mb20">
-                            <strong>Capacitación:</strong>
+                            <strong>Capacitacion:</strong>
                             {{ $curso->capacitacion->nombre ?? '—' }}
                         </div>
                     </div>

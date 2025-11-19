@@ -12,9 +12,9 @@
             {!! $errors->first('nombre', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
         <div class="form-group mb-3">
-            <label for="id_capacitacion">Capacitación</label>
+            <label for="id_capacitacion">Capacitacion</label>
             <select name="id_capacitacion" id="id_capacitacion" class="form-control" required>
-                <option value="">Seleccione una capacitación</option>
+                <option value="">Seleccione una capacitacion</option>
                 @foreach ($capacitaciones as $capacitacion)
                     <option value="{{ $capacitacion->id }}"
                         {{ old('id_capacitacion', $curso->id_capacitacion ?? '') == $capacitacion->id ? 'selected' : '' }}>
