@@ -11,7 +11,7 @@
 
                 <div class="card card-default">
                     <div class="card-header">
-                        <span class="card-title">{{ __('Update') }} Historial Clinico</span>
+                        <span class="card-title">{{ __('Actualizar') }} Historial Clinico</span>
                     </div>
                     <div class="card-body bg-white">
                         <form method="POST" action="{{ route('historial_clinico.update', $historialClinico->id) }}"  role="form" enctype="multipart/form-data">

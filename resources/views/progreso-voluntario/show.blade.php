@@ -11,7 +11,7 @@
                 <div class="card">
                     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <div class="float-left">
-                            <span class="card-title">{{ __('Show') }} Progreso Voluntario</span>
+                            <span class="card-title">{{ __('Mostrar') }} Progreso Voluntario</span>
                         </div>
                         <div class="float-right">
                             <a class="btn btn-primary btn-sm" href="{{ route('progreso-voluntario.index') }}"> {{ __('Back') }}</a>

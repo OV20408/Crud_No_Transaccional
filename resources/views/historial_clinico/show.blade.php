@@ -11,7 +11,7 @@
                 <div class="card">
                     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <div class="float-left">
-                            <span class="card-title">{{ __('Show') }} Historial Clinico</span>
+                            <span class="card-title">{{ __('Mostrar') }} Historial Clinico</span>
                         </div>
                         <div class="float-right">
                             <a class="btn btn-primary btn-sm" href="{{ route('historial_clinico.index') }}"> {{ __('Back') }}</a>
