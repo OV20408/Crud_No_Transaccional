@@ -38,7 +38,7 @@
                                         
 									<th >Descripcion</th>
 									<th >Nombre</th>
-									<th >Id Capacitacion</th>
+									<th >ID Capacitacion</th>
 
                                         <th></th>
                                     </tr>

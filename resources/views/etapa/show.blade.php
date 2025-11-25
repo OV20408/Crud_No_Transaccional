@@ -29,7 +29,7 @@
                                     {{ $etapa->orden }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
-                                    <strong>Id Curso:</strong>
+                                    <strong>ID Curso:</strong>
                                     {{ $etapa->id_curso }}
                                 </div>
 

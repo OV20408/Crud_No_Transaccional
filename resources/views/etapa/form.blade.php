@@ -15,7 +15,7 @@
         <div class="form-group mb-3">
             <label for="id_curso">{{ __('Curso') }}</label>
             <select name="id_curso" id="id_curso" class="form-control @error('id_curso') is-invalid @enderror" required>
-                <option value="">Seleccione un curso</option>
+                <option value="">Selecciona un curso</option>
                 @foreach ($cursos as $curso)
                     <option value="{{ $curso->id }}"
                         {{ old('id_curso', $etapa->id_curso ?? '') == $curso->id ? 'selected' : '' }}>

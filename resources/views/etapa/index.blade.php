@@ -38,7 +38,7 @@
                                         
 									<th >Nombre</th>
 									<th >Orden</th>
-									<th >Id Curso</th>
+									<th >ID Curso</th>
 
                                         <th></th>
                                     </tr>
