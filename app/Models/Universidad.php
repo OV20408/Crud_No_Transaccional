@@ -21,7 +21,10 @@ class Universidad extends Model
     protected $table = 'universidad';
         protected $primaryKey = 'id'; // Agregar esta línea
 
-    public $timestamps = false;
+    public $timestamps = true;   // activar timestamps
+
+    const CREATED_AT = 'created_at';  
+    const UPDATED_AT = null;     // no existe updated_at en la tabla
     
     protected $perPage = 20;
 
