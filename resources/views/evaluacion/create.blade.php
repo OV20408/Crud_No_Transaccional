@@ -11,7 +11,7 @@
 
                 <div class="card card-default">
                     <div class="card-header">
-                        <span class="card-title">{{ __('Create') }} Evaluacion</span>
+                        <span class="card-title">{{ __('Crear') }} Evaluacion</span>
                     </div>
                     <div class="card-body bg-white">
                         <form method="POST" action="{{ route('evaluacion.store') }}"  role="form" enctype="multipart/form-data">

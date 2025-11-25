@@ -11,7 +11,7 @@
                 <div class="card">
                     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <div class="float-left">
-                            <span class="card-title">{{ __('Show') }} Respuestum</span>
+                            <span class="card-title">{{ __('Mostrar') }} Respuesta</span>
                         </div>
                         <div class="float-right">
                             <a class="btn btn-primary btn-sm" href="{{ route('respuesta.index') }}"> {{ __('Back') }}</a>

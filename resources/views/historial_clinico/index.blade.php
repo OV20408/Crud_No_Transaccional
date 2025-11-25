@@ -63,7 +63,7 @@
                                         <td>
                                             <form action="{{ route('historial_clinico.destroy', $historialClinico->id) }}" method="POST">
                                                 <a class="btn btn-sm btn-primary" href="{{ route('historial_clinico.show', $historialClinico->id) }}">
-                                                    <i class="fa fa-fw fa-eye"></i> {{ __('Ver') }}
+                                                    <i class="fa fa-fw fa-eye"></i> {{ __('Mostrar') }}
                                                 </a>
                                                 <a class="btn btn-sm btn-success" href="{{ route('historial_clinico.edit', $historialClinico->id) }}">
                                                     <i class="fa fa-fw fa-edit"></i> {{ __('Editar') }}
