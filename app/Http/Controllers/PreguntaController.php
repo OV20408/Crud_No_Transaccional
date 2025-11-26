@@ -75,17 +75,13 @@ class PreguntaController extends Controller
     }
 
     public function destroy($id): RedirectResponse
-    {
-        $pregunta = \App\Models\Pregunta::findOrFail($id);
+{
+    $pregunta = Pregunta::findOrFail($id);
+    $pregunta->delete();
 
-        // 🔹 Primero eliminar las respuestas asociadas
-        $pregunta->respuestas()->delete();
+    return Redirect::route('pregunta.index')
+        ->with('success', 'Pregunta deleted successfully');
+}
 
-        // 🔹 Luego eliminar la pregunta
-        $pregunta->delete();
-
-        return Redirect::route('pregunta.index')
-            ->with('success', 'Pregunta deleted successfully');
-    }
 
 }

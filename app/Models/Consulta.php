@@ -1,11 +1,13 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
 class Consulta extends Model
 {
-    protected $table = 'consultas';
+    protected $table = 'consultas'; // tabla real
+    public $timestamps = false;    // porque NO tiene updated_at
 
     protected $fillable = [
         'voluntario_id',
@@ -14,14 +16,13 @@ class Consulta extends Model
         'estado'
     ];
 
-    public function voluntario()
-    {
-        return $this->belongsTo(\App\Models\User::class, 'voluntario_id', 'id_usuario');
-    }
-
-
     public function necesidad()
     {
-        return $this->belongsTo(\App\Models\Necesidad::class, 'necesidad_id');
+        return $this->belongsTo(Necesidad::class, 'necesidad_id', 'id');
+    }
+
+    public function voluntario()
+    {
+        return $this->belongsTo(Usuario::class, 'voluntario_id', 'id_usuario');
     }
 }

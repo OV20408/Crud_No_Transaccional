@@ -338,6 +338,10 @@ return [
             'url' => '/home',
             'icon' => 'fas fa-fw fa-chart-bar',
         ],
+
+        
+
+
         [
             'text' => 'Necesidades',
             'url' => '/necesidades',
@@ -397,6 +401,12 @@ return [
                 [
                     'text' => 'Respuesta',
                     'url' => '/respuesta',
+                ],
+                // Crud de Consultas
+                [
+                    'text' => 'Consultas',
+                    'url'  => '/consultas',
+                    'icon' => 'fas fa-comments',
                 ],
                 [
                     'text' => 'Progreso Voluntario',

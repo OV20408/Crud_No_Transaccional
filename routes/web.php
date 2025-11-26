@@ -15,6 +15,10 @@ use App\Http\Controllers\EvaluacionController;
 use App\Http\Controllers\RespuestaController;
 use App\Http\Controllers\ProgresoVoluntarioController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\ConsultaController;
+
+Route::resource('consultas', ConsultaController::class);
+
 
 
 

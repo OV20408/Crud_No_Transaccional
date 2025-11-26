@@ -18,13 +18,13 @@ class AuthApiController extends Controller
 
     $user = User::where('ci', $request->ci)->first();
 
-    // 💥 Comparación directa porque tu BD usa texto plano
-    if (!$user || $user->contrasena !== $request->contrasena) {
+    if (!$user || !Hash::check($request->contrasena, $user->contrasena)) {
         return response()->json([
             'success' => false,
             'message' => 'Credenciales incorrectas'
         ], 401);
     }
+
 
     return response()->json([
         'success' => true,
