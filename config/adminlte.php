@@ -305,6 +305,17 @@ return [
             'text' => 'search',
             'topnav_right' => true,
         ],
+
+        // Chat de Voluntarios
+        [
+            'text' => 'Chat de Voluntarios',
+            'url'  => '/chat-voluntarios',
+            'icon' => 'fas fa-comments',
+        ],
+
+
+        
+
         [
             'type' => 'fullscreen-widget',
             'topnav_right' => true,
@@ -323,34 +334,39 @@ return [
 
         ['header' => 'account_settings'],
         [
+            'text' => 'Estadisticas',
+            'url' => '/home',
+            'icon' => 'fas fa-fw fa-chart-bar',
+        ],
+        [
             'text' => 'Necesidades',
             'url' => '/necesidades',
-            'icon' => 'fas fa-fw fa-user',
+            'icon' => 'fa fa-plus-square',
         ],
         [
             'text' => 'Roles',
             'url' => '/roles',
-            'icon' => 'fas fa-fw fa-lock',
+            'icon' => 'fa fa-address-book',
         ],
         [
             'text' => 'Universidades',
             'url' => '/universidades',
-            'icon' => 'fas fa-fw fa-lock',
+            'icon' => 'fa fa-graduation-cap',
         ],
         [
             'text' => 'Capacitaciones',
             'url' => '/capacitaciones',
-            'icon' => 'fas fa-fw fa-lock',
+            'icon' => 'fa fa-window-restore',
         ],
         [
             'text' => 'Pruebas',
             'url' => '/test',
-            'icon' => 'fas fa-fw fa-lock',
+            'icon' => 'fas fa-fw fa-edit',
         ],
         [
             'text' => 'Historial Clinico',
             'url' => '/historial_clinico',
-            'icon' => 'fas fa-fw fa-lock',
+            'icon' => 'fas fa-fw fa-file',
         ],
 
         [
@@ -390,21 +406,14 @@ return [
         ],
 
         ['header' => 'labels'],
+        
         [
-            'text' => 'important',
-            'icon_color' => 'red',
-            'url' => '#',
+            'text' => 'Cerrar sesión',
+            'route' => 'logout',
+            'icon' => 'fas fa-sign-out-alt',
+            'method' => 'post',
         ],
-        [
-            'text' => 'warning',
-            'icon_color' => 'yellow',
-            'url' => '#',
-        ],
-        [
-            'text' => 'information',
-            'icon_color' => 'cyan',
-            'url' => '#',
-        ],
+
     ],
 
     /*

@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: laravel_app
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+    ports:
+      - "8000:8000"
+    command: php -S 0.0.0.0:8000 -t public
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16
+    container_name: laravel_db
+    restart: always
+    environment:
+      POSTGRES_DB: crud_lav
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: omar123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

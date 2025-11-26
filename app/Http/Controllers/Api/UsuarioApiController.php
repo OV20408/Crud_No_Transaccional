@@ -8,43 +8,40 @@ use Illuminate\Http\Request;
 
 class UsuarioApiController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        return User::all();
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function show($id)
     {
-        //
+        $u = User::find($id);
+
+        if (!$u) return response()->json(['message' => 'Usuario no encontrado'], 404);
+
+        return $this->normalize($u);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(User $user)
+    public function getByCi($ci)
     {
-        //
+        $u = User::where('ci', $ci)->first();
+
+        if (!$u) return response()->json(['message' => 'Usuario no encontrado'], 404);
+
+        return $this->normalize($u);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, User $user)
+    private function normalize($u)
     {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(User $user)
-    {
-        //
+        return [
+            'id' => $u->id_usuario,
+            'ci' => $u->ci,
+            'nombre' => $u->nombres,
+            'apellido' => $u->apellidos,
+            'telefono' => $u->telefono,
+            'tipo_sangre' => $u->tipo_sangre,
+            'rol_id' => $u->id_rol,
+            'fotoPerfil' => $u->foto_ci,
+        ];
     }
 }
