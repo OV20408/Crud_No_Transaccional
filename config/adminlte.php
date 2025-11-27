@@ -388,7 +388,11 @@ return [
             'icon' => 'fa fa-graduation-cap',
         ],
 
-        
+        [
+            'text' => 'Cuenta Voluntarios',
+            'url' => '/cuenta-voluntarios',
+            'icon' => 'fa fa-user',
+        ],
 
 
 
@@ -403,7 +407,7 @@ return [
             'text' => 'Apartados',
             'icon' => 'fas fa-fw fa-share',
             'submenu' => [
-                [
+               /*  [
                     'text' => 'Curso',
                     'url' => '/curso',
                     'icon' => 'fa fa-book',
@@ -419,7 +423,7 @@ return [
                     'text' => 'Necesidades',
                     'url' => '/necesidades',
                     'icon' => 'fa fa-plus-square',
-                ],
+                ], */
                 [
                     'text' => 'Roles',
                     'url' => '/roles',

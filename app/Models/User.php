@@ -63,4 +63,22 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Rol::class, 'id_rol', 'id');
     }
+
+    // 🚀 NUEVO: iniciales para el avatar (ej. "Omar Velasco" -> "OV")
+    public function getInicialesAttribute()
+    {
+        $n = trim($this->nombres ?? '');
+        $a = trim($this->apellidos ?? '');
+
+        $ini = '';
+
+        if ($n !== '') {
+            $ini .= mb_substr($n, 0, 1, 'UTF-8');
+        }
+        if ($a !== '') {
+            $ini .= mb_substr($a, 0, 1, 'UTF-8');
+        }
+
+        return mb_strtoupper($ini, 'UTF-8');
+    }
 }

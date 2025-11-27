@@ -17,6 +17,15 @@ use App\Http\Controllers\ProgresoVoluntarioController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\ConsultaController;use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\VoluntarioController;
+use App\Http\Controllers\AdministradorController;
+// Lista y creación real de administradores
+Route::resource('administradores', AdministradorController::class)
+    ->only(['index', 'create', 'store']);
+
+// Cambiar estado Activo/Inactivo
+Route::patch('administradores/{id}/toggle-estado', [AdministradorController::class, 'toggleEstado'])
+    ->name('administradores.toggle-estado');
+
 
 
 Route::get('/chat-consulta', function () {
@@ -40,6 +49,10 @@ Route::post('/consultas/{id}/responder', function ($id) {
 
     return redirect('/chat-consulta')->with('success', 'Respuesta enviada');
 });
+
+
+Route::view('/ayudas_solicitadas', 'ayudas_solicitadas.index')->name('ayudas_solicitadas.index');
+
 
 
 Route::resource('voluntarios', VoluntarioController::class);

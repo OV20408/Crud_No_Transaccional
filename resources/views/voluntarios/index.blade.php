@@ -9,10 +9,44 @@
     --color-blanco: #f8f9fa;
   }
 
+
+
+    .form-container {
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px 20px;
+    width: 100%;
+    min-height: 100vh;
+  }
+
+  .form-content {
+    padding: 2rem 3rem;
+    width: 100%;
+    max-width: 1200px;
+  }
+
+  .form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .form-titulo {
+    font-size: 2.5rem;
+    padding-bottom: 0.5rem;
+    position: relative;
+    margin: 0;
+  }
+
+
+
+
   .listado-container {
     padding: 20px;
     width: 100%;
     box-sizing: border-box;
+    padding: 40px 20px;
     min-height: 100vh;
   }
 
@@ -245,7 +279,7 @@
 <div class="listado-container">
   <div class="listado-content">
     <header class="listado-header">
-      <h1 class="titulo-listado">Voluntarios</h1>
+      <h1 class="form-titulo">Voluntarios</h1>
     </header>
 
     <section class="listado-paneles">

@@ -55,7 +55,7 @@
                                             </td>
 
                                             <td class="text-center">
-                                                <a class="btn btn-sm btn-warning"
+                                                <a class="btn btn-sm btn-success"
                                                    href="{{ route('capacitaciones.edit', $capacitacion->id) }}">
                                                     <i class="fa fa-fw fa-edit"></i> Editar
                                                 </a>

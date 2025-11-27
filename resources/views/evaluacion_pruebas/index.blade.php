@@ -416,7 +416,7 @@
 
         {{-- HEADER COMO EN REACT --}}
         <div class="form-header">
-          <h1 class="form-titulo">Evaluación Post-Incendio</h1>
+          <h1 class="form-titulo">Evaluación Post-Incendio (Voluntario)</h1>
         </div>
 
         {{-- ===================== PASO 1: FÍSICO ===================== --}}
