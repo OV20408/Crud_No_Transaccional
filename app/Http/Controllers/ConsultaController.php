@@ -18,7 +18,7 @@ class ConsultaController extends Controller
     {
         $consultas = Consulta::paginate();
 
-        return view('consulta.index', compact('consultas'))
+        return view('consultas-web.index', compact('consultas'))
             ->with('i', ($request->input('page', 1) - 1) * $consultas->perPage());
     }
 
@@ -31,7 +31,7 @@ class ConsultaController extends Controller
     $voluntarios = \App\Models\User::all();
     $necesidades = \App\Models\Necesidad::all();
 
-    return view('consulta.create', compact('consulta', 'voluntarios', 'necesidades'));
+    return view('consultas-web.create', compact('consulta', 'voluntarios', 'necesidades'));
 }
 
     /**
@@ -41,7 +41,7 @@ class ConsultaController extends Controller
     {
         Consulta::create($request->validated());
 
-        return Redirect::route('consultas.index')
+        return Redirect::route('consultas-web.index')
             ->with('success', 'Consulta created successfully.');
     }
 
@@ -52,7 +52,7 @@ class ConsultaController extends Controller
     {
         $consulta = Consulta::find($id);
 
-        return view('consulta.show', compact('consulta'));
+        return view('consultas-web.show', compact('consulta'));
     }
 
     /**
@@ -64,7 +64,7 @@ class ConsultaController extends Controller
     $voluntarios = \App\Models\User::all();
     $necesidades = \App\Models\Necesidad::all();
 
-    return view('consulta.edit', compact('consulta', 'voluntarios', 'necesidades'));
+    return view('consultas-web.edit', compact('consulta', 'voluntarios', 'necesidades'));
 }
 
 
@@ -75,7 +75,7 @@ class ConsultaController extends Controller
     {
         $consulta->update($request->validated());
 
-        return Redirect::route('consultas.index')
+        return Redirect::route('consultas-web.index')
             ->with('success', 'Consulta updated successfully');
     }
 
@@ -83,7 +83,7 @@ class ConsultaController extends Controller
     {
         Consulta::find($id)->delete();
 
-        return Redirect::route('consultas.index')
+        return Redirect::route('consultas-web.index')
             ->with('success', 'Consulta deleted successfully');
     }
 }

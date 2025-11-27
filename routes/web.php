@@ -15,13 +15,35 @@ use App\Http\Controllers\EvaluacionController;
 use App\Http\Controllers\RespuestaController;
 use App\Http\Controllers\ProgresoVoluntarioController;
 use App\Http\Controllers\UsuarioController;
-use App\Http\Controllers\ConsultaController;
-
-Route::resource('consultas', ConsultaController::class);
-
+use App\Http\Controllers\ConsultaController;use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\VoluntarioController;
 
 
+Route::get('/chat-consulta', function () {
+    $consultas = DB::table('consultas')
+        ->join('usuario', 'usuario.id_usuario', '=', 'consultas.voluntario_id')
+        ->select('consultas.*', 'usuario.nombres', 'usuario.apellidos', 'usuario.ci')
+        ->orderBy('consultas.id', 'DESC')
+        ->get();
 
+    return view('chat-consulta.index', compact('consultas'));
+});
+
+
+Route::post('/consultas/{id}/responder', function ($id) {
+    DB::table('consultas')
+        ->where('id', $id)
+        ->update([
+            'respuesta_admin' => request('respuesta_admin'),
+            'estado' => 'respondido'
+        ]);
+
+    return redirect('/chat-consulta')->with('success', 'Respuesta enviada');
+});
+
+
+Route::resource('voluntarios', VoluntarioController::class);
+Route::resource('consultas-web', ConsultaController::class);
 Route::resource('roles', RolController::class);
 Route::resource('capacitaciones', CapacitacionController::class);
 Route::resource('necesidades', NecesidadController::class);
@@ -35,6 +57,7 @@ Route::resource('reportes', ReporteController::class);
 Route::resource('evaluacion', EvaluacionController::class);
 Route::resource('respuesta', RespuestaController::class);
 Route::resource('progreso-voluntario', ProgresoVoluntarioController::class);
+Route::view('evaluacion_pruebas', 'evaluacion_pruebas.index')->name('evaluacion_pruebas');
 
 
 

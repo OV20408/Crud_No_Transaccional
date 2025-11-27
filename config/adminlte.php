@@ -332,46 +332,72 @@ return [
             'can' => 'manage-blog',
         ],
 
-        ['header' => 'account_settings'],
+        //secciones de gevopi
+        ['header' => 'APARTADOS GEVOPI'],
         [
             'text' => 'Estadisticas',
             'url' => '/home',
             'icon' => 'fas fa-fw fa-chart-bar',
         ],
 
-        
+        [
+            'text' => 'Voluntarios',
+            'url' => '/voluntarios',
+            'icon' => 'fa fa-users',
+        ],
 
+        [
+            'text' => 'Evaluacion',
+            'url' => '/evaluacion',
+            'icon' => 'fa fa-check-circle',
+        ],
+
+        [
+            'text' => 'Evaluacion Voluntarios',
+            'url' => '/evaluacion_pruebas',
+            'icon' => 'fa fa-user-check',
+        ],
+
+        [
+            'text' => 'Capacitaciones',
+            'url' => '/capacitaciones',
+            'icon' => 'fa fa-window-restore',
+        ],
 
         [
             'text' => 'Necesidades',
             'url' => '/necesidades',
             'icon' => 'fa fa-plus-square',
         ],
+
         [
-            'text' => 'Roles',
-            'url' => '/roles',
-            'icon' => 'fa fa-address-book',
+            'text' => 'Ayudas Solicitadas',
+            'url' => '/ayudas_solicitadas',
+            'icon' => 'fa fa-hand-holding-heart',
         ],
+
+        [
+            'text' => 'Administradores',
+            'url' => '/administradores',
+            'icon' => 'fa fa-user-shield',
+        ],
+
         [
             'text' => 'Universidades',
             'url' => '/universidades',
             'icon' => 'fa fa-graduation-cap',
         ],
-        [
-            'text' => 'Capacitaciones',
-            'url' => '/capacitaciones',
-            'icon' => 'fa fa-window-restore',
-        ],
-        [
-            'text' => 'Pruebas',
-            'url' => '/test',
-            'icon' => 'fas fa-fw fa-edit',
-        ],
-        [
-            'text' => 'Historial Clinico',
-            'url' => '/historial_clinico',
-            'icon' => 'fas fa-fw fa-file',
-        ],
+
+        
+
+
+
+
+//secciones de crud
+
+
+        ['header' => 'CRUD'],
+
 
         [
             'text' => 'Apartados',
@@ -380,41 +406,76 @@ return [
                 [
                     'text' => 'Curso',
                     'url' => '/curso',
+                    'icon' => 'fa fa-book',
                 ],
                 
                 [
                     'text' => 'Etapa',
                     'url' => '/etapas',
+                    'icon' => 'fa fa-layer-group',
                 ],
+
+                [
+                    'text' => 'Necesidades',
+                    'url' => '/necesidades',
+                    'icon' => 'fa fa-plus-square',
+                ],
+                [
+                    'text' => 'Roles',
+                    'url' => '/roles',
+                    'icon' => 'fa fa-address-book',
+                ],
+                
+                
+                [
+                    'text' => 'Pruebas',
+                    'url' => '/test',
+                    'icon' => 'fas fa-fw fa-edit',
+                ],
+                [
+                    'text' => 'Historial Clinico',
+                    'url' => '/historial_clinico',
+                    'icon' => 'fas fa-fw fa-file',
+                ],
+
                 [
                     'text' => 'Preguntas',
                     'url' => '/pregunta',
+                    'icon' => 'fas fa-fw fa-question',
                 ],
                 [
                     'text' => 'Reporte',
                     'url' => '/reportes',
+                    'icon' => 'fas fa-fw fa-file-alt',
                 ],
                 [
                     'text' => 'Evaluacion',
                     'url' => '/evaluacion',
+                    'icon' => 'fas fa-fw fa-check',
                 ], 
                 [
                     'text' => 'Respuesta',
                     'url' => '/respuesta',
+                    'icon' => 'fas fa-fw fa-reply',
                 ],
                 // Crud de Consultas
                 [
                     'text' => 'Consultas',
-                    'url'  => '/consultas',
+                    'url'  => '/consultas-web',
                     'icon' => 'fas fa-comments',
                 ],
                 [
                     'text' => 'Progreso Voluntario',
                     'url' => '/progreso-voluntario',
+                    'icon' => 'fas fa-fw fa-chart-line',
                 ], 
+
+        
+        
             ],
         ],
-
+        
+        
         ['header' => 'labels'],
         
         [
@@ -423,7 +484,6 @@ return [
             'icon' => 'fas fa-sign-out-alt',
             'method' => 'post',
         ],
-
     ],
 
     /*

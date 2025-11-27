@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property $nombre
  *
  * @property Curso[] $cursos
- * @property ReporteCapacitacion[] $reporteCapacitacions
+ * @property Reporte[] $reporteCapacitacions
  * @package App
  * @mixin \Illuminate\Database\Eloquent\Builder
  */
@@ -43,9 +43,6 @@ class Capacitacion extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function reporteCapacitacions()
-    {
-        return $this->hasMany(\App\Models\ReporteCapacitacion::class, 'id', 'id_capacitacion');
-    }
+    
     
 }

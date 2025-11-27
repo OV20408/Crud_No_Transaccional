@@ -7,45 +7,39 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Class Curso
  *
- * @property $id
- * @property $descripcion
- * @property $nombre
- * @property $id_capacitacion
+ * @property int $id
+ * @property string|null $descripcion
+ * @property string $nombre
+ * @property int $id_capacitacion
  *
- * @property Capacitacion $capacitacion
- * @property Etapa[] $etapas
- * @package App
- * @mixin \Illuminate\Database\Eloquent\Builder
+ * @property \App\Models\Capacitacion $capacitacion
+ * @property \Illuminate\Database\Eloquent\Collection|\App\Models\Etapa[] $etapas
  */
 class Curso extends Model
 {
     protected $table = 'curso';
     public $timestamps = false;
-    
+
     protected $perPage = 20;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = ['descripcion', 'nombre', 'id_capacitacion'];
 
-
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * Relación: curso pertenece a una capacitación
      */
     public function capacitacion()
     {
         return $this->belongsTo(\App\Models\Capacitacion::class, 'id_capacitacion', 'id');
     }
-    
+
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * Relación: curso tiene muchas etapas
      */
     public function etapas()
     {
-        return $this->hasMany(\App\Models\Etapa::class, 'id', 'id_curso');
+        // 🔴 Antes lo tenías al revés: hasMany(Etapa::class, 'id', 'id_curso')
+        // ✅ Debe ser:
+        // FK en tabla etapa: id_curso → PK en curso: id
+        return $this->hasMany(\App\Models\Etapa::class, 'id_curso', 'id');
     }
-    
 }

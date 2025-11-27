@@ -13,24 +13,30 @@ class ConsultaApiController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data' => \App\Models\Consulta::with(['voluntario', 'necesidad'])->get()
+            'data' => Consulta::with(['voluntario', 'necesidad'])->get()
         ]);
     }
 
     public function store(Request $request)
-    {
-        $data = $request->validate([
-            'voluntario_id' => 'required|integer',
-            'mensaje' => 'required|string|max:500',
-        ]);
+{
+    $request->validate([
+        'voluntario_id' => 'required|integer',
+        'mensaje' => 'required|string|max:500',
+    ]);
 
-        $consulta = Consulta::create($data);
+    $consulta = \DB::table('consultas')->insert([
+        'voluntario_id' => $request->voluntario_id,
+        'necesidad_id' => 1, // valor por defecto
+        'mensaje' => $request->mensaje,
+        'estado' => 'pendiente',
+        'created_at' => now(),
+        'updated_at' => now(),
 
-        return response()->json([
-            'success' => true,
-            'data' => $consulta
-        ], 201);
-    }
+    ]);
+
+    return response()->json(['success' => true, 'message' => 'Consulta registrada']);
+}
+
 }
 
 

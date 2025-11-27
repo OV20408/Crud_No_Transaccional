@@ -7,13 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class Consulta extends Model
 {
     protected $table = 'consultas'; // tabla real
-    public $timestamps = false;    // porque NO tiene updated_at
+    public $timestamps = true;    // porque NO tiene updated_at
 
     protected $fillable = [
         'voluntario_id',
         'necesidad_id',
         'mensaje',
-        'estado'
+        'estado',
+        'respuesta_admin', 
     ];
 
     public function necesidad()
@@ -23,6 +24,6 @@ class Consulta extends Model
 
     public function voluntario()
     {
-        return $this->belongsTo(Usuario::class, 'voluntario_id', 'id_usuario');
+        return $this->belongsTo(User::class, 'voluntario_id', 'id_usuario');
     }
 }
