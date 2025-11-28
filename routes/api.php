@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ConsultaApiController;
 use App\Http\Controllers\Api\AuthApiController;
 use App\Http\Controllers\Api\VoluntarioApiController;
 use App\Http\Controllers\Api\UsuarioApiController;
+use App\Http\Controllers\Api\CapacitacionApiController;
 
 // ==================== AUTENTICACIÓN ====================
 Route::post('/usuarios/login', [AuthApiController::class, 'login']);
@@ -27,6 +28,17 @@ Route::prefix('voluntario')->group(function () {
 Route::get('/voluntarios', [VoluntarioApiController::class, 'index']);
 Route::get('/voluntarios/{id}', [VoluntarioApiController::class, 'show']);
 Route::post('/voluntarios', [VoluntarioApiController::class, 'store']);
+
+// ==================== CAPACITACIONES Y CURSOS ====================
+Route::get('/capacitaciones', [CapacitacionApiController::class, 'index']);
+Route::get('/capacitaciones/{id}', [CapacitacionApiController::class, 'show']);
+Route::post('/capacitaciones', [CapacitacionApiController::class, 'store']);
+Route::post('/cursos', [CapacitacionApiController::class, 'storeCurso']);
+Route::post('/etapas', [CapacitacionApiController::class, 'storeEtapa']);
+
+// Cursos por voluntario (para la app móvil)
+Route::get('/voluntarios/{id}/cursos', [CapacitacionApiController::class, 'getCursosByVoluntario']);
+Route::post('/voluntarios/asignar-curso', [CapacitacionApiController::class, 'asignarCursoAVoluntario']);
 
 // ==================== CONSULTAS ====================
 Route::post('/consultas', [ConsultaApiController::class, 'store']);
