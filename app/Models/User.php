@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Hash; // 👈 NUEVO
+use Illuminate\Support\Facades\Hash;
 
 class User extends Authenticatable
 {
@@ -37,7 +37,7 @@ class User extends Authenticatable
 
     protected $hidden = [
         'contrasena',
-        'password', // 👈 por si alguien accede a este atributo virtual
+        'remember_token',
     ];
 
     protected $casts = [
@@ -46,7 +46,9 @@ class User extends Authenticatable
         'updated_at' => 'datetime',
     ];
 
-    // Ocultar campos nulos en JSON
+    /**
+     *  Oculta los campos nulos en JSON.
+     */
     public function toArray()
     {
         return array_filter(parent::toArray(), function ($value) {
@@ -54,36 +56,37 @@ class User extends Authenticatable
         });
     }
 
-    // 👇 Esto hace que cualquier $user->password = '...' se guarde en "contrasena"
+    /**
+     *  Setter REAL de contraseña.
+     *  Laravel siempre llama a $user->password, por lo que
+     *  este método es el que debe mapear a "contrasena".
+     */
     public function setPasswordAttribute($value)
     {
-        $this->attributes['contrasena'] = Hash::make($value);
-    }
- 
-    // Mutador para contrasena - hashea automáticamente
-    public function setContrasenaAttribute($value)
-    {
-        $this->attributes['contrasena'] = Hash::make($value);
+        // Evita volver a hashear una contraseña ya hasheada
+        if (strlen($value) < 60) {
+            $this->attributes['contrasena'] = Hash::make($value);
+        } else {
+            $this->attributes['contrasena'] = $value;
+        }
     }
 
+    /**
+     *  Getter virtual de password.
+     *  Esto permite que Laravel trate "password" pero se lea "contrasena".
+     */
     public function getPasswordAttribute()
     {
         return $this->contrasena;
     }
 
+    /**
+     *  Necesario para que el Auth de Laravel use "contrasena".
+     */
     public function getAuthPassword()
     {
         return $this->contrasena;
     }
-
-
-    //verificar later
-    /* public function setPasswordAttribute($value)
-    {
-        $this->attributes['contrasena'] = $value;
-    } */
-
-    
 
     public function rol()
     {

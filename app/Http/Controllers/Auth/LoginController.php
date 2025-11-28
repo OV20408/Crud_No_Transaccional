@@ -7,7 +7,6 @@ use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-
 class LoginController extends Controller
 {
     use AuthenticatesUsers;
@@ -27,7 +26,7 @@ class LoginController extends Controller
     }
 
     /**
-     * Definir el campo de login (CI en lugar de email)
+     * Login con CI
      */
     public function username()
     {
@@ -35,7 +34,7 @@ class LoginController extends Controller
     }
 
     /**
-     * Validar los datos de login
+     * Validación personalizada
      */
     protected function validateLogin(Request $request)
     {
@@ -46,13 +45,39 @@ class LoginController extends Controller
     }
 
     /**
-     * Obtener credenciales personalizadas para el intento de login
+     * Credenciales personalizadas
      */
     protected function credentials(Request $request)
     {
         return [
-            'ci' => $request->get('ci'),
+            'ci'       => $request->get('ci'),
             'password' => $request->get('contrasena'),
         ];
+    }
+
+    /**
+     * DESPUÉS de un login exitoso, validamos el rol.
+     */
+    protected function authenticated(Request $request, $user)
+    {
+        // Solo admins pueden entrar a la web
+        if ($user->rol?->nombre !== 'Administrador') {
+
+            Auth::logout();
+
+            return redirect()->back()->withErrors([
+                'ci' => 'Solo los administradores pueden acceder al panel web.',
+            ]);
+        }
+
+        // Si el usuario está inactivo
+        if (strtolower($user->estado) !== 'activo') {
+
+            Auth::logout();
+
+            return redirect()->back()->withErrors([
+                'ci' => 'Tu usuario está inactivo. Contacta al administrador.',
+            ]);
+        }
     }
 }
