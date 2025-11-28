@@ -13,8 +13,9 @@ Route::get('/usuarios', [UsuarioApiController::class, 'index']);
 Route::get('/usuarios/{id}', [UsuarioApiController::class, 'show']);
 Route::get('/usuarios/ci/{ci}', [UsuarioApiController::class, 'getByCi']);
 
-Route::get('/voluntario/voluntarios', [VoluntarioApiController::class, 'index']);
-Route::get('/voluntario/voluntarios/{id}', [VoluntarioApiController::class, 'show']);
+Route::get('/voluntarios', [VoluntarioApiController::class, 'index']);
+Route::get('/voluntarios/{id}', [VoluntarioApiController::class, 'show']);
+Route::post('/voluntarios', [VoluntarioApiController::class, 'store']);
 
 
 

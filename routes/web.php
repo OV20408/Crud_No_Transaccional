@@ -18,14 +18,19 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\ConsultaController;use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\VoluntarioController;
 use App\Http\Controllers\AdministradorController;
-// Lista y creación real de administradores
-Route::resource('administradores', AdministradorController::class)
-    ->only(['index', 'create', 'store']);
 
-// Cambiar estado Activo/Inactivo
-Route::patch('administradores/{id}/toggle-estado', [AdministradorController::class, 'toggleEstado'])
+Route::get('/administradores', [AdministradorController::class, 'index'])
+    ->name('administradores.index');
+
+Route::get('/administradores/create', [AdministradorController::class, 'create'])
+    ->name('administradores.create');
+
+Route::post('/administradores', [AdministradorController::class, 'store'])
+    ->name('administradores.store');
+
+Route::post('/administradores/{id}/toggle-estado', [AdministradorController::class, 'toggleEstado'])
     ->name('administradores.toggle-estado');
-
+    
 
 
 Route::get('/chat-consulta', function () {

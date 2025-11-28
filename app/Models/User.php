@@ -5,21 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash; // 👈 NUEVO
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    // 🔹 Nombre real de la tabla
     protected $table = 'usuario';
-
-    // 🔹 Clave primaria personalizada
     protected $primaryKey = 'id_usuario';
-
-    // 🔹 No usar 'id' auto para timestamps de Laravel
     public $timestamps = true;
 
-    // 🔹 Campos asignables
     protected $fillable = [
         'nombres',
         'apellidos',
@@ -40,31 +35,47 @@ class User extends Authenticatable
         'foto_licencia',
     ];
 
-    // 🔹 Ocultos al serializar
     protected $hidden = [
         'contrasena',
+        'password', // 👈 por si alguien accede a este atributo virtual
     ];
 
-    // 🔹 Casteos automáticos
     protected $casts = [
         'fecha_nacimiento' => 'date',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
 
-    // 🔹 IMPORTANTE: indicar a Laravel cuál campo es el password
+    // 👇 Esto hace que cualquier $user->password = '...' se guarde en "contrasena"
+    public function setPasswordAttribute($value)
+    {
+        $this->attributes['contrasena'] = Hash::make($value);
+    }
+ 
+    public function getPasswordAttribute()
+    {
+        return $this->contrasena;
+    }
+
     public function getAuthPassword()
     {
         return $this->contrasena;
     }
 
-    // 🔹 Relación con Rol
+
+    //verificar later
+    /* public function setPasswordAttribute($value)
+    {
+        $this->attributes['contrasena'] = $value;
+    } */
+
+    
+
     public function rol()
     {
         return $this->belongsTo(Rol::class, 'id_rol', 'id');
     }
 
-    // 🚀 NUEVO: iniciales para el avatar (ej. "Omar Velasco" -> "OV")
     public function getInicialesAttribute()
     {
         $n = trim($this->nombres ?? '');

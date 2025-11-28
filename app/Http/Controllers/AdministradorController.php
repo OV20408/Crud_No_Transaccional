@@ -6,6 +6,8 @@ use App\Models\User;
 use App\Models\Rol;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password; // 👈 IMPORTANTE
+use Illuminate\Support\Str;              // 👈 IMPORTANTE
 
 class AdministradorController extends Controller
 {
@@ -31,6 +33,7 @@ class AdministradorController extends Controller
     {
         $idRolAdmin = Rol::where('nombre', 'Administrador')->value('id');
 
+        // 🧾 Validación usando los NOMBRES de campo de tu form Blade
         $validated = $request->validate([
             'nombre'    => 'required|string|max:30',
             'apellido'  => 'required|string|max:30',
@@ -40,10 +43,12 @@ class AdministradorController extends Controller
             'telefono'  => 'nullable|string|max:15',
         ]);
 
+        // CI + extensión (opcional)
         $ciCompleto = $validated['ci'] .
             (!empty($validated['extension']) ? '-' . $validated['extension'] : '');
 
-        User::create([
+        // 1️⃣ Crear el usuario con una contraseña ALEATORIA que él no conoce
+        $user = User::create([
             'nombres'   => $validated['nombre'],
             'apellidos' => $validated['apellido'],
             'email'     => $validated['correo'],
@@ -51,12 +56,21 @@ class AdministradorController extends Controller
             'telefono'  => $validated['telefono'] ?? null,
             'estado'    => 'activo',
             'id_rol'    => $idRolAdmin ?? 1,
-            'contrasena'=> Hash::make('Admin123*'), // contraseña por defecto
+            // Algo random y fuerte, solo para tener un hash en la BD
+            'contrasena'=> Hash::make(Str::random(32)),
+        ]);
+
+        // 2️⃣ Enviar el link de "reset password" para que él ponga su propia clave
+        Password::broker()->sendResetLink([
+            'email' => $user->email,
         ]);
 
         return redirect()
             ->route('administradores.index')
-            ->with('success', 'Administrador creado correctamente.');
+            ->with(
+                'success',
+                'Administrador creado. Se envió un correo para que configure su contraseña.'
+            );
     }
 
     public function toggleEstado($id)
@@ -71,3 +85,5 @@ class AdministradorController extends Controller
             ->with('success', 'Estado actualizado correctamente.');
     }
 }
+
+
