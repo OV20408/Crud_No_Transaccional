@@ -46,12 +46,26 @@ class User extends Authenticatable
         'updated_at' => 'datetime',
     ];
 
+    // Ocultar campos nulos en JSON
+    public function toArray()
+    {
+        return array_filter(parent::toArray(), function ($value) {
+            return !is_null($value);
+        });
+    }
+
     // 👇 Esto hace que cualquier $user->password = '...' se guarde en "contrasena"
     public function setPasswordAttribute($value)
     {
         $this->attributes['contrasena'] = Hash::make($value);
     }
  
+    // Mutador para contrasena - hashea automáticamente
+    public function setContrasenaAttribute($value)
+    {
+        $this->attributes['contrasena'] = Hash::make($value);
+    }
+
     public function getPasswordAttribute()
     {
         return $this->contrasena;

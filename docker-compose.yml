@@ -20,7 +20,7 @@ services:
     environment:
       POSTGRES_DB: crud_lav
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: omar123
+      POSTGRES_PASSWORD: tilin
     ports:
       - "5433:5432"
     volumes:
