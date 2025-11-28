@@ -70,7 +70,7 @@
   }
 
   .btn-agregar-pregunta:hover {
-    background-color: var(--color-amarillo-hover);
+    background-color: var(--color-azul);
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.12);
   }

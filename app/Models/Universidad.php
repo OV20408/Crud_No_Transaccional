@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
  * Class Universidad
  *
  * @property $id
- * @property $direccion
+ * @property $direccion 
  * @property $nombre
  * @property $telefono
  *
