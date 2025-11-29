@@ -8,6 +8,15 @@ use App\Http\Controllers\Api\AuthApiController;
 use App\Http\Controllers\Api\VoluntarioApiController;
 use App\Http\Controllers\Api\UsuarioApiController;
 use App\Http\Controllers\Api\ChatMensajeApiController;
+use App\Http\Controllers\Api\CapacitacionApiController;
+use App\Http\Controllers\Api\SolicitudAyudaApiController;
+
+
+
+Route::get('/solicitudes-ayuda', [SolicitudAyudaApiController::class, 'index']);
+Route::post('/solicitudes-ayuda', [SolicitudAyudaApiController::class, 'store']);
+Route::patch('/solicitudes-ayuda/{id}/estado', [SolicitudAyudaApiController::class, 'actualizarEstado']);
+
 
 
 Route::get('/chat-mensajes', [ChatMensajeApiController::class, 'index']);

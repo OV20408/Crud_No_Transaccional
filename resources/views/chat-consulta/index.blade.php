@@ -233,7 +233,6 @@
             });
         });
 
-        // Buscador
         const buscador = document.getElementById('buscador-voluntarios');
         if (buscador) {
             buscador.addEventListener('input', e => {
@@ -253,11 +252,11 @@
 
             const channel = window.Echo.channel('consultas');
 
-            // 🔴 CAMBIO CRÍTICO: Agregar el punto antes del nombre del evento
+            // Agregar el punto antes del nombre del evento
             channel.listen('.MensajeChatCreado', ({ mensaje }) => {
                 console.log('💬 MensajeChatCreado recibido:', mensaje);
 
-                // 🔴 IMPORTANTE: Convertir a número para comparaciones consistentes
+                //Convertir a número para comparaciones consistentes
                 const volId = parseInt(mensaje.voluntario_id);
 
                 if (!conversaciones[volId]) {
@@ -280,7 +279,7 @@
 
                 // evitar duplicados
                 if (conv.mensajes.some(m => m.id === mensaje.id)) {
-                    console.log('⚠️ Mensaje duplicado, ignorando');
+                    console.log(' Mensaje duplicado, ignorando');
                     return;
                 }
 
@@ -295,7 +294,7 @@
                     fecha: fechaFormateada,
                 });
 
-                console.log('✅ Mensaje agregado a conversación');
+                console.log(' Mensaje agregado a conversación');
 
                 // Si es la conversación activa, re-renderizar
                 if (voluntarioActual == volId) {
@@ -309,16 +308,16 @@
 
             // Debug de suscripción
             channel.subscribed(() => {
-                console.log('✅ Suscrito exitosamente al canal "consultas"');
+                console.log(' Suscrito exitosamente al canal "consultas"');
             });
 
             channel.error((error) => {
-                console.error('❌ Error en canal "consultas":', error);
+                console.error(' Error en canal "consultas":', error);
             });
 
-            console.log('✅ Listener .MensajeChatCreado configurado');
+            console.log(' Listener .MensajeChatCreado configurado');
         } else {
-            console.error('❌ Echo no está definido. Verifica bootstrap.js y que Vite esté corriendo.');
+            console.error(' Echo no está definido. Verifica bootstrap.js y que Vite esté corriendo.');
         }
 
         // Función auxiliar para agregar voluntario a la lista izquierda dinámicamente
@@ -422,14 +421,13 @@
                 }
 
                 const json = await resp.json();
-                console.log('✅ Mensaje enviado:', json);
+                console.log('Mensaje enviado:', json);
 
-                // No agregamos manualmente, confiamos en el evento WebSocket
-                // que se disparará desde el backend
+                // No agregamos manualmente el mensaje, ya que llegará por WebSocket
 
                 inputRespuesta.value = '';
             } catch (err) {
-                console.error('❌ Error al enviar:', err);
+                console.error(' Error al enviar:', err);
                 alert('Error al enviar la respuesta');
             } finally {
                 btnEnviar.disabled = false;

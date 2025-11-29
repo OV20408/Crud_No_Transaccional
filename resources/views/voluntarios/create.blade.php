@@ -329,13 +329,13 @@
                     </button>
                     <div>
                         <a href="{{ route('voluntarios.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Cancelar
+                            Cancelar
                         </a>
                         <button type="button" class="btn btn-primary" id="btn-next">
-                            Siguiente <i class="fas fa-arrow-right"></i>
+                            Siguiente 
                         </button>
                         <button type="submit" class="btn btn-success" id="btn-submit" style="display:none;">
-                            <i class="fas fa-save"></i> Guardar voluntario
+                            Guardar voluntario
                         </button>
                     </div>
                 </div>

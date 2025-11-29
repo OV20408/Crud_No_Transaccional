@@ -19,22 +19,9 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\ConsultaController;use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\VoluntarioController;
 use App\Http\Controllers\AdministradorController;
+use App\Http\Controllers\AyudasSolicitadasController;
 use App\Models\Consulta;
 use App\Events\ConsultaRespondida;
-
-
-Route::post('/consultas/{id}/responder', function ($id) {
-    $consulta = Consulta::findOrFail($id);
-
-    $consulta->respuesta_admin = request('respuesta_admin');
-    $consulta->estado = 'respondido';
-    $consulta->save();
-
-    // Emitimos evento para que la app vea la respuesta en tiempo real
-    broadcast(new ConsultaRespondida($consulta))->toOthers();
-
-    return redirect('/chat-consulta')->with('success', 'Respuesta enviada');
-});
 
 
 
@@ -76,8 +63,8 @@ Route::get('/chat-consulta', function () {
 
 
 
-
-Route::view('/ayudas_solicitadas', 'ayudas_solicitadas.index')->name('ayudas_solicitadas.index');
+Route::get('/ayudas_solicitadas', [AyudasSolicitadasController::class, 'index'])
+    ->name('ayudas_solicitadas.index');
 
 Route::resource('voluntarios', VoluntarioController::class);
 Route::resource('consultas-web', ConsultaController::class);
