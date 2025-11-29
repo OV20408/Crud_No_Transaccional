@@ -26,11 +26,11 @@
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>Fecha Actualizacion:</strong>
-                                    {{ $historialClinico->fecha_actualizacion }}
+                                    {{ $historialClinico->fecha_actualizacion ? \Carbon\Carbon::parse($historialClinico->fecha_actualizacion)->format('d/m/Y H:i') : '—' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>Fecha Inicio:</strong>
-                                    {{ $historialClinico->fecha_inicio }}
+                                    {{ $historialClinico->fecha_inicio ? \Carbon\Carbon::parse($historialClinico->fecha_inicio)->format('d/m/Y H:i') : '—' }}
                                 </div>
 
                     </div>

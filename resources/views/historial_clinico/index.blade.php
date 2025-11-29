@@ -57,8 +57,8 @@
                                         <td>{{ $historialClinico->usuario?->ci ?? '—' }}</td>
 
                                         {{-- Fechas --}}
-                                        <td>{{ $historialClinico->fecha_inicio }}</td>
-                                        <td>{{ $historialClinico->fecha_actualizacion }}</td>
+                                        <td>{{ $historialClinico->fecha_inicio ? \Carbon\Carbon::parse($historialClinico->fecha_inicio)->format('d/m/Y H:i') : '—' }}</td>
+                                        <td>{{ $historialClinico->fecha_actualizacion ? \Carbon\Carbon::parse($historialClinico->fecha_actualizacion)->format('d/m/Y H:i') : '—' }}</td>
 
                                         <td>
                                             <form action="{{ route('historial_clinico.destroy', $historialClinico->id) }}" method="POST">

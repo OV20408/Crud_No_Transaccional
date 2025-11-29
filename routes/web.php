@@ -35,7 +35,7 @@ Route::get('/administradores/create', [AdministradorController::class, 'create']
 Route::post('/administradores', [AdministradorController::class, 'store'])
     ->name('administradores.store');
 
-Route::post('/administradores/{id}/toggle-estado', [AdministradorController::class, 'toggleEstado'])
+Route::patch('/administradores/{id}/toggle-estado', [AdministradorController::class, 'toggleEstado'])
     ->name('administradores.toggle-estado');
     
 
@@ -86,7 +86,7 @@ Route::view('evaluacion_pruebas', 'evaluacion_pruebas.index')->name('evaluacion_
 
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect('/login');
 });
 
 Auth::routes();

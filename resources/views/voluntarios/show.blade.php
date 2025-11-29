@@ -368,7 +368,7 @@
         <i class="fas fa-id-card"></i>
         Datos Personales
       </h4>
-      <p><i class="fas fa-calendar-alt"></i> {{ $voluntario->fecha_nacimiento ?? 'N/D' }}</p>
+      <p><i class="fas fa-calendar-alt"></i> {{ $voluntario->fecha_nacimiento ? \Carbon\Carbon::parse($voluntario->fecha_nacimiento)->format('d/m/Y') : 'N/D' }}</p>
       <p><i class="fas fa-venus-mars"></i> {{ $voluntario->genero ?? 'N/D' }}</p>
       <p><i class="fas fa-phone"></i> {{ $voluntario->telefono ?? 'N/D' }}</p>
       <p><i class="fas fa-tint"></i> {{ $voluntario->tipo_sangre ?? 'N/D' }}</p>

@@ -52,7 +52,7 @@
                                             <td>{{ ++$i }}</td>
                                             
 										<td >{{ $reporte->estado_general }}</td>
-										<td >{{ $reporte->fecha_generado }}</td>
+										<td >{{ $reporte->fecha_generado ? \Carbon\Carbon::parse($reporte->fecha_generado)->format('d/m/Y H:i') : '—' }}</td>
 										<td >{{ $reporte->observaciones }}</td>
 										<td >{{ $reporte->recomendaciones }}</td>
 										<td >{{ $reporte->resumen_emocional }}</td>

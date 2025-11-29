@@ -22,7 +22,7 @@
                         
                                 <div class="form-group mb-2 mb20">
                                     <strong>Fecha:</strong>
-                                    {{ $evaluacion->fecha }}
+                                    {{ $evaluacion->fecha ? \Carbon\Carbon::parse($evaluacion->fecha)->format('d/m/Y H:i') : '—' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>Id Reporte:</strong>

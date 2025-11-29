@@ -26,7 +26,7 @@
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>Fecha Generado:</strong>
-                                    {{ $reporte->fecha_generado }}
+                                    {{ $reporte->fecha_generado ? \Carbon\Carbon::parse($reporte->fecha_generado)->format('d/m/Y H:i') : '—' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>Observaciones:</strong>
