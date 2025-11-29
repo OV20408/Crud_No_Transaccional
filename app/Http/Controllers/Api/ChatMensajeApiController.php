@@ -35,6 +35,9 @@ class ChatMensajeApiController extends Controller
             'texto'         => 'required|string|max:1000',
         ]);
 
+        // 🔴 FORZAR A INTEGER para consistencia
+        $validated['voluntario_id'] = (int) $validated['voluntario_id'];
+
         $mensaje = ChatMensaje::create($validated);
         $mensaje->load('voluntario');
 

@@ -253,10 +253,12 @@
 
             const channel = window.Echo.channel('consultas');
 
-            channel.listen('MensajeChatCreado', ({ mensaje }) => {
+            // 🔴 CAMBIO CRÍTICO: Agregar el punto antes del nombre del evento
+            channel.listen('.MensajeChatCreado', ({ mensaje }) => {
                 console.log('💬 MensajeChatCreado recibido:', mensaje);
 
-                const volId = mensaje.voluntario_id;
+                // 🔴 IMPORTANTE: Convertir a número para comparaciones consistentes
+                const volId = parseInt(mensaje.voluntario_id);
 
                 if (!conversaciones[volId]) {
                     const nombre = mensaje.voluntario
@@ -270,38 +272,125 @@
                         mensajes: [],
                     };
 
-                    // (Opcional) aquí podrías agregar dinámicamente el li de la izquierda
+                    // Opcional: agregar dinámicamente el voluntario a la lista izquierda
+                    agregarVoluntarioALista(volId, nombre, mensaje.voluntario?.ci || '');
                 }
 
                 const conv = conversaciones[volId];
 
                 // evitar duplicados
                 if (conv.mensajes.some(m => m.id === mensaje.id)) {
+                    console.log('⚠️ Mensaje duplicado, ignorando');
                     return;
                 }
+
+                const fechaFormateada = mensaje.created_at 
+                    ? new Date(mensaje.created_at).toLocaleString('es-BO')
+                    : '';
 
                 conv.mensajes.push({
                     id: mensaje.id,
                     tipo: mensaje.de === 'admin' ? 'admin' : 'voluntario',
                     texto: mensaje.texto,
-                    fecha: mensaje.created_at,
+                    fecha: fechaFormateada,
                 });
 
+                console.log('✅ Mensaje agregado a conversación');
+
+                // Si es la conversación activa, re-renderizar
                 if (voluntarioActual == volId) {
+                    console.log('🔄 Re-renderizando conversación activa');
                     renderConversacion(volId);
                 }
+
+                // Actualizar preview en lista izquierda
+                actualizarPreviewVoluntario(volId, mensaje.texto, fechaFormateada);
             });
 
-            console.log('✅ Listener MensajeChatCreado configurado');
+            // Debug de suscripción
+            channel.subscribed(() => {
+                console.log('✅ Suscrito exitosamente al canal "consultas"');
+            });
+
+            channel.error((error) => {
+                console.error('❌ Error en canal "consultas":', error);
+            });
+
+            console.log('✅ Listener .MensajeChatCreado configurado');
         } else {
             console.error('❌ Echo no está definido. Verifica bootstrap.js y que Vite esté corriendo.');
+        }
+
+        // Función auxiliar para agregar voluntario a la lista izquierda dinámicamente
+        function agregarVoluntarioALista(volId, nombre, ci) {
+            const listaVoluntarios = document.getElementById('lista-voluntarios');
+            const yaExiste = document.querySelector(`[data-voluntario-id="${volId}"]`);
+            
+            if (yaExiste) return;
+
+            const li = document.createElement('li');
+            li.className = 'nav-item volunteer-item';
+            li.dataset.voluntarioId = volId;
+            li.dataset.nombre = nombre;
+            li.dataset.ci = ci;
+
+            li.innerHTML = `
+                <a href="#" class="nav-link">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <strong class="nombre">${nombre}</strong><br>
+                            <small class="text-muted">CI ${ci}</small>
+                        </div>
+                        <div class="text-right">
+                            <small class="text-muted d-block fecha-preview">Ahora</small>
+                            <span class="badge badge-danger">Pendiente</span>
+                        </div>
+                    </div>
+                    <div>
+                        <small class="text-muted d-block text-truncate preview-texto">
+                            Nuevo mensaje...
+                        </small>
+                    </div>
+                </a>
+            `;
+
+            li.addEventListener('click', e => {
+                e.preventDefault();
+                document.querySelectorAll('.volunteer-item .nav-link')
+                    .forEach(a => a.classList.remove('active'));
+                li.querySelector('.nav-link').classList.add('active');
+                renderConversacion(volId);
+            });
+
+            listaVoluntarios.insertBefore(li, listaVoluntarios.firstChild);
+        }
+
+        // Función auxiliar para actualizar el preview del último mensaje
+        function actualizarPreviewVoluntario(volId, texto, fecha) {
+            const item = document.querySelector(`[data-voluntario-id="${volId}"]`);
+            if (!item) return;
+
+            const previewTexto = item.querySelector('.preview-texto');
+            const fechaPreview = item.querySelector('.fecha-preview');
+
+            if (previewTexto) {
+                previewTexto.textContent = texto.substring(0, 45) + (texto.length > 45 ? '...' : '');
+            }
+
+            if (fechaPreview) {
+                fechaPreview.textContent = fecha;
+            }
+
+            // Mover el voluntario al principio de la lista
+            const lista = document.getElementById('lista-voluntarios');
+            lista.insertBefore(item, lista.firstChild);
         }
 
         // Seleccionar la primera conversación por defecto
         const primer = document.querySelector('.volunteer-item');
         if (primer) {
-        primer.querySelector('.nav-link').classList.add('active');
-        renderConversacion(primer.dataset.voluntarioId);
+            primer.querySelector('.nav-link').classList.add('active');
+            renderConversacion(primer.dataset.voluntarioId);
         }
 
         // Interceptar submit del formulario para evitar refresh
@@ -319,6 +408,7 @@
                     headers: {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
                     },
                     body: JSON.stringify({
                         voluntario_id: voluntarioActual,
@@ -331,23 +421,15 @@
                     throw new Error('Error HTTP ' + resp.status);
                 }
 
-                const json    = await resp.json();
-                const mensaje = json.data;
+                const json = await resp.json();
+                console.log('✅ Mensaje enviado:', json);
 
-                const conv = conversaciones[voluntarioActual];
-                if (!conv.mensajes.some(m => m.id === mensaje.id)) {
-                    conv.mensajes.push({
-                        id: mensaje.id,
-                        tipo: 'admin',
-                        texto: mensaje.texto,
-                        fecha: mensaje.created_at,
-                    });
-                }
+                // No agregamos manualmente, confiamos en el evento WebSocket
+                // que se disparará desde el backend
 
-                renderConversacion(voluntarioActual);
                 inputRespuesta.value = '';
             } catch (err) {
-                console.error(err);
+                console.error('❌ Error al enviar:', err);
                 alert('Error al enviar la respuesta');
             } finally {
                 btnEnviar.disabled = false;
