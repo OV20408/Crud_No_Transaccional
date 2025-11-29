@@ -32,6 +32,8 @@ return [
 
     'use_ico_only' => false,
     'use_full_favicon' => false,
+    'use_route_url' => true,
+
 
     /*
     |--------------------------------------------------------------------------
@@ -309,7 +311,7 @@ return [
         // Chat de Voluntarios
         [
             'text' => 'Chat de Voluntarios',
-            'url'  => '/chat-voluntarios',
+            'url'  => '/chat-consulta',
             'icon' => 'fas fa-comments',
         ],
 
@@ -390,7 +392,7 @@ return [
 
         [
             'text' => 'Cuenta Voluntarios',
-            'url' => '/cuenta-voluntarios',
+            'url' => 'voluntarios/create',
             'icon' => 'fa fa-user',
         ],
 

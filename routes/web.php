@@ -19,6 +19,25 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\ConsultaController;use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\VoluntarioController;
 use App\Http\Controllers\AdministradorController;
+use App\Models\Consulta;
+use App\Events\ConsultaRespondida;
+
+
+Route::post('/consultas/{id}/responder', function ($id) {
+    $consulta = Consulta::findOrFail($id);
+
+    $consulta->respuesta_admin = request('respuesta_admin');
+    $consulta->estado = 'respondido';
+    $consulta->save();
+
+    // Emitimos evento para que la app vea la respuesta en tiempo real
+    broadcast(new ConsultaRespondida($consulta))->toOthers();
+
+    return redirect('/chat-consulta')->with('success', 'Respuesta enviada');
+});
+
+
+
 
 Route::get('/administradores', [AdministradorController::class, 'index'])
     ->name('administradores.index');
@@ -33,33 +52,32 @@ Route::post('/administradores/{id}/toggle-estado', [AdministradorController::cla
     ->name('administradores.toggle-estado');
     
 
+    #----------------------------------------------------------
 
 Route::get('/chat-consulta', function () {
-    $consultas = DB::table('consultas')
-        ->join('usuario', 'usuario.id_usuario', '=', 'consultas.voluntario_id')
-        ->select('consultas.*', 'usuario.nombres', 'usuario.apellidos', 'usuario.ci')
-        ->orderBy('consultas.id', 'DESC')
+    $mensajes = DB::table('chat_mensajes')
+        ->join('usuario', 'usuario.id_usuario', '=', 'chat_mensajes.voluntario_id')
+        ->select(
+            'chat_mensajes.*',
+            'usuario.nombres',
+            'usuario.apellidos',
+            'usuario.ci'
+        )
+        ->orderBy('chat_mensajes.created_at', 'asc')
         ->get();
 
-    return view('chat-consulta.index', compact('consultas'));
+    return view('chat-consulta.index', compact('mensajes'));
 });
 
 
-Route::post('/consultas/{id}/responder', function ($id) {
-    DB::table('consultas')
-        ->where('id', $id)
-        ->update([
-            'respuesta_admin' => request('respuesta_admin'),
-            'estado' => 'respondido'
-        ]);
+#------------------------------------------------- HACIA ARRIBA ES LA COMS DE WEB A MOVIL
 
-    return redirect('/chat-consulta')->with('success', 'Respuesta enviada');
-});
+
+
+
 
 
 Route::view('/ayudas_solicitadas', 'ayudas_solicitadas.index')->name('ayudas_solicitadas.index');
-
-
 
 Route::resource('voluntarios', VoluntarioController::class);
 Route::resource('consultas-web', ConsultaController::class);

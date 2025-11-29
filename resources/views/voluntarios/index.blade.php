@@ -7,6 +7,9 @@
     --color-card: #ffffff;
     --color-texto-principal: #333333;
     --color-blanco: #f8f9fa;
+    --color-azul: #007bff;
+    --color-gris :#6c757d;
+
   }
 
 
@@ -63,7 +66,7 @@
   }
 
   .titulo-listado {
-    color: var(--color-amarillo);
+    color: var(--color-azul);
     font-size: 2.5rem;
     margin-bottom: 20px;
     font-weight: bold;
@@ -91,7 +94,7 @@
     padding: 12px 18px;
     font-size: 16px;
     border-radius: 25px;
-    border: 1px solid var(--color-amarillo);
+    border: 1px solid var(--color-azul);
     width: 100%;
     max-width: 85%;
     transition: border-color 0.3s ease;
@@ -111,7 +114,7 @@
 
   .filtros-grid label {
     font-weight: 600;
-    color: var(--color-amarillo);
+    color: var(--color-azul);
     display: block;
     margin-bottom: 5px;
   }
@@ -129,7 +132,7 @@
   .filtros-grid input:focus,
   .filtros-grid select:focus {
     outline: none;
-    border-color: var(--color-amarillo);
+    border-color: var(--color-azul);
     box-shadow: 0 0 0 0.2rem rgba(255, 167, 38, 0.15);
   }
 
@@ -141,7 +144,7 @@
   .filtro-limpiar button {
     padding: 10px 16px;
     border: none;
-    background-color: #c62828;
+    background-color: var(--color-gris);
     color: white;
     border-radius: 8px;
     font-weight: bold;
@@ -168,7 +171,7 @@
   }
 
   .mensaje-vacio {
-    color: var(--color-amarillo);
+    color: var(--color-azul);
     font-style: italic;
     padding: 20px;
     text-align: center;
@@ -185,7 +188,7 @@
     background-color: var(--color-card);
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    border-left: 6px solid var(--color-amarillo);
+    border-left: 6px solid var(--color-azul);
     cursor: pointer;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     text-decoration: none;
@@ -202,7 +205,7 @@
   .avatar {
     width: 48px;
     height: 48px;
-    background-color: var(--color-amarillo);
+    background-color: var(--color-azul);
     color: white;
     font-weight: bold;
     font-size: 20px;

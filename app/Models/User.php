@@ -33,6 +33,7 @@ class User extends Authenticatable
         'foto_ci',
         'licencia_conducir',
         'foto_licencia',
+        'password',
     ];
 
     protected $hidden = [
@@ -46,9 +47,13 @@ class User extends Authenticatable
         'updated_at' => 'datetime',
     ];
 
-    /**
-     *  Oculta los campos nulos en JSON.
-     */
+    public function chatMensajes()
+    {
+        return $this->hasMany(\App\Models\ChatMensaje::class, 'voluntario_id', 'id_usuario');
+    }
+
+
+    
     public function toArray()
     {
         return array_filter(parent::toArray(), function ($value) {
@@ -57,13 +62,11 @@ class User extends Authenticatable
     }
 
     /**
-     *  Setter REAL de contraseña.
      *  Laravel siempre llama a $user->password, por lo que
      *  este método es el que debe mapear a "contrasena".
      */
     public function setPasswordAttribute($value)
     {
-        // Evita volver a hashear una contraseña ya hasheada
         if (strlen($value) < 60) {
             $this->attributes['contrasena'] = Hash::make($value);
         } else {

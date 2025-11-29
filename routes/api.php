@@ -7,6 +7,12 @@ use App\Http\Controllers\Api\ConsultaApiController;
 use App\Http\Controllers\Api\AuthApiController;
 use App\Http\Controllers\Api\VoluntarioApiController;
 use App\Http\Controllers\Api\UsuarioApiController;
+use App\Http\Controllers\Api\ChatMensajeApiController;
+
+
+Route::get('/chat-mensajes', [ChatMensajeApiController::class, 'index']);
+Route::post('/chat-mensajes', [ChatMensajeApiController::class, 'store']);
+
 
 // ==================== AUTENTICACIÓN ====================
 Route::post('/usuarios/login', [AuthApiController::class, 'login']);

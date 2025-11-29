@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\ConsultaRequest;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use App\Events\ConsultaRespondida;
 
 class ConsultaController extends Controller
 {
@@ -16,23 +17,24 @@ class ConsultaController extends Controller
      */
     public function index(Request $request): View
     {
-        $consultas = Consulta::paginate();
+        $consultas = Consulta::with('voluntario')
+            ->orderBy('created_at', 'asc')
+            ->get(); // Cambiado de paginate() a get() para el chat
 
-        return view('consultas-web.index', compact('consultas'))
-            ->with('i', ($request->input('page', 1) - 1) * $consultas->perPage());
+        return view('consultas-web.index', compact('consultas'));
     }
 
     /**
      * Show the form for creating a new resource.
      */
     public function create(): View
-{
-    $consulta = new Consulta();
-    $voluntarios = \App\Models\User::all();
-    $necesidades = \App\Models\Necesidad::all();
+    {
+        $consulta = new Consulta();
+        $voluntarios = \App\Models\User::all();
+        $necesidades = \App\Models\Necesidad::all();
 
-    return view('consultas-web.create', compact('consulta', 'voluntarios', 'necesidades'));
-}
+        return view('consultas-web.create', compact('consulta', 'voluntarios', 'necesidades'));
+    }
 
     /**
      * Store a newly created resource in storage.
@@ -59,14 +61,13 @@ class ConsultaController extends Controller
      * Show the form for editing the specified resource.
      */
     public function edit($id): View
-{
-    $consulta = Consulta::findOrFail($id);
-    $voluntarios = \App\Models\User::all();
-    $necesidades = \App\Models\Necesidad::all();
+    {
+        $consulta = Consulta::findOrFail($id);
+        $voluntarios = \App\Models\User::all();
+        $necesidades = \App\Models\Necesidad::all();
 
-    return view('consultas-web.edit', compact('consulta', 'voluntarios', 'necesidades'));
-}
-
+        return view('consultas-web.edit', compact('consulta', 'voluntarios', 'necesidades'));
+    }
 
     /**
      * Update the specified resource in storage.
@@ -85,5 +86,40 @@ class ConsultaController extends Controller
 
         return Redirect::route('consultas-web.index')
             ->with('success', 'Consulta deleted successfully');
+    }
+
+    /**
+     * Responder a una consulta (para el chat en tiempo real)
+     */
+    public function responder(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'respuesta_admin' => 'required|string|max:500',
+        ]);
+
+        $consulta = Consulta::findOrFail($id);
+        
+        $consulta->update([
+            'respuesta_admin' => $validated['respuesta_admin'],
+            'estado'          => 'respondida',
+        ]);
+
+        // Cargar relaciones necesarias para el evento
+        $consulta->load('voluntario');
+
+        // Disparar el evento para notificar al móvil en tiempo real
+        ConsultaRespondida::dispatch($consulta);
+
+        // Si es una petición AJAX, devolver JSON
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Respuesta enviada correctamente',
+                'data'    => $consulta,
+            ]);
+        }
+
+        // Si no, redirect normal
+        return Redirect::back()->with('success', 'Respuesta enviada correctamente');
     }
 }
