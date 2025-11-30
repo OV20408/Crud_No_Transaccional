@@ -854,17 +854,28 @@
 
       case 'necesidades':
         contenido.innerHTML = `
-          <h2 class="titulo-seccion">Analisis de Necesidades</h2>
-          @if(count($cursos) > 0)
-            @foreach($cursos as $curso)
-              <div class="vista-card">
-                <strong>{{ $curso->nombre }}</strong>
-                <p>{{ $curso->descripcion }}</p>
-                <p><em>Capacitación: {{ $curso->capacitacion_nombre }}</em></p>
-              </div>
-            @endforeach
+          <h2 class="titulo-seccion">Análisis de Necesidades</h2>
+          @if(count($necesidades) > 0)
+            <div class="row">
+              @foreach($necesidades as $necesidad)
+                <div class="col-md-6 mb-3">
+                  <div class="vista-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div>
+                        <strong>{{ $necesidad->descripcion }}</strong>
+                        <p class="mb-0 mt-2">
+                          <span class="badge" style="background-color: #007bff; color: white;">
+                            {{ $necesidad->tipo ?? 'General' }}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              @endforeach
+            </div>
           @else
-            <p class="mensaje-vacio">No hay necesidades asignadas.</p>
+            <p class="mensaje-vacio">No hay necesidades identificadas para este voluntario.</p>
           @endif
         `;
         break;

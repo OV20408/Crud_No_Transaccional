@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\ChatMensajeApiController;
 use App\Http\Controllers\Api\CapacitacionApiController;
 use App\Http\Controllers\Api\SolicitudAyudaApiController;
 use App\Http\Controllers\Api\EtapaApiController;
+use App\Http\Controllers\Api\NecesidadApiController;
 
 
 Route::patch('/etapas/{etapa}/estado', [EtapaApiController::class, 'toggleEstado'])
@@ -62,6 +63,14 @@ Route::patch('/progreso/{id}/estado', [CapacitacionApiController::class, 'cambia
 // Cursos por voluntario (para la app móvil)
 Route::get('/voluntarios/{id}/cursos', [CapacitacionApiController::class, 'getCursosByVoluntario']);
 Route::post('/voluntarios/asignar-curso', [CapacitacionApiController::class, 'asignarCursoAVoluntario']);
+
+// ==================== NECESIDADES ====================
+Route::get('/necesidades', [NecesidadApiController::class, 'index']);
+Route::get('/necesidades/{id}', [NecesidadApiController::class, 'show']);
+Route::post('/necesidades', [NecesidadApiController::class, 'store']);
+Route::put('/necesidades/{id}', [NecesidadApiController::class, 'update']);
+Route::delete('/necesidades/{id}', [NecesidadApiController::class, 'destroy']);
+Route::get('/voluntarios/{id}/necesidades', [NecesidadApiController::class, 'getByVoluntario']);
 
 // ==================== CONSULTAS ====================
 Route::post('/consultas', [ConsultaApiController::class, 'store']);
