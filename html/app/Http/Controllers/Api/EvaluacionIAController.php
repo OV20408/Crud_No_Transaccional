@@ -28,12 +28,8 @@ class EvaluacionIAController extends Controller
         // Validar que vengan todos los campos requeridos
         $validator = Validator::make($request->all(), [
             'id_usuario' => 'required|integer|exists:usuario,id_usuario',
-            'respuestas_fisico' => 'required|array|min:1',
-            'respuestas_fisico.*' => 'required|integer|min:1|max:5',
-            'respuestas_psico' => 'required|array|min:1',
-            'respuestas_psico.*' => 'required|integer|min:1|max:5',
-            'estado_cuerpo' => 'nullable|array',
-            'estado_cuerpo.*' => 'nullable|string|in:muybien,bien,normal,mal,muymal',
+            'evaluacion_fisica' => 'required|string|min:10',
+            'evaluacion_emocional' => 'required|string|min:10',
         ]);
 
         if ($validator->fails()) {
@@ -45,29 +41,10 @@ class EvaluacionIAController extends Controller
         }
 
         try {
-            // Convertir estado del cuerpo a formato para IA
-            $cuerpoData = [];
-            if ($request->has('estado_cuerpo')) {
-                foreach ($request->estado_cuerpo as $parte => $estado) {
-                    if ($estado) {
-                        $valorNumerico = match($estado) {
-                            'muybien' => 5,
-                            'bien' => 4,
-                            'normal' => 3,
-                            'mal' => 2,
-                            'muymal' => 1,
-                            default => 3
-                        };
-                        $cuerpoData[$parte] = $valorNumerico;
-                    }
-                }
-            }
-
-            // Llamar a la IA
+            // Llamar a la IA con el formato correcto (string)
             $resultadoIA = $this->iaService->generarEvaluacionCompleta(
-                $request->respuestas_fisico,
-                $request->respuestas_psico,
-                $cuerpoData
+                $request->evaluacion_fisica,
+                $request->evaluacion_emocional
             );
 
             if (!$resultadoIA['success']) {
@@ -92,11 +69,11 @@ class EvaluacionIAController extends Controller
             $reporte = Reporte::create([
                 'id_historial' => $historial->id,
                 'fecha_generado' => now(),
-                'resumen_fisico' => $resultadoIA['fisico']['data']['resumen'] ?? 'Evaluación física procesada',
-                'resumen_emocional' => $resultadoIA['emocional']['data']['resumen'] ?? 'Evaluación emocional procesada',
-                'estado_general' => $this->calcularEstadoGeneral($resultadoIA),
-                'observaciones' => $resultadoIA['fisico']['data']['observaciones'] ?? null,
-                'recomendaciones' => $resultadoIA['emocional']['data']['recomendaciones'] ?? null,
+                'resumen_fisico' => $resultadoIA['fisico']['respuesta'] ?? 'Evaluación física procesada',
+                'resumen_emocional' => $resultadoIA['emocional']['respuesta'] ?? 'Evaluación emocional procesada',
+                'estado_general' => 'Procesado por IA',
+                'observaciones' => null,
+                'recomendaciones' => null,
             ]);
 
             // Actualizar historial

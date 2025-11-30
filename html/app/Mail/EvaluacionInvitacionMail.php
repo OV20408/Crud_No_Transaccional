@@ -8,20 +8,20 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use App\Models\Voluntario;
+use App\Models\User;
 
 class EvaluacionInvitacionMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public Voluntario $voluntario;
+    public User $voluntario;
     public string $token;
     public string $enlaceEvaluacion;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(Voluntario $voluntario, string $token)
+    public function __construct(User $voluntario, string $token)
     {
         $this->voluntario = $voluntario;
         $this->token = $token;

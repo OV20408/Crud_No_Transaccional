@@ -41,7 +41,13 @@ class ChatMensajeApiController extends Controller
         $mensaje = ChatMensaje::create($validated);
         $mensaje->load('voluntario');
 
-        MensajeChatCreado::dispatch($mensaje);
+        // Intentar broadcast, pero no fallar si WebSocket no está disponible
+        try {
+            MensajeChatCreado::dispatch($mensaje);
+        } catch (\Exception $e) {
+            // Log del error pero continuar - el mensaje ya se guardó
+            \Log::warning('Broadcast falló (WebSocket no disponible): ' . $e->getMessage());
+        }
 
         return response()->json([
             'success' => true,
