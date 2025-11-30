@@ -8,23 +8,30 @@ use Illuminate\Support\Facades\Log;
 class IAService
 {
     protected string $baseUrl = 'http://18.218.3.153:5000';
-    protected int $timeout = 30;
+    protected int $timeout = 60;
 
     /**
      * Generar evaluación emocional/psicológica
+     * La IA espera: {"evaluacion": "texto descriptivo de la evaluación"}
      */
-    public function generarEmocion(array $respuestas): array
+    public function generarEmocion(string $evaluacion): array
     {
         try {
             $response = Http::timeout($this->timeout)
+                ->withHeaders([
+                    'Content-Type' => 'application/json; charset=utf-8',
+                    'Accept' => 'application/json'
+                ])
                 ->post("{$this->baseUrl}/generar_emocion", [
-                    'respuestas' => $respuestas
+                    'evaluacion' => $evaluacion
                 ]);
 
             if ($response->successful()) {
+                $data = $response->json();
                 return [
                     'success' => true,
-                    'data' => $response->json()
+                    'data' => $data,
+                    'respuesta' => $data['respuesta'] ?? $data
                 ];
             }
 
@@ -52,20 +59,26 @@ class IAService
 
     /**
      * Generar evaluación física
+     * La IA espera: {"evaluacion": "texto descriptivo de la evaluación física"}
      */
-    public function generarFisico(array $respuestas, array $cuerpo = []): array
+    public function generarFisico(string $evaluacion): array
     {
         try {
             $response = Http::timeout($this->timeout)
+                ->withHeaders([
+                    'Content-Type' => 'application/json; charset=utf-8',
+                    'Accept' => 'application/json'
+                ])
                 ->post("{$this->baseUrl}/generar_fisico", [
-                    'respuestas' => $respuestas,
-                    'cuerpo' => $cuerpo
+                    'evaluacion' => $evaluacion
                 ]);
 
             if ($response->successful()) {
+                $data = $response->json();
                 return [
                     'success' => true,
-                    'data' => $response->json()
+                    'data' => $data,
+                    'respuesta' => $data['respuesta'] ?? $data
                 ];
             }
 
@@ -94,10 +107,10 @@ class IAService
     /**
      * Generar evaluación completa (física + emocional)
      */
-    public function generarEvaluacionCompleta(array $respuestasFisico, array $respuestasPsico, array $cuerpo = []): array
+    public function generarEvaluacionCompleta(string $evaluacionFisica, string $evaluacionEmocional): array
     {
-        $resultadoFisico = $this->generarFisico($respuestasFisico, $cuerpo);
-        $resultadoEmocion = $this->generarEmocion($respuestasPsico);
+        $resultadoFisico = $this->generarFisico($evaluacionFisica);
+        $resultadoEmocion = $this->generarEmocion($evaluacionEmocional);
 
         return [
             'fisico' => $resultadoFisico,

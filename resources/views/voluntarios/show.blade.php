@@ -371,7 +371,7 @@
   }
 
   .historial-toggle {
-    background: linear-gradient(135deg, var(--color-amarillo) 0%, #FFB74D 100%);
+    background: linear-gradient(135deg, var(--color-azul) 0%, #0056b3 100%);
     padding: 15px 20px;
     border-radius: 8px;
     cursor: pointer;
@@ -381,7 +381,7 @@
 
   .historial-toggle:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 167, 38, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
   }
 
   .historial-toggle h4 {
@@ -395,6 +395,11 @@
 
   .flecha-historial {
     font-size: 1.2rem;
+    transition: transform 0.3s ease;
+  }
+
+  .flecha-historial.rotated {
+    transform: rotate(180deg);
   }
 
   .historial-seccion {
@@ -404,8 +409,69 @@
   }
 
   .historial-seccion.visible {
-    max-height: 2000px;
+    max-height: 5000px;
     margin-bottom: 20px;
+  }
+
+  /* Historial Tabla 2 columnas */
+  .historial-tabla {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 15px;
+  }
+
+  .historial-columna {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .historial-columna-header {
+    background: linear-gradient(135deg, var(--color-azul) 0%, #0056b3 100%);
+    color: white;
+    padding: 12px 15px;
+    border-radius: 8px;
+    font-weight: bold;
+    text-align: center;
+    font-size: 1rem;
+  }
+
+  .historial-columna-header.psicologico {
+    background: linear-gradient(135deg, var(--color-azul) 0%, #0056b3 100%);
+  }
+
+  .historial-item {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    border-left: 4px solid var(--color-azul);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .historial-item.psicologico {
+    border-left-color: var(--color-azul);
+  }
+
+  .historial-item-content {
+    font-size: 0.9rem;
+    color: #333;
+    line-height: 1.5;
+  }
+
+  .historial-item-fecha {
+    font-size: 0.8rem;
+    color: #666;
+    font-weight: 500;
+    text-align: right;
+  }
+
+  @media (max-width: 992px) {
+    .historial-tabla {
+      grid-template-columns: 1fr;
+    }
   }
 
   .btn-volver {
@@ -505,11 +571,6 @@
         <button class="btn-formulario-enviar" onclick="descargarHistorialClinico({{ $voluntario->id_usuario }})">
           <i class="fas fa-file-medical"></i> Descargar Historial Clínico
         </button>
-        @if(count($reportes) > 0)
-          <a href="#" class="btn-descargar-pdf">
-            <i class="fas fa-file-pdf"></i> Descargar Historial Clínico
-          </a>
-        @endif
       </div>
     </div>
   </header>
@@ -661,36 +722,32 @@
         contenido.innerHTML = `
           <h2 class="titulo-seccion">Historial</h2>
           @if(count($reportes) > 0)
-            <div class="panel-historial">
-              <div class="historial-toggle" onclick="toggleHistorial('clinico')">
-                <h4>
-                  Clínico
-                  <i class="fas fa-chevron-down flecha-historial" id="flecha-clinico"></i>
-                </h4>
-              </div>
-              <div class="historial-seccion" id="seccion-clinico">
+            <div class="historial-tabla">
+              <!-- Columna Clínico -->
+              <div class="historial-columna">
+                <div class="historial-columna-header">
+                  <i class="fas fa-heartbeat mr-2"></i> Clínico
+                </div>
                 @foreach($reportes as $reporte)
                   @if($reporte->resumen_fisico)
-                    <div class="vista-card">
-                      <p>{{ $reporte->resumen_fisico }}</p>
-                      <small>{{ \Carbon\Carbon::parse($reporte->fecha_generado)->format('d/m/Y') }}</small>
+                    <div class="historial-item">
+                      <div class="historial-item-content">{{ $reporte->resumen_fisico }}</div>
+                      <div class="historial-item-fecha">{{ \Carbon\Carbon::parse($reporte->fecha_generado)->format('d/m/Y') }}</div>
                     </div>
                   @endif
                 @endforeach
               </div>
 
-              <div class="historial-toggle" onclick="toggleHistorial('psicologico')">
-                <h4>
-                  Psicológico
-                  <i class="fas fa-chevron-down flecha-historial" id="flecha-psicologico"></i>
-                </h4>
-              </div>
-              <div class="historial-seccion" id="seccion-psicologico">
+              <!-- Columna Psicológico -->
+              <div class="historial-columna">
+                <div class="historial-columna-header psicologico">
+                  <i class="fas fa-brain mr-2"></i> Psicológico
+                </div>
                 @foreach($reportes as $reporte)
                   @if($reporte->resumen_emocional)
-                    <div class="vista-card">
-                      <p>{{ $reporte->resumen_emocional }}</p>
-                      <small>{{ \Carbon\Carbon::parse($reporte->fecha_generado)->format('d/m/Y') }}</small>
+                    <div class="historial-item psicologico">
+                      <div class="historial-item-content">{{ $reporte->resumen_emocional }}</div>
+                      <div class="historial-item-fecha">{{ \Carbon\Carbon::parse($reporte->fecha_generado)->format('d/m/Y') }}</div>
                     </div>
                   @endif
                 @endforeach

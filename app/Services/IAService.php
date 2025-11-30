@@ -18,6 +18,10 @@ class IAService
     {
         try {
             $response = Http::timeout($this->timeout)
+                ->withHeaders([
+                    'Content-Type' => 'application/json; charset=utf-8',
+                    'Accept' => 'application/json'
+                ])
                 ->post("{$this->baseUrl}/generar_emocion", [
                     'evaluacion' => $evaluacion
                 ]);
@@ -61,6 +65,10 @@ class IAService
     {
         try {
             $response = Http::timeout($this->timeout)
+                ->withHeaders([
+                    'Content-Type' => 'application/json; charset=utf-8',
+                    'Accept' => 'application/json'
+                ])
                 ->post("{$this->baseUrl}/generar_fisico", [
                     'evaluacion' => $evaluacion
                 ]);

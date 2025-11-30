@@ -696,44 +696,34 @@ document.addEventListener('DOMContentLoaded', () => {
       if (checked) {
         const label = document.querySelector(`label[for="${checked.id}"]`);
         const respuesta = label?.textContent.trim() || 'No respondido';
-        // Formato compacto: f1:Nunca,f2:Siempre...
-        texto += `${name}:${respuesta},`;
+        // Formato completo con pregunta y respuesta para la IA
+        const pregunta = preguntasTexto[i - 1] || `Pregunta ${i}`;
+        texto += `${pregunta}: ${respuesta}. `;
       }
     }
     
     if (prefix === 'f') {
-      // Guardar estados del cuerpo en formato compacto: [BC]h:mal|ls:bien|...[/BC]
-      // h=head, ls=leftShoulder, rs=rightShoulder, la=leftArm, ra=rightArm, 
-      // t=torso, ll=leftLeg, rl=rightLeg, lh=leftHand, rh=rightHand, lf=leftFoot, rf=rightFoot
-      const abrevPartes = {
-        'Cabeza': 'h',
-        'Hombro Izquierdo': 'ls',
-        'Hombro Derecho': 'rs',
-        'Brazo Izquierdo': 'la',
-        'Brazo Derecho': 'ra',
-        'Pecho': 'c',
-        'Abdomen': 's',
-        'Pierna Izquierda': 'll',
-        'Pierna Derecha': 'rl',
-        'Mano Izquierda': 'lh',
-        'Mano Derecha': 'rh',
-        'Pie Izquierdo': 'lf',
-        'Pie Derecho': 'rf'
+      // Agregar estados del cuerpo con nombres completos para la IA
+      const nombresEstados = { 
+        'muybien': 'muy bien', 
+        'bien': 'bien', 
+        'normal': 'normal', 
+        'mal': 'mal', 
+        'muymal': 'muy mal' 
       };
-      const abrevEstados = { 'muybien': '1', 'bien': '2', 'normal': '3', 'mal': '4', 'muymal': '5' };
       
-      const estadosCuerpo = [];
+      const partesConMolestia = [];
       for (const [parte, estado] of Object.entries(bodyState)) {
-        if (estado && abrevPartes[parte]) {
-          estadosCuerpo.push(`${abrevPartes[parte]}:${abrevEstados[estado] || '3'}`);
+        if (estado && estado !== 'normal') {
+          partesConMolestia.push(`${parte} (${nombresEstados[estado] || estado})`);
         }
       }
-      if (estadosCuerpo.length > 0) {
-        texto += `[BC]${estadosCuerpo.join('|')}[/BC]`;
+      if (partesConMolestia.length > 0) {
+        texto += ` Partes del cuerpo con molestias: ${partesConMolestia.join(', ')}.`;
       }
     }
     
-    return texto.trim().replace(/,$/, '');
+    return texto.trim();
   }
   
   function validateAllResponses() {

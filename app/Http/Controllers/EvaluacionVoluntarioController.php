@@ -8,9 +8,11 @@ use App\Models\Reporte;
 use App\Models\Test;
 use App\Models\HistorialClinico;
 use App\Mail\EvaluacionInvitacionMail;
+use App\Services\IAService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
@@ -124,12 +126,37 @@ class EvaluacionVoluntarioController extends Controller
                 ]
             );
             
-            // Usar los resúmenes enviados desde el frontend
-            $resumenFisico = $request->input('resumen_fisico', 'Sin evaluación física');
-            $resumenEmocional = $request->input('resumen_emocional', 'Sin evaluación emocional');
-            $estadoGeneral = $request->input('estado_general', 'Completado');
+            // Obtener las respuestas del voluntario
+            $evaluacionFisica = $request->input('resumen_fisico', 'Sin evaluación física');
+            $evaluacionEmocional = $request->input('resumen_emocional', 'Sin evaluación emocional');
             
-            // Crear reporte
+            // Enviar a la IA para procesar
+            $iaService = app(IAService::class);
+            $resultadoIA = $iaService->generarEvaluacionCompleta($evaluacionFisica, $evaluacionEmocional);
+            
+            // Determinar los resúmenes (usar respuesta IA si está disponible, si no guardar las respuestas del usuario)
+            $resumenFisico = $evaluacionFisica; // Respuestas del voluntario como fallback
+            $resumenEmocional = $evaluacionEmocional;
+            $estadoGeneral = 'Completado';
+            
+            if ($resultadoIA['success']) {
+                // Si la IA respondió correctamente, usar sus respuestas
+                $resumenFisico = $resultadoIA['fisico']['respuesta'] ?? $evaluacionFisica;
+                $resumenEmocional = $resultadoIA['emocional']['respuesta'] ?? $evaluacionEmocional;
+                $estadoGeneral = 'Procesado por IA';
+                Log::info('Evaluación procesada por IA', [
+                    'voluntario_id' => $voluntario->id_usuario,
+                    'fisico_ok' => $resultadoIA['fisico']['success'] ?? false,
+                    'emocional_ok' => $resultadoIA['emocional']['success'] ?? false
+                ]);
+            } else {
+                Log::warning('IA no disponible, guardando respuestas del voluntario', [
+                    'voluntario_id' => $voluntario->id_usuario,
+                    'error' => $resultadoIA
+                ]);
+            }
+            
+            // Crear reporte con los resultados
             $reporte = Reporte::create([
                 'id_historial' => $historial->id,
                 'resumen_fisico' => $resumenFisico,
