@@ -10,6 +10,11 @@ use App\Http\Controllers\Api\UsuarioApiController;
 use App\Http\Controllers\Api\ChatMensajeApiController;
 use App\Http\Controllers\Api\CapacitacionApiController;
 use App\Http\Controllers\Api\SolicitudAyudaApiController;
+use App\Http\Controllers\Api\EtapaApiController;
+
+
+Route::patch('/etapas/{etapa}/estado', [EtapaApiController::class, 'toggleEstado'])
+    ->middleware('auth:sanctum');
 
 
 

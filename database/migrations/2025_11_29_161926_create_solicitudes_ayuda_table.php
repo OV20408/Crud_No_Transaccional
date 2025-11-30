@@ -6,18 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
+
     public function up(): void
     {
         Schema::create('solicitudes_ayuda', function (Blueprint $table) {
             $table->id();
 
             // FK al voluntario que pide ayuda (usuario.id_usuario)
-            $table->unsignedInteger('voluntario_id');
+            $table->unsignedBigInteger('voluntario_id');
 
-            // Campos que vienen del GEVOPI viejo / GraphQL
+
+
             // tipo: Físico / Emocional / Recursos
             $table->string('tipo', 50);
 

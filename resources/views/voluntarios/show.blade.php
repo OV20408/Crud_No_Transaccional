@@ -448,7 +448,7 @@
         <i class="fas fa-poll"></i> Encuestas Realizadas
       </button>
       <button class="btn-opcion" onclick="mostrarVista('necesidades')">
-        <i class="fas fa-book"></i> Analisis de Necesdades
+        <i class="fas fa-book"></i> Analisis de Necesidades
       </button>
     </div>
   </section>

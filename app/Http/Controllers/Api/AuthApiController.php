@@ -50,9 +50,16 @@ class AuthApiController extends Controller
             ], 403);
         }
 
+        // 🔥 GENERAR TOKEN REAL DE SANCTUM
+        // Primero revoca tokens antiguos (opcional)
+        $user->tokens()->delete();
+        
+        // Crear nuevo token
+        $token = $user->createToken('mobile-app')->plainTextToken;
+
         return response()->json([
             'success' => true,
-            'access_token' => 'token-' . $user->id_usuario,
+            'access_token' => $token,  // 👈 Token real de Sanctum
             'user' => [
                 'id' => $user->id_usuario,
                 'ci' => $user->ci,

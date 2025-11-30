@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
 
             // Voluntario / usuario participante del chat
-            $table->unsignedInteger('voluntario_id');
+            $table->unsignedBigInteger('voluntario_id');
 
             // Quién envía el mensaje
             $table->enum('de', ['voluntario', 'admin']);

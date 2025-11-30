@@ -464,12 +464,7 @@ return [
                     'url' => '/respuesta',
                     'icon' => 'fas fa-fw fa-reply',
                 ],
-                // Crud de Consultas
-                [
-                    'text' => 'Consultas',
-                    'url'  => '/consultas-web',
-                    'icon' => 'fas fa-comments',
-                ],
+                
                 [
                     'text' => 'Progreso Voluntario',
                     'url' => '/progreso-voluntario',

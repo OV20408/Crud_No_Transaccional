@@ -15,10 +15,11 @@ return new class extends Migration
             $table->id();
             $table->string('estado_general')->nullable();
             $table->timestamp('fecha_generado')->useCurrent();
-            $table->string('observaciones', 2000)->nullable();
+            
+            $table->text('observaciones')->nullable();
             $table->string('recomendaciones')->nullable();
-            $table->string('resumen_emocional', 1000)->nullable();
-            $table->string('resumen_fisico', 1000)->nullable();
+            $table->text('resumen_emocional')->nullable();
+            $table->text('resumen_fisico')->nullable();        
         });
 
     }

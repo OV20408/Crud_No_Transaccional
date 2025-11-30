@@ -25,6 +25,11 @@ return new class extends Migration
 
             // Rol asociado
             $table->unsignedBigInteger('id_rol')->nullable();
+            $table->foreign('id_rol')
+              ->references('id')
+              ->on('rol')
+              ->nullOnDelete()
+              ->cascadeOnUpdate();
 
             $table->string('nivel_entrenamiento')->nullable();
             $table->string('entidad_pertenencia')->nullable();

@@ -23,7 +23,7 @@ return new class extends Migration
           ->cascadeOnUpdate();
 
     $table->primary(['id_reporte', 'id_progreso']);
-    $table->timestamp('created_at')->useCurrent();
+    $table->timestamps();
 });
 
     }
