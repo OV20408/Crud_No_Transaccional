@@ -10,8 +10,11 @@ use App\Http\Controllers\Api\UsuarioApiController;
 use App\Http\Controllers\Api\ChatMensajeApiController;
 use App\Http\Controllers\Api\CapacitacionApiController;
 use App\Http\Controllers\Api\SolicitudAyudaApiController;
+use App\Http\Controllers\Api\EvaluacionIAController;
 
-
+// ==================== EVALUACIONES CON IA ====================
+Route::post('/evaluaciones/procesar', [EvaluacionIAController::class, 'procesarEvaluacion']);
+Route::get('/evaluaciones/historial/{idUsuario}', [EvaluacionIAController::class, 'historialVoluntario']);
 
 Route::get('/solicitudes-ayuda', [SolicitudAyudaApiController::class, 'index']);
 Route::post('/solicitudes-ayuda', [SolicitudAyudaApiController::class, 'store']);

@@ -636,18 +636,61 @@
     <div class="modal fade" id="modalSuccess" tabindex="-1" role="dialog" aria-labelledby="modalSuccessLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content text-center">
-          <div class="modal-header border-0">
-            <h5 class="modal-title" id="modalSuccessLabel">¡Enviado con éxito!</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+          <div class="modal-header border-0 bg-success text-white">
+            <h5 class="modal-title" id="modalSuccessLabel">¡Evaluación Enviada!</h5>
+            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
           <div class="modal-body">
-            <h1 style="font-size: 70px; color: #00b4d8;">✔️</h1>
-            <p>Su respuesta ha sido enviada exitosamente.</p>
+            <h1 style="font-size: 70px; color: #28a745;">✔️</h1>
+            <p id="successMessage">Su evaluación ha sido procesada exitosamente.</p>
+            <div id="successDetails" class="text-left mt-3" style="display:none;">
+              <hr>
+              <p><strong>Resumen Físico:</strong> <span id="resumenFisico"></span></p>
+              <p><strong>Resumen Emocional:</strong> <span id="resumenEmocional"></span></p>
+              <p><strong>Estado General:</strong> <span id="estadoGeneral"></span></p>
+            </div>
           </div>
           <div class="modal-footer border-0">
-            <button type="button" class="btn btn-primary" data-dismiss="modal">Cerrar</button>
+            <button type="button" class="btn btn-success" data-dismiss="modal">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {{-- Modal Error de Conexión --}}
+    <div class="modal fade" id="modalConexionError" tabindex="-1" role="dialog" aria-labelledby="modalConexionErrorLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content text-center">
+          <div class="modal-header border-0 bg-danger text-white">
+            <h5 class="modal-title" id="modalConexionErrorLabel">Error de Conexión</h5>
+            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <h1 style="font-size: 70px; color: #dc3545;">❌</h1>
+            <p id="conexionErrorMessage">No se pudo enviar la evaluación. Por favor, verifique su conexión a internet e intente nuevamente.</p>
+          </div>
+          <div class="modal-footer border-0">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            <button type="button" class="btn btn-danger" id="btnReintentar">Reintentar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {{-- Modal Cargando --}}
+    <div class="modal fade" id="modalCargando" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content text-center">
+          <div class="modal-body py-5">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+              <span class="sr-only">Cargando...</span>
+            </div>
+            <p class="mt-3 mb-0">Procesando evaluación con IA...</p>
+            <small class="text-muted">Esto puede tomar unos segundos</small>
           </div>
         </div>
       </div>
@@ -657,20 +700,50 @@
 </section>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  /* ====== Navegación de pasos ====== */
+  /* ====== Variables globales ====== */
   const stepFisico = document.getElementById('step-fisico');
   const stepPsico  = document.getElementById('step-psico');
-  const stepRes    = document.getElementById('resultado-final');
   const nextBtn    = document.getElementById('btn-next');
   const prevBtn    = document.getElementById('btn-prev');
   const sendBtn    = document.getElementById('btn-send');
+  
+  // ID del usuario (debe venir de la sesión o URL)
+  const idUsuario = new URLSearchParams(window.location.search).get('id_usuario') || null;
  
+  /* ====== Navegación de pasos con validación ====== */
   nextBtn?.addEventListener('click', e => {
     e.preventDefault();
+    
+    // Validar que todas las preguntas físicas estén respondidas
+    const preguntasFisico = ['f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8'];
+    let todasRespondidas = true;
+    let primeraNoRespondida = null;
+    
+    for (const pregunta of preguntasFisico) {
+      const checked = document.querySelector(`input[name="${pregunta}"]:checked`);
+      if (!checked) {
+        todasRespondidas = false;
+        if (!primeraNoRespondida) {
+          primeraNoRespondida = document.querySelector(`input[name="${pregunta}"]`)?.closest('.q-row');
+        }
+      }
+    }
+    
+    if (!todasRespondidas) {
+      $('#modalError').modal('show');
+      if (primeraNoRespondida) {
+        primeraNoRespondida.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        primeraNoRespondida.style.border = '2px solid #dc3545';
+        setTimeout(() => primeraNoRespondida.style.border = '', 3000);
+      }
+      return;
+    }
+    
     stepFisico.classList.add('step-hidden');
     stepPsico.classList.remove('step-hidden');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
+  
   prevBtn?.addEventListener('click', e => {
     e.preventDefault();
     stepPsico.classList.add('step-hidden');
@@ -683,26 +756,27 @@ document.addEventListener('DOMContentLoaded', () => {
   const colorClassByState = {
     muybien:'estado-muybien', bien:'estado-bien', normal:'estado-normal', mal:'estado-mal', muymal:'estado-muymal'
   };
-  // estado seleccionado por parte
+  
   const bodyState = {
-  'Cabeza': null,
-  'Torso': null,
-  'Brazo Izquierdo': null,
-  'Brazo Derecho': null,
-  'Pierna Izquierda': null,
-  'Pierna Derecha': null,
-  'Mano Izquierda': null,
-  'Mano Derecha': null,
-  'Pie Izquierdo': null,
-  'Pie Derecho': null
-};
+    'Cabeza': null,
+    'Torso': null,
+    'Brazo Izquierdo': null,
+    'Brazo Derecho': null,
+    'Pierna Izquierda': null,
+    'Pierna Derecha': null,
+    'Mano Izquierda': null,
+    'Mano Derecha': null,
+    'Pie Izquierdo': null,
+    'Pie Derecho': null
+  };
  
   function closePopup(){ document.querySelectorAll('.popup-selector').forEach(n => n.remove()); }
+  
   function applyStateToSVG(svg, state){
-    // limpiar clases previas
     svg.classList.remove(...Object.values(colorClassByState));
     if(state && colorClassByState[state]) svg.classList.add(colorClassByState[state]);
   }
+  
   function showPopup(x, y, svgEl, partName){
     closePopup();
     const popup = document.createElement('div');
@@ -723,7 +797,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
  
     document.body.appendChild(popup);
-    // cerrar al click fuera
     setTimeout(()=>{
       document.addEventListener('click', onOutside, { once:true });
     },0);
@@ -735,82 +808,166 @@ document.addEventListener('DOMContentLoaded', () => {
   // Clicks en las partes válidas
   const humanBody = document.getElementById('humanBody');
   const torsoIds = new Set(['chest','stomach']);
-  humanBody.querySelectorAll('svg').forEach(svg=>{
+  humanBody?.querySelectorAll('svg').forEach(svg=>{
     svg.addEventListener('click', (e)=>{
       e.stopPropagation();
       const raw = svg.getAttribute('data-part');
       if(!raw) return;
-      const partName = torsoIds.has(svg.id) ? 'Torso' : raw; // colapsar torso
+      const partName = torsoIds.has(svg.id) ? 'Torso' : raw;
       const rect = svg.getBoundingClientRect();
       showPopup(rect.left + rect.width/2, rect.top - 10, svg, partName);
     });
   });
  
-  /* ====== Recolección y “análisis” simple de resultados ====== */
+  /* ====== Recolección de respuestas ====== */
   const optionValue = { 'Nunca':1, 'Raramente':2, 'A veces':3, 'Frecuentemente':4, 'Siempre':5 };
+  const optionText = { 1:'Nunca', 2:'Raramente', 3:'A veces', 4:'Frecuentemente', 5:'Siempre' };
+  
+  const preguntasFisicoTexto = [
+    '¿Te sientes más cansado o agotado de lo habitual después de las intervenciones?',
+    '¿Has notado quemaduras, irritación o enrojecimiento en la piel después de las intervenciones?',
+    '¿Has tenido dificultades para respirar o tos después de las intervenciones?',
+    '¿Tienes dolor o molestias en el pecho desde el incendio?',
+    '¿Has experimentado palpitaciones o un ritmo cardíaco irregular después de la intervención?',
+    '¿Tus ojos han estado irritados, con ardor o picazón desde la intervención?',
+    '¿Tienes dificultad para respirar profundamente desde la intervención?',
+    '¿Has notado que tu nariz está congestionada o bloqueada más de lo normal?'
+  ];
+  
+  const preguntasPsicoTexto = [
+    '¿Has experimentado ansiedad o nerviosismo después de las intervenciones?',
+    '¿Te sientes emocionalmente agotado o sin energía?',
+    '¿Has tenido dificultades para dormir o insomnio?',
+    '¿Has experimentado recuerdos intrusivos o flashbacks del incendio?',
+    '¿Te sientes más irritable o con cambios de humor?',
+    '¿Has notado dificultad para concentrarte en tus tareas diarias?',
+    '¿Te sientes desconectado o alejado de tus seres queridos?',
+    '¿Has experimentado sentimientos de culpa o impotencia?'
+  ];
  
-  function collectSection(prefix){ // prefix: 'f' | 'p'
+  function collectSection(prefix, count = 8){
     const values = [];
-    // asume f1..f8 / p1..p8
-    for(let i=1;i<=8;i++){
+    for(let i=1; i<=count; i++){
       const name = `${prefix}${i}`;
       const checked = document.querySelector(`input[name="${name}"]:checked`);
-      if(checked){ values.push(optionValue[checked.value] || 0); }
+      if(checked){
+        const label = document.querySelector(`label[for="${checked.id}"]`);
+        values.push(optionValue[label?.textContent.trim()] || 3);
+      }
     }
     return values;
   }
- 
-  function summarizeBodyIssues(){
-    const criticas = [];
-    for(const [parte, estado] of Object.entries(bodyState)){
-      if(estado === 'muymal' || estado === 'mal') criticas.push(parte.toLowerCase());
+  
+  function buildEvaluacionTexto(prefix, preguntasTexto, count = 8) {
+    let texto = '';
+    for(let i=1; i<=count; i++){
+      const name = `${prefix}${i}`;
+      const checked = document.querySelector(`input[name="${name}"]:checked`);
+      if(checked){
+        const label = document.querySelector(`label[for="${checked.id}"]`);
+        const respuesta = label?.textContent.trim() || 'No respondido';
+        texto += `${preguntasTexto[i-1]}: ${respuesta}. `;
+      }
     }
-    if(!criticas.length) return 'Sin molestias relevantes por zonas. Mantén hidratación y descanso.';
-    return `Molestias en: ${criticas.join(', ')}. Recomendamos reposo, hidratación y vigilancia de síntomas.`;
+    
+    // Agregar información del cuerpo si es evaluación física
+    if (prefix === 'f') {
+      const partesConProblema = [];
+      for (const [parte, estado] of Object.entries(bodyState)) {
+        if (estado && (estado === 'mal' || estado === 'muymal')) {
+          partesConProblema.push(`${parte} (${estado})`);
+        }
+      }
+      if (partesConProblema.length > 0) {
+        texto += ` Partes del cuerpo con molestias: ${partesConProblema.join(', ')}.`;
+      }
+    }
+    
+    return texto.trim();
+  }
+  
+  function validateAllResponses() {
+    const preguntasFisico = ['f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8'];
+    const preguntasPsico = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8'];
+    
+    for (const pregunta of [...preguntasFisico, ...preguntasPsico]) {
+      if (!document.querySelector(`input[name="${pregunta}"]:checked`)) {
+        return false;
+      }
+    }
+    return true;
   }
  
-  function textForAverage(avg, area){
-    if(avg >= 4.2) return area==='fisico'
-      ? 'No se observan signos físicos relevantes. Continúa con descanso, hidratación y control básico.'
-      : 'Estado emocional estable. Mantén tus rutinas de descanso y desconexión.';
-    if(avg >= 3) return area==='fisico'
-      ? 'Molestias leves-moderadas. Considera una evaluación breve y reduce cargas en próximas guardias.'
-      : 'Estrés moderado. Practica respiración, pausas activas y contacto con tu red de apoyo.';
-    return area==='fisico'
-      ? 'Síntomas físicos elevados. Sugerimos evaluación médica y pausa operacional.'
-      : 'Indicadores emocionales altos. Recomendamos psicoeducación y apoyo especializado.';
+  /* ====== Envío a la API con IA ====== */
+  async function enviarEvaluacion() {
+    // Validar todas las respuestas
+    if (!validateAllResponses()) {
+      $('#modalError').modal('show');
+      return;
+    }
+    
+    // Mostrar modal de carga
+    $('#modalCargando').modal('show');
+    
+    // Construir textos descriptivos para la IA
+    const evaluacionFisica = buildEvaluacionTexto('f', preguntasFisicoTexto);
+    const evaluacionEmocional = buildEvaluacionTexto('p', preguntasPsicoTexto);
+    
+    const payload = {
+      id_usuario: idUsuario || 1,
+      evaluacion_fisica: evaluacionFisica,
+      evaluacion_emocional: evaluacionEmocional
+    };
+    
+    console.log('Enviando a IA:', payload);
+    
+    try {
+      const response = await fetch('/api/evaluaciones/procesar', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      $('#modalCargando').modal('hide');
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        // Mostrar modal de éxito con detalles
+        document.getElementById('resumenFisico').textContent = data.data.resumen_fisico || 'N/A';
+        document.getElementById('resumenEmocional').textContent = data.data.resumen_emocional || 'N/A';
+        document.getElementById('estadoGeneral').textContent = data.data.estado_general || 'N/A';
+        document.getElementById('successDetails').style.display = 'block';
+        $('#modalSuccess').modal('show');
+      } else {
+        // Mostrar modal de error
+        document.getElementById('conexionErrorMessage').textContent = 
+          data.message || 'Error al procesar la evaluación. Por favor, intente nuevamente.';
+        $('#modalConexionError').modal('show');
+      }
+    } catch (error) {
+      $('#modalCargando').modal('hide');
+      console.error('Error:', error);
+      document.getElementById('conexionErrorMessage').textContent = 
+        'No se pudo conectar con el servidor. Verifique su conexión a internet.';
+      $('#modalConexionError').modal('show');
+    }
   }
- 
-  function nl(p){ return `<p>${p}</p>`; }
- 
-  sendBtn?.addEventListener('click', ()=>{
-    // Recolectar respuestas
-    const fis = collectSection('f');
-    const psi = collectSection('p');
- 
-    // Promedios (evitamos validar aquí; es pura maquetación con lógica base)
-    const avgFis = fis.length ? (fis.reduce((a,b)=>a+b,0)/fis.length) : 0;
-    const avgPsi = psi.length ? (psi.reduce((a,b)=>a+b,0)/psi.length) : 0;
- 
-    const bodyVals = Object.values(bodyState).filter(Boolean).map(s=>valueByState[s]);
-    const avgBody = bodyVals.length ? (bodyVals.reduce((a,b)=>a+b,0)/bodyVals.length) : 0;
- 
-    // Texto final
-    const fisicoTexto = [
-      textForAverage((avgFis*0.7 + avgBody*0.3), 'fisico'),
-      summarizeBodyIssues()
-    ].map(nl).join('');
- 
-    const psicoTexto  = nl(textForAverage(avgPsi, 'emocional'));
- 
-    document.getElementById('texto-fisico').innerHTML = fisicoTexto;
-    document.getElementById('texto-psico').innerHTML  = psicoTexto;
- 
-    // Mostrar vista de resultados
-    stepFisico.classList.add('step-hidden');
-    stepPsico.classList.add('step-hidden');
-    stepRes.classList.remove('step-hidden');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  
+  // Botón enviar
+  sendBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    enviarEvaluacion();
+  });
+  
+  // Botón reintentar
+  document.getElementById('btnReintentar')?.addEventListener('click', () => {
+    $('#modalConexionError').modal('hide');
+    enviarEvaluacion();
   });
 });
 </script>
