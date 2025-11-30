@@ -198,14 +198,55 @@ class VoluntarioController extends Controller
             ORDER BY cu.nombre
         ", [$id]);
 
-        // 8. Evaluaciones del último reporte
+        // 8. Evaluaciones del voluntario (a través de historial_clinico -> reporte -> evaluacion)
         $evaluaciones = [];
-        if ($reporteMasReciente) {
-            $evaluaciones = DB::table('evaluacion')
+        if ($historial) {
+            $evaluaciones = DB::table('reporte')
+                ->join('evaluacion', 'evaluacion.id_reporte', '=', 'reporte.id')
                 ->join('test', 'evaluacion.id_test', '=', 'test.id')
-                ->where('evaluacion.id_reporte', $reporteMasReciente->id)
-                ->select('evaluacion.*', 'test.nombre as test_nombre')
+                ->where('reporte.id_historial', $historial->id)
+                ->select(
+                    'reporte.id as reporte_id',
+                    'reporte.resumen_fisico',
+                    'reporte.resumen_emocional',
+                    'reporte.estado_general',
+                    'reporte.fecha_generado',
+                    'evaluacion.id as evaluacion_id',
+                    'evaluacion.fecha',
+                    'test.nombre as test_nombre'
+                )
+                ->orderBy('reporte.fecha_generado', 'desc')
                 ->get();
+        }
+        
+        // Si no hay evaluaciones por historial, intentar obtener los reportes directamente
+        if (empty($evaluaciones) || count($evaluaciones) == 0) {
+            // Obtener reportes que tengan id_historial del usuario
+            $reportesEvaluacion = DB::table('reporte')
+                ->join('historial_clinico', 'historial_clinico.id', '=', 'reporte.id_historial')
+                ->where('historial_clinico.id_usuario', $id)
+                ->select(
+                    'reporte.id as reporte_id',
+                    'reporte.resumen_fisico',
+                    'reporte.resumen_emocional',
+                    'reporte.estado_general',
+                    'reporte.fecha_generado'
+                )
+                ->orderBy('reporte.fecha_generado', 'desc')
+                ->get();
+                
+            // Convertir reportes a formato de evaluaciones para la vista
+            $evaluaciones = $reportesEvaluacion->map(function($reporte) {
+                return (object)[
+                    'reporte_id' => $reporte->reporte_id,
+                    'resumen_fisico' => $reporte->resumen_fisico,
+                    'resumen_emocional' => $reporte->resumen_emocional,
+                    'estado_general' => $reporte->estado_general,
+                    'fecha_generado' => $reporte->fecha_generado,
+                    'fecha' => $reporte->fecha_generado,
+                    'test_nombre' => 'Evaluación Física y Psicológica'
+                ];
+            });
         }
 
         $capacitacionesProgreso = DB::select("
