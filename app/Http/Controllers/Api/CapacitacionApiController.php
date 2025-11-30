@@ -230,4 +230,56 @@ class CapacitacionApiController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Cambiar el estado de una etapa para un voluntario
+     */
+    public function cambiarEstadoEtapa(Request $request, $idProgreso)
+    {
+        try {
+            $progreso = ProgresoVoluntario::find($idProgreso);
+
+            if (!$progreso) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Progreso no encontrado'
+                ], 404);
+            }
+
+            // Ciclar estados: sin_empezar -> en_progreso -> completado -> sin_empezar
+            $estados = ['sin_empezar', 'en_progreso', 'completado'];
+            $estadoActual = $progreso->estado;
+            $indiceActual = array_search($estadoActual, $estados);
+            $nuevoEstado = $estados[($indiceActual + 1) % count($estados)];
+
+            $progreso->estado = $nuevoEstado;
+            
+            if ($nuevoEstado === 'en_progreso' && !$progreso->fecha_inicio) {
+                $progreso->fecha_inicio = now();
+            } elseif ($nuevoEstado === 'completado') {
+                $progreso->fecha_finalizacion = now();
+            } elseif ($nuevoEstado === 'sin_empezar') {
+                $progreso->fecha_inicio = null;
+                $progreso->fecha_finalizacion = null;
+            }
+
+            $progreso->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Estado actualizado',
+                'data' => [
+                    'id' => $progreso->id,
+                    'estado' => $progreso->estado,
+                    'fecha_inicio' => $progreso->fecha_inicio,
+                    'fecha_finalizacion' => $progreso->fecha_finalizacion
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al cambiar estado: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

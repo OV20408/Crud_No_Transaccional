@@ -49,6 +49,7 @@ Route::get('/capacitaciones/{id}', [CapacitacionApiController::class, 'show']);
 Route::post('/capacitaciones', [CapacitacionApiController::class, 'store']);
 Route::post('/cursos', [CapacitacionApiController::class, 'storeCurso']);
 Route::post('/etapas', [CapacitacionApiController::class, 'storeEtapa']);
+Route::patch('/progreso/{id}/estado', [CapacitacionApiController::class, 'cambiarEstadoEtapa']);
 
 // Cursos por voluntario (para la app móvil)
 Route::get('/voluntarios/{id}/cursos', [CapacitacionApiController::class, 'getCursosByVoluntario']);
