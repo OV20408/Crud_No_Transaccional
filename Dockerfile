@@ -1,17 +1,19 @@
-FROM php:8.2-cli
+FROM php:8.4-fpm
 
-# Dependencias necesarias para PostgreSQL
 RUN apt-get update && apt-get install -y \
-    libpq-dev \
-    curl \
+    git \
     unzip \
-    git
+    libpq-dev \
+    libzip-dev \
+    && docker-php-ext-install pdo pdo_pgsql zip
 
-# Extensiones de PHP
-RUN docker-php-ext-install pdo pdo_pgsql pgsql
-
-# Instalar Composer
-RUN curl -sS https://getcomposer.org/installer \
-    | php -- --install-dir=/usr/local/bin --filename=composer
+# Instalar composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www
+
+COPY . .
+
+# Copiar entrypoint
+COPY docker-entrypoint.sh /usr/local/bin/entrypoint.sh
+ENTRYPOINT ["entrypoint.sh"]
