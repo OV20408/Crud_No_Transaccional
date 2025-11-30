@@ -227,7 +227,7 @@
     background: var(--color-blanco);
     padding: 20px;
     border-radius: 8px;
-    border-left: 4px solid var(--color-amarillo);
+    border-left: 4px solid var(--color-azul);
     margin-bottom: 15px;
     transition: all 0.3s ease;
   }
@@ -459,6 +459,50 @@
       <p class="mensaje-vacio">Selecciona una opción para ver el contenido</p>
     </div>
   </section>
+
+  {{-- Modal para asignar capacitación --}}
+<div class="modal fade" id="modalAsignarCapacitacion" tabindex="-1" role="dialog" aria-labelledby="modalAsignarCapacitacionLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <form method="POST" action="{{ route('voluntarios.capacitaciones.asignar', $voluntario->id_usuario) }}" class="modal-content">
+      @csrf
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalAsignarCapacitacionLabel">Asignar capacitación</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="capacitacion_id">Capacitación</label>
+          <select name="capacitacion_id" id="capacitacion_id" class="form-control" required>
+            <option value="">-- Selecciona una capacitación --</option>
+            @foreach($capacitacionesAll as $cap)
+              <option value="{{ $cap->id }}">{{ $cap->nombre }}</option>
+            @endforeach
+          </select>
+        </div>
+
+        @if($errors->any())
+          <div class="alert alert-danger mt-2">
+            {{ $errors->first() }}
+          </div>
+        @endif
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Asignar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+
+
+
 </div>
 
 <script>
@@ -531,11 +575,18 @@
         `;
         break;
 
-      case 'capacitaciones':
+            case 'capacitaciones':
         contenido.innerHTML = `
-          <h2 class="titulo-seccion">Capacitaciones y Certificaciones</h2>
-          @if(count($capacitaciones) > 0)
-            @foreach($capacitaciones as $cap)
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;">
+            <h2 class="titulo-seccion" style="margin-bottom:0;">Capacitaciones y Certificaciones</h2>
+            <button class="btn-formulario-enviar" data-toggle="modal" data-target="#modalAsignarCapacitacion">
+              <i class="fas fa-plus-circle"></i> Asignar capacitación
+            </button>
+          </div>
+
+          <div style="margin-top:20px;">
+          @if(count($capacitacionesProgreso) > 0)
+            @foreach($capacitacionesProgreso as $cap)
               <div class="vista-card">
                 <strong>{{ $cap->nombre }}</strong>
                 <p>{{ $cap->descripcion }}</p>
@@ -544,8 +595,10 @@
           @else
             <p class="mensaje-vacio">No hay capacitaciones asignadas.</p>
           @endif
+          </div>
         `;
         break;
+
 
       case 'encuestas':
         contenido.innerHTML = `

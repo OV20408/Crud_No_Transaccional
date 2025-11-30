@@ -208,15 +208,75 @@ class VoluntarioController extends Controller
                 ->get();
         }
 
-        return view('voluntarios.show', compact(
+        $capacitacionesProgreso = DB::select("
+            SELECT DISTINCT 
+                c.*
+            FROM progreso_voluntario pv
+            JOIN etapa e   ON e.id = pv.id_etapa
+            JOIN curso cu  ON cu.id = e.id_curso
+            JOIN capacitacion c ON c.id = cu.id_capacitacion
+            WHERE pv.id_usuario = ?
+            ORDER BY c.nombre
+        ", [$id]);
+
+        // 9. Todas las capacitaciones del sistema (para el combo de asignar)
+        $capacitacionesAll = Capacitacion::orderBy('nombre')->get();
+
+                return view('voluntarios.show', compact(
             'voluntario',
             'historial',
             'reportes',
             'reporteMasReciente',
-            'capacitaciones',
             'necesidades',
             'cursos',
-            'evaluaciones'
+            'evaluaciones',
+            'capacitacionesProgreso',
+            'capacitacionesAll'
         ));
+
     }
+
+
+
+
+        public function asignarCapacitacion(Request $request, $idUsuario)
+    {
+        $request->validate([
+            'capacitacion_id' => 'required|exists:capacitacion,id',
+        ]);
+
+        // Buscar todas las etapas de los cursos de esa capacitación
+        $etapas = DB::table('etapa')
+            ->join('curso', 'curso.id', '=', 'etapa.id_curso')
+            ->where('curso.id_capacitacion', $request->capacitacion_id)
+            ->select('etapa.id')
+            ->get();
+
+        if ($etapas->isEmpty()) {
+            return redirect()
+                ->back()
+                ->withErrors('La capacitación seleccionada no tiene etapas configuradas, no se puede asignar.');
+        }
+
+        DB::transaction(function () use ($idUsuario, $etapas) {
+            foreach ($etapas as $etapa) {
+                ProgresoVoluntario::firstOrCreate(
+                    [
+                        'id_usuario' => $idUsuario,
+                        'id_etapa'   => $etapa->id,
+                    ],
+                    [
+                        'estado'            => 'en_progreso',
+                        'fecha_inicio'      => now(),
+                        'fecha_finalizacion'=> null,
+                    ]
+                );
+            }
+        });
+
+        return redirect()
+            ->route('voluntarios.show', $idUsuario)
+            ->with('success', 'Capacitación asignada al voluntario correctamente.');
+    }
+
 }

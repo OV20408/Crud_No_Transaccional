@@ -59,7 +59,10 @@ Route::get('/chat-consulta', function () {
 
 #------------------------------------------------- HACIA ARRIBA ES LA COMS DE WEB A MOVIL
 
-
+Route::post(
+    'voluntarios/{id}/capacitaciones/asignar',
+    [VoluntarioController::class, 'asignarCapacitacion']
+)->name('voluntarios.capacitaciones.asignar');
 
 
 
