@@ -26,11 +26,11 @@
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>Fecha Finalizacion:</strong>
-                                    {{ $progresoVoluntario->fecha_finalizacion }}
+                                    {{ $progresoVoluntario->fecha_finalizacion ? \Carbon\Carbon::parse($progresoVoluntario->fecha_finalizacion)->format('d/m/Y H:i') : '—' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>Fecha Inicio:</strong>
-                                    {{ $progresoVoluntario->fecha_inicio }}
+                                    {{ $progresoVoluntario->fecha_inicio ? \Carbon\Carbon::parse($progresoVoluntario->fecha_inicio)->format('d/m/Y H:i') : '—' }}
                                 </div>
                                 <div class="form-group mb-2 mb20">
                                     <strong>Id Etapa:</strong>

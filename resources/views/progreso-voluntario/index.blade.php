@@ -51,8 +51,8 @@
                                             <td>{{ ++$i }}</td>
                                             
 										<td >{{ $progresoVoluntario->estado }}</td>
-										<td >{{ $progresoVoluntario->fecha_finalizacion }}</td>
-										<td >{{ $progresoVoluntario->fecha_inicio }}</td>
+										<td >{{ $progresoVoluntario->fecha_finalizacion ? \Carbon\Carbon::parse($progresoVoluntario->fecha_finalizacion)->format('d/m/Y H:i') : '—' }}</td>
+										<td >{{ $progresoVoluntario->fecha_inicio ? \Carbon\Carbon::parse($progresoVoluntario->fecha_inicio)->format('d/m/Y H:i') : '—' }}</td>
 										<td >{{ $progresoVoluntario->id_etapa }}</td>
 										<td >{{ $progresoVoluntario->id_usuario }}</td>
 

@@ -70,7 +70,9 @@
                         </div>
                     </div>
                 </div>
-                {!! $consultas->withQueryString()->links() !!}
+                @if(method_exists($consultas, 'links'))
+                    {!! $consultas->withQueryString()->links() !!}
+                @endif
             </div>
         </div>
     </div>
