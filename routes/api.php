@@ -10,15 +10,12 @@ use App\Http\Controllers\Api\UsuarioApiController;
 use App\Http\Controllers\Api\ChatMensajeApiController;
 use App\Http\Controllers\Api\CapacitacionApiController;
 use App\Http\Controllers\Api\SolicitudAyudaApiController;
-<<<<<<< HEAD
 use App\Http\Controllers\Api\EtapaApiController;
 
 
 Route::patch('/etapas/{etapa}/estado', [EtapaApiController::class, 'toggleEstado'])
     ->middleware('auth:sanctum');
-=======
 use App\Http\Controllers\Api\EvaluacionIAController;
->>>>>>> cf12dfd120d496ed055da76eb85f9cff16c2d842
 
 // ==================== EVALUACIONES CON IA ====================
 Route::post('/evaluaciones/procesar', [EvaluacionIAController::class, 'procesarEvaluacion']);
