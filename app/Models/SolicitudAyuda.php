@@ -10,7 +10,8 @@ class SolicitudAyuda extends Model
 
     protected $fillable = [
         'voluntario_id',
-        'tipo',
+        'tipo',              // ← Campo en DB
+        'tipo_emergencia',   // ✅ AGREGAR ESTE
         'nivel_emergencia',
         'descripcion',
         'latitud',

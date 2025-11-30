@@ -14,6 +14,7 @@ class AyudasSolicitadasController extends Controller
             ->map(function ($s) {
                 return [
                     'id'         => $s->id,
+                    'voluntario_id' => $s->voluntario_id, 
                     'voluntario' => trim(($s->voluntario->nombres ?? '').' '.($s->voluntario->apellidos ?? '')),
                     'prioridad'  => strtolower($s->nivel_emergencia), // 'alto', 'medio', 'bajo'
                     'estado'     => strtolower($s->estado),

@@ -87,9 +87,7 @@
             <select class="form-control" id="estadoFiltro">
               <option value="">Todos</option>
               <option value="sin responder">Sin responder</option>
-              <option value="en progreso">En progreso</option>
               <option value="respondido">Respondido</option>
-              <option value="resuelto">Resuelto</option>
             </select>
           </div>
 
@@ -240,40 +238,105 @@
     }
 
     function renderListado(lista) {
-      listadoDiv.innerHTML = '';
+  listadoDiv.innerHTML = '';
 
-      if (lista.length === 0) {
-        listadoDiv.innerHTML = '<p class="mensaje-vacio">No se encontraron resultados.</p>';
-        return;
-      }
+  if (lista.length === 0) {
+    listadoDiv.innerHTML = '<p class="mensaje-vacio">No se encontraron resultados.</p>';
+    return;
+  }
 
-      lista.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'ayuda-card mb-3';
-        card.innerHTML = `
-          <div class="d-flex justify-content-between align-items-center">
-            <h6 class="mb-1">${item.voluntario}</h6>
-            <span class="${claseBadge(item.prioridad)}">${item.prioridad?.toUpperCase() || ''}</span>
-          </div>
-          <p class="small mb-1 text-muted">${item.direccion ?? ''}</p>
-          <p class="small mb-1">${item.detalle ?? ''}</p>
-          <p class="small mb-0">
-            <strong>Estado:</strong> ${item.estado || 'Sin responder'}<br>
-            <strong>Fecha:</strong> ${item.fecha ?? ''}
-          </p>
-        `;
-
-        card.addEventListener('click', () => {
-          const marker = marcadoresPorId[item.id];
-          if (marker) {
-            map.flyTo(marker.getLatLng(), 15, { duration: 0.5 });
-            marker.openPopup();
-          }
-        });
-
-        listadoDiv.appendChild(card);
-      });
+  lista.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'ayuda-card mb-3';
+    
+    // Determinar botón según estado
+    let botonAccion = '';
+    
+    switch(item.estado ? item.estado.toLowerCase() : 'sin responder') {
+      case 'sin responder':
+        botonAccion = `
+          <a href="/chat-consulta?emergencia=1&voluntario_id=${item.voluntario_id}&ayuda_id=${item.id}" 
+             class="btn btn-sm btn-danger w-100">
+             <i class="fas fa-exclamation-triangle"></i> Atender emergencia
+          </a>`;
+        break;
+        
+      case 'en progreso':
+        botonAccion = `
+          <a href="/chat-consulta?emergencia=1&voluntario_id=${item.voluntario_id}&ayuda_id=${item.id}" 
+             class="btn btn-sm btn-warning w-100">
+             <i class="fas fa-comments"></i> Continuar chat
+          </a>`;
+        break;
+        
+      case 'respondido':
+      case 'resuelto':
+        botonAccion = `
+          <a href="/chat-consulta?emergencia=1&voluntario_id=${item.voluntario_id}&ayuda_id=${item.id}" 
+             class="btn btn-sm btn-success w-100">
+             <i class="fas fa-check-circle"></i> Ver resolución
+          </a>`;
+        break;
     }
+
+    card.innerHTML = `
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="mb-0">${item.voluntario || 'Sin nombre'}</h6>
+        <span class="${claseBadge(item.prioridad)}">${(item.prioridad || 'media').toUpperCase()}</span>
+      </div>
+      <p class="small mb-1 text-muted">
+        <i class="fas fa-map-marker-alt"></i> ${item.direccion || 'Ubicación reportada'}
+      </p>
+      <p class="small mb-2">${item.detalle || 'Sin descripción'}</p>
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="badge badge-${getBadgeColor(item.estado)}">
+          ${(item.estado || 'sin responder').toUpperCase()}
+        </span>
+        <small class="text-muted">
+          <i class="far fa-clock"></i> ${item.fecha || ''}
+        </small>
+      </div>
+      
+      <div class="mt-2">
+        ${botonAccion}
+      </div>
+    `;
+
+    // Click en el card (excepto en el botón) para centrar en el mapa
+    card.addEventListener('click', (e) => {
+      // Solo si NO se clickeó el botón
+      if (!e.target.closest('a.btn')) {
+        const marker = marcadoresPorId[item.id];
+        if (marker) {
+          map.flyTo(marker.getLatLng(), 15, { duration: 0.5 });
+          marker.openPopup();
+        }
+      }
+    });
+
+    listadoDiv.appendChild(card);
+  });
+}
+
+function getBadgeColor(estado) {
+  const colores = {
+    'sin responder': 'danger',
+    'en progreso': 'warning',
+    'respondido': 'success',
+    'resuelto': 'primary'
+  };
+  return colores[(estado || '').toLowerCase()] || 'secondary';
+}
+
+function claseBadge(prioridad) {
+  const clases = {
+    'alta': 'badge badge-danger',
+    'media': 'badge badge-warning',
+    'baja': 'badge badge-info'
+  };
+  return clases[(prioridad || 'media').toLowerCase()] || 'badge badge-secondary';
+}
+    
 
     function aplicarFiltros() {
       const texto = buscarNombre.value.trim().toLowerCase();

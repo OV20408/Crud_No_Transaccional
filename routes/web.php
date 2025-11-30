@@ -42,7 +42,7 @@ Route::patch('/administradores/{id}/toggle-estado', [AdministradorController::cl
 
     #----------------------------------------------------------
 
-Route::get('/chat-consulta', function () {
+/* Route::get('/chat-consulta', function () {
     $mensajes = DB::table('chat_mensajes')
         ->join('usuario', 'usuario.id_usuario', '=', 'chat_mensajes.voluntario_id')
         ->select(
@@ -55,8 +55,76 @@ Route::get('/chat-consulta', function () {
         ->get();
 
     return view('chat-consulta.index', compact('mensajes'));
-});
+}); */
 
+Route::get('/chat-consulta', function () {
+    $esEmergencia = request()->query('emergencia') == '1';
+    $voluntarioId = request()->query('voluntario_id');
+    $ayudaId      = request()->query('ayuda_id');
+
+    // Consultar mensajes normales
+    $mensajes = DB::table('chat_mensajes')
+        ->join('usuario', 'usuario.id_usuario', '=', 'chat_mensajes.voluntario_id')
+        ->select(
+            'chat_mensajes.*',
+            'usuario.nombres',
+            'usuario.apellidos',
+            'usuario.ci'
+        )
+        ->orderBy('chat_mensajes.created_at', 'asc')
+        ->get();
+
+    // Si viene de emergencia y no hay mensajes de ese voluntario relacionados
+    if ($esEmergencia && $voluntarioId && $ayudaId) {
+        $marcador = "🚨 [EMERGENCIA #{$ayudaId}]";
+        
+        // Buscar si ya existe un mensaje de esta emergencia
+        $existeMensajeEmergencia = $mensajes->contains(function ($m) use ($marcador, $voluntarioId) {
+            return $m->voluntario_id == $voluntarioId 
+                && strpos($m->texto, $marcador) !== false;
+        });
+
+        if (!$existeMensajeEmergencia) {
+            // Obtener datos de la ayuda
+            $ayuda = DB::table('solicitudes_ayuda')
+                ->where('id', $ayudaId)
+                ->first();
+
+            if ($ayuda) {
+                // Crear mensaje inicial automático
+                DB::table('chat_mensajes')->insert([
+                    'voluntario_id' => $voluntarioId,
+                    'de'            => 'admin',
+                    'texto'         => "{$marcador} Hemos recibido tu solicitud: \"{$ayuda->descripcion}\". Un equipo está revisando tu caso. Responde aquí cualquier duda.",
+                    'created_at'    => now(),
+                    'updated_at'    => now(),
+                ]);
+
+                // Actualizar estado de la solicitud
+                DB::table('solicitudes_ayuda')
+                    ->where('id', $ayudaId)
+                    ->update([
+                        'estado'     => 'en progreso',
+                        'updated_at' => now(),
+                    ]);
+
+                // Recargar mensajes
+                $mensajes = DB::table('chat_mensajes')
+                    ->join('usuario', 'usuario.id_usuario', '=', 'chat_mensajes.voluntario_id')
+                    ->select(
+                        'chat_mensajes.*',
+                        'usuario.nombres',
+                        'usuario.apellidos',
+                        'usuario.ci'
+                    )
+                    ->orderBy('chat_mensajes.created_at', 'asc')
+                    ->get();
+            }
+        }
+    }
+
+    return view('chat-consulta.index', compact('mensajes', 'voluntarioId', 'ayudaId', 'esEmergencia'));
+})->name('chat.consulta');
 
 #------------------------------------------------- HACIA ARRIBA ES LA COMS DE WEB A MOVIL
 

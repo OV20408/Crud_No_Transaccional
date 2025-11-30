@@ -53,7 +53,10 @@ class User extends Authenticatable
         return $this->hasMany(\App\Models\ChatMensaje::class, 'voluntario_id', 'id_usuario');
     }
 
-
+    public function solicitudesAyuda()
+    {
+        return $this->hasMany(\App\Models\SolicitudAyuda::class, 'voluntario_id', 'id_usuario');
+    }
     
     public function toArray()
     {
