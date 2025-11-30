@@ -755,33 +755,37 @@
               {{-- Columna Evaluación Física --}}
               <div class="col-md-6">
                 @foreach($evaluaciones as $evaluacion)
-                  <div class="card mb-3" style="border-left: 4px solid #353b41; background-color: #f4f6f9;">
-                    <div class="card-body d-flex justify-content-between align-items-center py-3">
-                      <div>
-                        <strong style="color: #353b41;">Evaluacion Fisica</strong>
-                        <p class="mb-0 text-muted" style="font-size: 0.9rem;">Fecha realizada: {{ \Carbon\Carbon::parse($evaluacion->fecha_generado ?? $evaluacion->fecha)->format('j/n/Y') }}</p>
+                  <a href="{{ route('reporte.ver', ['id' => $evaluacion->reporte_id ?? $evaluacion->id_reporte ?? $evaluacion->id, 'tipo' => 'fisico']) }}" style="text-decoration: none;">
+                    <div class="card mb-3" style="border-left: 4px solid #353b41; background-color: #f4f6f9; cursor: pointer; transition: all 0.2s;">
+                      <div class="card-body d-flex justify-content-between align-items-center py-3">
+                        <div>
+                          <strong style="color: #353b41;">Evaluacion Fisica</strong>
+                          <p class="mb-0 text-muted" style="font-size: 0.9rem;">Fecha realizada: {{ \Carbon\Carbon::parse($evaluacion->fecha_generado ?? $evaluacion->fecha)->format('j/n/Y') }}</p>
+                        </div>
+                        <span class="badge" style="background-color: #007bff; color: white; padding: 8px 12px; border-radius: 20px;">
+                          # Reporte #{{ $evaluacion->reporte_id ?? $evaluacion->id_reporte ?? 'N/A' }}
+                        </span>
                       </div>
-                      <span class="badge" style="background-color: #353b41; color: white; padding: 8px 12px; border-radius: 20px;">
-                        # Reporte #{{ $evaluacion->reporte_id ?? $evaluacion->id_reporte ?? 'N/A' }}
-                      </span>
                     </div>
-                  </div>
+                  </a>
                 @endforeach
               </div>
               {{-- Columna Evaluación Emocional --}}
               <div class="col-md-6">
                 @foreach($evaluaciones as $evaluacion)
-                  <div class="card mb-3" style="border-left: 4px solid #353b41; background-color: #f4f6f9;">
-                    <div class="card-body d-flex justify-content-between align-items-center py-3">
-                      <div>
-                        <strong style="color: #353b41;">Evaluacion Emocional</strong>
-                        <p class="mb-0 text-muted" style="font-size: 0.9rem;">Fecha realizada: {{ \Carbon\Carbon::parse($evaluacion->fecha_generado ?? $evaluacion->fecha)->format('j/n/Y') }}</p>
+                  <a href="{{ route('reporte.ver', ['id' => $evaluacion->reporte_id ?? $evaluacion->id_reporte ?? $evaluacion->id, 'tipo' => 'emocional']) }}" style="text-decoration: none;">
+                    <div class="card mb-3" style="border-left: 4px solid #353b41; background-color: #f4f6f9; cursor: pointer; transition: all 0.2s;">
+                      <div class="card-body d-flex justify-content-between align-items-center py-3">
+                        <div>
+                          <strong style="color: #353b41;">Evaluacion Emocional</strong>
+                          <p class="mb-0 text-muted" style="font-size: 0.9rem;">Fecha realizada: {{ \Carbon\Carbon::parse($evaluacion->fecha_generado ?? $evaluacion->fecha)->format('j/n/Y') }}</p>
+                        </div>
+                        <span class="badge" style="background-color: #007bff; color: white; padding: 8px 12px; border-radius: 20px;">
+                          # Reporte #{{ $evaluacion->reporte_id ?? $evaluacion->id_reporte ?? 'N/A' }}
+                        </span>
                       </div>
-                      <span class="badge" style="background-color: #353b41; color: white; padding: 8px 12px; border-radius: 20px;">
-                        # Reporte #{{ $evaluacion->reporte_id ?? $evaluacion->id_reporte ?? 'N/A' }}
-                      </span>
                     </div>
-                  </div>
+                  </a>
                 @endforeach
               </div>
             </div>

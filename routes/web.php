@@ -102,6 +102,11 @@ Route::post('/evaluacion-voluntario/{token}/procesar', [EvaluacionVoluntarioCont
 Route::get('/voluntarios/{id}/historial-encuestas', [EvaluacionVoluntarioController::class, 'historialEncuestas'])
     ->name('voluntarios.historial-encuestas');
 
+// Ver detalle de un reporte/encuesta realizada (físico o emocional)
+Route::get('/reporte/{id}/{tipo}', [EvaluacionVoluntarioController::class, 'verReporte'])
+    ->name('reporte.ver')
+    ->where('tipo', 'fisico|emocional');
+
 
 
 Route::get('/', function () {

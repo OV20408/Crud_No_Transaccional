@@ -199,4 +199,216 @@ class EvaluacionVoluntarioController extends Controller
             'evaluaciones' => $reportes
         ]);
     }
+    
+    /**
+     * Ver detalle de un reporte/encuesta realizada
+     */
+    public function verReporte($id, $tipo = 'fisico')
+    {
+        $reporte = Reporte::find($id);
+        
+        if (!$reporte) {
+            abort(404, 'Reporte no encontrado');
+        }
+        
+        // Obtener el voluntario a través del historial clínico
+        $historial = HistorialClinico::find($reporte->id_historial);
+        $voluntario = null;
+        
+        if ($historial) {
+            $voluntario = User::where('id_usuario', $historial->id_usuario)->first();
+        }
+        
+        // Obtener universidades para el combo de asignar
+        $universidades = DB::table('universidad')->orderBy('nombre')->get();
+        
+        // Parsear las respuestas del resumen físico y emocional
+        $respuestasFisicas = $this->parsearRespuestas($reporte->resumen_fisico);
+        $respuestasEmocionales = $this->parsearRespuestas($reporte->resumen_emocional);
+        
+        // Parsear el estado del cuerpo del resumen físico
+        $estadoCuerpo = $this->parsearEstadoCuerpo($reporte->resumen_fisico);
+        
+        return view('reportes.detalle', compact(
+            'reporte',
+            'voluntario',
+            'universidades',
+            'respuestasFisicas',
+            'respuestasEmocionales',
+            'estadoCuerpo',
+            'tipo'
+        ));
+    }
+    
+    /**
+     * Parsear respuestas del resumen
+     */
+    private function parsearRespuestas($resumen)
+    {
+        $respuestas = [];
+        
+        if (empty($resumen)) {
+            return $respuestas;
+        }
+        
+        // Preguntas físicas
+        $preguntasFisicas = [
+            'f1' => '¿Te sientes más cansado o agotado de lo habitual después de las intervenciones?',
+            'f2' => '¿Has notado quemaduras, irritación o enrojecimiento en la piel después de las intervenciones?',
+            'f3' => '¿Has tenido dificultades para respirar o tos después de las intervenciones?',
+            'f4' => '¿Tienes dolor o molestias en el pecho desde el incendio?',
+            'f5' => '¿Has experimentado palpitaciones o un ritmo cardíaco irregular después de la intervención?',
+            'f6' => '¿Tus ojos han estado irritados, con ardor o picazón desde la intervención?',
+            'f7' => '¿Tienes dificultad para respirar profundamente desde la intervención?',
+            'f8' => '¿Has notado que tu nariz está congestionada o bloqueada más de lo normal?',
+        ];
+        
+        // Preguntas psicológicas
+        $preguntasPsicologicas = [
+            'p1' => '¿Con qué frecuencia has tenido pensamientos no deseados relacionados al incendio?',
+            'p2' => '¿Sientes que últimamente piensas en qué pudiste hacer diferente durante la intervención?',
+            'p3' => '¿Has notado disminución de apetito desde la intervención?',
+            'p4' => '¿Te resulta difícil relajarte o desconectar mentalmente después de las intervenciones?',
+            'p5' => '¿Has tenido dificultades para concentrarte en tus tareas diarias debido al estrés?',
+            'p6' => '¿Has sufrido de insomnio recientemente?',
+            'p7' => '¿Te has sentido emocionalmente más inestable o irritable desde el incendio?',
+            'p8' => '¿Te sientes preocupado o ansioso constantemente desde el incendio?',
+        ];
+        
+        $opciones = ['Nunca', 'Raramente', 'A veces', 'Frecuentemente', 'Siempre'];
+        
+        // Primero intentar formato compacto: f1:Nunca,f2:Siempre...
+        $todasPreguntas = array_merge($preguntasFisicas, $preguntasPsicologicas);
+        
+        foreach ($todasPreguntas as $key => $pregunta) {
+            foreach ($opciones as $opcion) {
+                // Formato compacto: f1:Nunca
+                if (preg_match('/' . $key . ':' . preg_quote($opcion, '/') . '(?:,|$|\[)/i', $resumen)) {
+                    $respuestas[] = [
+                        'pregunta' => $pregunta,
+                        'respuesta' => $opcion
+                    ];
+                    break;
+                }
+                // Formato antiguo: pregunta completa: respuesta
+                if (strpos($resumen, $pregunta . ': ' . $opcion) !== false) {
+                    $respuestas[] = [
+                        'pregunta' => $pregunta,
+                        'respuesta' => $opcion
+                    ];
+                    break;
+                }
+            }
+        }
+        
+        return $respuestas;
+    }
+    
+    /**
+     * Parsear estado del cuerpo del resumen
+     */
+    private function parsearEstadoCuerpo($resumen)
+    {
+        $estadoCuerpo = [
+            'head' => 'normal',
+            'leftShoulder' => 'normal',
+            'rightShoulder' => 'normal',
+            'leftArm' => 'normal',
+            'rightArm' => 'normal',
+            'chest' => 'normal',
+            'stomach' => 'normal',
+            'leftLeg' => 'normal',
+            'rightLeg' => 'normal',
+            'leftHand' => 'normal',
+            'rightHand' => 'normal',
+            'leftFoot' => 'normal',
+            'rightFoot' => 'normal',
+        ];
+        
+        if (empty($resumen)) {
+            return $estadoCuerpo;
+        }
+        
+        // Mapeo de abreviaturas a nombres de partes
+        $abrevToKey = [
+            'h' => 'head',
+            'ls' => 'leftShoulder',
+            'rs' => 'rightShoulder',
+            'la' => 'leftArm',
+            'ra' => 'rightArm',
+            'c' => 'chest',
+            's' => 'stomach',
+            't' => 'chest', // compatibilidad con formato antiguo
+            'll' => 'leftLeg',
+            'rl' => 'rightLeg',
+            'lh' => 'leftHand',
+            'rh' => 'rightHand',
+            'lf' => 'leftFoot',
+            'rf' => 'rightFoot',
+        ];
+        
+        // Mapeo de números a estados
+        $numToEstado = [
+            '1' => 'muybien',
+            '2' => 'bien',
+            '3' => 'normal',
+            '4' => 'mal',
+            '5' => 'muymal',
+        ];
+        
+        // Formato compacto [BC]h:5|ls:2|...[/BC]
+        if (preg_match('/\[BC\](.*?)\[\/BC\]/s', $resumen, $matches)) {
+            $partes = explode('|', trim($matches[1]));
+            
+            foreach ($partes as $parte) {
+                $parte = trim($parte);
+                if (preg_match('/^([a-z]+):(\d)$/i', $parte, $m)) {
+                    $abrev = strtolower($m[1]);
+                    $num = $m[2];
+                    
+                    if (isset($abrevToKey[$abrev]) && isset($numToEstado[$num])) {
+                        $key = $abrevToKey[$abrev];
+                        $estadoCuerpo[$key] = $numToEstado[$num];
+                    }
+                }
+            }
+            
+            return $estadoCuerpo;
+        }
+        
+        // Formato anterior [ESTADO_CUERPO]...[/ESTADO_CUERPO]
+        $mapeoPartes = [
+            'Cabeza' => 'head',
+            'Hombro Izquierdo' => 'leftShoulder',
+            'Hombro Derecho' => 'rightShoulder',
+            'Brazo Izquierdo' => 'leftArm',
+            'Brazo Derecho' => 'rightArm',
+            'Pecho' => 'chest',
+            'Abdomen' => 'stomach',
+            'Torso' => 'chest', // compatibilidad
+            'Pierna Izquierda' => 'leftLeg',
+            'Pierna Derecha' => 'rightLeg',
+            'Mano Izquierda' => 'leftHand',
+            'Mano Derecha' => 'rightHand',
+            'Pie Izquierdo' => 'leftFoot',
+            'Pie Derecho' => 'rightFoot',
+        ];
+        
+        if (preg_match('/\[ESTADO_CUERPO\](.*?)\[\/ESTADO_CUERPO\]/s', $resumen, $matches)) {
+            $partes = explode(' | ', trim($matches[1]));
+            
+            foreach ($partes as $parte) {
+                if (preg_match('/^(.+?):\s*(muybien|bien|normal|mal|muymal)$/i', trim($parte), $m)) {
+                    $nombreParte = trim($m[1]);
+                    $estado = strtolower(trim($m[2]));
+                    
+                    if (isset($mapeoPartes[$nombreParte])) {
+                        $estadoCuerpo[$mapeoPartes[$nombreParte]] = $estado;
+                    }
+                }
+            }
+        }
+        
+        return $estadoCuerpo;
+    }
 }
