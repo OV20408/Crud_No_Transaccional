@@ -1,6 +1,7 @@
 @extends('adminlte::page')
 
 @section('content')
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <style>
   :root {
     --color-amarillo: #FFA726;
@@ -8,9 +9,122 @@
     --color-texto-principal: #333333;
     --color-blanco: #f8f9fa;
     --color-azul: #007bff;
-      --color-gris :#6c757d;
+    --color-gris: #6c757d;
+  }
 
+  /* Toast Notification Styles */
+  .toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+  }
 
+  .toast-notification {
+    display: none;
+    min-width: 320px;
+    padding: 16px 20px;
+    border-radius: 8px;
+    border: 1px solid;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    margin-bottom: 10px;
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideOut {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+  }
+
+  .toast-notification.toast-success {
+    background-color: #f8f9fa;
+    border-color: #6c757d;
+    color: #333333;
+  }
+
+  .toast-notification.toast-error {
+    background-color: #fff5f5;
+    border-color: #dc3545;
+    color: #721c24;
+  }
+
+  .toast-notification.toast-loading {
+    background-color: #f8f9fa;
+    border-color: #6c757d;
+    color: #333333;
+  }
+
+  .toast-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .toast-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .toast-message {
+    flex: 1;
+  }
+
+  .toast-message h4 {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .toast-message p {
+    margin: 0;
+    font-size: 14px;
+    opacity: 0.9;
+  }
+
+  .toast-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    opacity: 0.6;
+    padding: 0;
+    line-height: 1;
+  }
+
+  .toast-close:hover {
+    opacity: 1;
+  }
+
+  .spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid #6c757d;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .infovoluntarios-container {
@@ -257,7 +371,7 @@
   }
 
   .historial-toggle {
-    background: linear-gradient(135deg, var(--color-amarillo) 0%, #FFB74D 100%);
+    background: linear-gradient(135deg, var(--color-azul) 0%, #0056b3 100%);
     padding: 15px 20px;
     border-radius: 8px;
     cursor: pointer;
@@ -267,7 +381,7 @@
 
   .historial-toggle:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 167, 38, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
   }
 
   .historial-toggle h4 {
@@ -281,6 +395,11 @@
 
   .flecha-historial {
     font-size: 1.2rem;
+    transition: transform 0.3s ease;
+  }
+
+  .flecha-historial.rotated {
+    transform: rotate(180deg);
   }
 
   .historial-seccion {
@@ -290,8 +409,69 @@
   }
 
   .historial-seccion.visible {
-    max-height: 2000px;
+    max-height: 5000px;
     margin-bottom: 20px;
+  }
+
+  /* Historial Tabla 2 columnas */
+  .historial-tabla {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 15px;
+  }
+
+  .historial-columna {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .historial-columna-header {
+    background: linear-gradient(135deg, var(--color-azul) 0%, #0056b3 100%);
+    color: white;
+    padding: 12px 15px;
+    border-radius: 8px;
+    font-weight: bold;
+    text-align: center;
+    font-size: 1rem;
+  }
+
+  .historial-columna-header.psicologico {
+    background: linear-gradient(135deg, var(--color-azul) 0%, #0056b3 100%);
+  }
+
+  .historial-item {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    border-left: 4px solid var(--color-azul);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .historial-item.psicologico {
+    border-left-color: var(--color-azul);
+  }
+
+  .historial-item-content {
+    font-size: 0.9rem;
+    color: #333;
+    line-height: 1.5;
+  }
+
+  .historial-item-fecha {
+    font-size: 0.8rem;
+    color: #666;
+    font-weight: 500;
+    text-align: right;
+  }
+
+  @media (max-width: 992px) {
+    .historial-tabla {
+      grid-template-columns: 1fr;
+    }
   }
 
   .btn-volver {
@@ -335,6 +515,39 @@
 </style>
 
 <div class="infovoluntarios-container">
+  <!-- Toast Container -->
+  <div class="toast-container">
+    <div class="toast-notification toast-loading" id="toast-loading">
+      <div class="toast-content">
+        <div class="spinner"></div>
+        <div class="toast-message">
+          <h4>Enviando formulario...</h4>
+          <p>Por favor espere</p>
+        </div>
+      </div>
+    </div>
+    <div class="toast-notification toast-success" id="toast-success">
+      <div class="toast-content">
+        <span class="toast-icon">✓</span>
+        <div class="toast-message">
+          <h4>¡Formulario enviado!</h4>
+          <p id="toast-success-msg">El correo ha sido enviado correctamente</p>
+        </div>
+        <button class="toast-close" onclick="hideToast('toast-success')">&times;</button>
+      </div>
+    </div>
+    <div class="toast-notification toast-error" id="toast-error">
+      <div class="toast-content">
+        <span class="toast-icon">✕</span>
+        <div class="toast-message">
+          <h4>Error</h4>
+          <p id="toast-error-msg">No se pudo enviar el formulario</p>
+        </div>
+        <button class="toast-close" onclick="hideToast('toast-error')">&times;</button>
+      </div>
+    </div>
+  </div>
+
   <a href="{{ route('voluntarios.index') }}" class="btn-volver">
     <i class="fas fa-arrow-left"></i> Volver a la lista
   </a>
@@ -352,17 +565,12 @@
           <span class="dot"></span>
           {{ ucfirst($voluntario->estado) }}
         </div>
-        <button class="btn-formulario-enviar" onclick="alert('Funcionalidad de enviar formulario')">
-          Enviar Formulario
+        <button class="btn-formulario-enviar" onclick="enviarFormularioVoluntario({{ $voluntario->id_usuario }})" id="btn-enviar-formulario">
+          <i class="fas fa-paper-plane"></i> Enviar Formulario
         </button>
-        <button class="btn-formulario-enviar" onclick="alert('Funcionalidad de enviar formulario')">
-          Descargar Historial Clinico
+        <button class="btn-formulario-enviar" onclick="descargarHistorialClinico({{ $voluntario->id_usuario }})">
+          <i class="fas fa-file-medical"></i> Descargar Historial Clínico
         </button>
-        @if(count($reportes) > 0)
-          <a href="#" class="btn-descargar-pdf">
-            Descargar Historial Clínico
-          </a>
-        @endif
       </div>
     </div>
   </header>
@@ -514,36 +722,32 @@
         contenido.innerHTML = `
           <h2 class="titulo-seccion">Historial</h2>
           @if(count($reportes) > 0)
-            <div class="panel-historial">
-              <div class="historial-toggle" onclick="toggleHistorial('clinico')">
-                <h4>
-                  Clínico
-                  <i class="fas fa-chevron-down flecha-historial" id="flecha-clinico"></i>
-                </h4>
-              </div>
-              <div class="historial-seccion" id="seccion-clinico">
+            <div class="historial-tabla">
+              <!-- Columna Clínico -->
+              <div class="historial-columna">
+                <div class="historial-columna-header">
+                  <i class="fas fa-heartbeat mr-2"></i> Clínico
+                </div>
                 @foreach($reportes as $reporte)
                   @if($reporte->resumen_fisico)
-                    <div class="vista-card">
-                      <p>{{ $reporte->resumen_fisico }}</p>
-                      <small>{{ \Carbon\Carbon::parse($reporte->fecha_generado)->format('d/m/Y') }}</small>
+                    <div class="historial-item">
+                      <div class="historial-item-content">{{ $reporte->resumen_fisico }}</div>
+                      <div class="historial-item-fecha">{{ \Carbon\Carbon::parse($reporte->fecha_generado)->format('d/m/Y') }}</div>
                     </div>
                   @endif
                 @endforeach
               </div>
 
-              <div class="historial-toggle" onclick="toggleHistorial('psicologico')">
-                <h4>
-                  Psicológico
-                  <i class="fas fa-chevron-down flecha-historial" id="flecha-psicologico"></i>
-                </h4>
-              </div>
-              <div class="historial-seccion" id="seccion-psicologico">
+              <!-- Columna Psicológico -->
+              <div class="historial-columna">
+                <div class="historial-columna-header psicologico">
+                  <i class="fas fa-brain mr-2"></i> Psicológico
+                </div>
                 @foreach($reportes as $reporte)
                   @if($reporte->resumen_emocional)
-                    <div class="vista-card">
-                      <p>{{ $reporte->resumen_emocional }}</p>
-                      <small>{{ \Carbon\Carbon::parse($reporte->fecha_generado)->format('d/m/Y') }}</small>
+                    <div class="historial-item psicologico">
+                      <div class="historial-item-content">{{ $reporte->resumen_emocional }}</div>
+                      <div class="historial-item-fecha">{{ \Carbon\Carbon::parse($reporte->fecha_generado)->format('d/m/Y') }}</div>
                     </div>
                   @endif
                 @endforeach
@@ -604,13 +808,44 @@
         contenido.innerHTML = `
           <h2 class="titulo-seccion">Encuestas Realizadas</h2>
           @if(count($evaluaciones) > 0)
-            @foreach($evaluaciones as $evaluacion)
-              <div class="vista-card">
-                <strong>{{ $evaluacion->test_nombre }}</strong>
-                <p>Fecha: {{ \Carbon\Carbon::parse($evaluacion->fecha)->format('d/m/Y') }}</p>
-                <p>Reporte #{{ $evaluacion->id_reporte }}</p>
+            <div class="row">
+              {{-- Columna Evaluación Física --}}
+              <div class="col-md-6">
+                @foreach($evaluaciones as $evaluacion)
+                  <a href="{{ route('reporte.ver', ['id' => $evaluacion->reporte_id ?? $evaluacion->id_reporte ?? $evaluacion->id, 'tipo' => 'fisico']) }}" style="text-decoration: none;">
+                    <div class="card mb-3" style="border-left: 4px solid #353b41; background-color: #f4f6f9; cursor: pointer; transition: all 0.2s;">
+                      <div class="card-body d-flex justify-content-between align-items-center py-3">
+                        <div>
+                          <strong style="color: #353b41;">Evaluacion Fisica</strong>
+                          <p class="mb-0 text-muted" style="font-size: 0.9rem;">Fecha realizada: {{ \Carbon\Carbon::parse($evaluacion->fecha_generado ?? $evaluacion->fecha)->format('j/n/Y') }}</p>
+                        </div>
+                        <span class="badge" style="background-color: #007bff; color: white; padding: 8px 12px; border-radius: 20px;">
+                          # Reporte #{{ $evaluacion->reporte_id ?? $evaluacion->id_reporte ?? 'N/A' }}
+                        </span>
+                      </div>
+                    </div>
+                  </a>
+                @endforeach
               </div>
-            @endforeach
+              {{-- Columna Evaluación Emocional --}}
+              <div class="col-md-6">
+                @foreach($evaluaciones as $evaluacion)
+                  <a href="{{ route('reporte.ver', ['id' => $evaluacion->reporte_id ?? $evaluacion->id_reporte ?? $evaluacion->id, 'tipo' => 'emocional']) }}" style="text-decoration: none;">
+                    <div class="card mb-3" style="border-left: 4px solid #353b41; background-color: #f4f6f9; cursor: pointer; transition: all 0.2s;">
+                      <div class="card-body d-flex justify-content-between align-items-center py-3">
+                        <div>
+                          <strong style="color: #353b41;">Evaluacion Emocional</strong>
+                          <p class="mb-0 text-muted" style="font-size: 0.9rem;">Fecha realizada: {{ \Carbon\Carbon::parse($evaluacion->fecha_generado ?? $evaluacion->fecha)->format('j/n/Y') }}</p>
+                        </div>
+                        <span class="badge" style="background-color: #007bff; color: white; padding: 8px 12px; border-radius: 20px;">
+                          # Reporte #{{ $evaluacion->reporte_id ?? $evaluacion->id_reporte ?? 'N/A' }}
+                        </span>
+                      </div>
+                    </div>
+                  </a>
+                @endforeach
+              </div>
+            </div>
           @else
             <p class="mensaje-vacio">No hay encuestas realizadas.</p>
           @endif
@@ -649,6 +884,86 @@
       flecha.classList.remove('fa-chevron-down');
       flecha.classList.add('fa-chevron-up');
     }
+  }
+
+  // Funciones para Toast Notifications
+  function showToast(toastId) {
+    const toast = document.getElementById(toastId);
+    toast.style.display = 'block';
+  }
+
+  function hideToast(toastId) {
+    const toast = document.getElementById(toastId);
+    toast.style.animation = 'slideOut 0.3s ease';
+    setTimeout(() => {
+      toast.style.display = 'none';
+      toast.style.animation = 'slideIn 0.3s ease';
+    }, 300);
+  }
+
+  function hideAllToasts() {
+    ['toast-loading', 'toast-success', 'toast-error'].forEach(id => {
+      document.getElementById(id).style.display = 'none';
+    });
+  }
+
+  // Función para enviar formulario al voluntario
+  function enviarFormularioVoluntario(voluntarioId) {
+    // Deshabilitar botón para evitar múltiples envíos
+    const btn = document.getElementById('btn-enviar-formulario');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+    // Mostrar toast de cargando
+    hideAllToasts();
+    showToast('toast-loading');
+
+    // Obtener CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    // Hacer la petición
+    fetch(`/voluntarios/${voluntarioId}/enviar-formulario`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrfToken,
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({})
+    })
+    .then(response => response.json())
+    .then(data => {
+      hideAllToasts();
+      
+      if (data.success) {
+        document.getElementById('toast-success-msg').textContent = data.message;
+        showToast('toast-success');
+        
+        // Auto-hide después de 5 segundos
+        setTimeout(() => {
+          hideToast('toast-success');
+        }, 5000);
+      } else {
+        document.getElementById('toast-error-msg').textContent = data.message;
+        showToast('toast-error');
+      }
+    })
+    .catch(error => {
+      hideAllToasts();
+      console.error('Error:', error);
+      document.getElementById('toast-error-msg').textContent = 'Error de conexión. Intente nuevamente.';
+      showToast('toast-error');
+    })
+    .finally(() => {
+      // Rehabilitar botón
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Formulario';
+    });
+  }
+
+  // Función para descargar historial clínico
+  function descargarHistorialClinico(voluntarioId) {
+    alert('Funcionalidad de descargar historial clínico en desarrollo');
   }
 </script>
 @endsection

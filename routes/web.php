@@ -20,6 +20,7 @@ use App\Http\Controllers\ConsultaController;use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\VoluntarioController;
 use App\Http\Controllers\AdministradorController;
 use App\Http\Controllers\AyudasSolicitadasController;
+use App\Http\Controllers\EvaluacionVoluntarioController;
 use App\Models\Consulta;
 use App\Events\ConsultaRespondida;
 
@@ -85,6 +86,26 @@ Route::resource('evaluacion', EvaluacionController::class);
 Route::resource('respuesta', RespuestaController::class);
 Route::resource('progreso-voluntario', ProgresoVoluntarioController::class);
 Route::view('evaluacion_pruebas', 'evaluacion_pruebas.index')->name('evaluacion_pruebas');
+
+// Rutas para envío de formulario de evaluación a voluntarios
+Route::post('/voluntarios/{id}/enviar-formulario', [EvaluacionVoluntarioController::class, 'enviarInvitacion'])
+    ->name('voluntarios.enviar-formulario');
+
+// Ruta pública para que el voluntario acceda a la evaluación (sin auth)
+Route::get('/evaluacion-voluntario/{token}', [EvaluacionVoluntarioController::class, 'mostrarEvaluacion'])
+    ->name('evaluacion-voluntario.mostrar');
+
+Route::post('/evaluacion-voluntario/{token}/procesar', [EvaluacionVoluntarioController::class, 'procesarEvaluacion'])
+    ->name('evaluacion-voluntario.procesar');
+
+// Historial de encuestas de un voluntario
+Route::get('/voluntarios/{id}/historial-encuestas', [EvaluacionVoluntarioController::class, 'historialEncuestas'])
+    ->name('voluntarios.historial-encuestas');
+
+// Ver detalle de un reporte/encuesta realizada (físico o emocional)
+Route::get('/reporte/{id}/{tipo}', [EvaluacionVoluntarioController::class, 'verReporte'])
+    ->name('reporte.ver')
+    ->where('tipo', 'fisico|emocional');
 
 
 

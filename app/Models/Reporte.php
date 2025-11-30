@@ -31,12 +31,15 @@ class Reporte extends Model
      * Campos asignables
      */
     protected $fillable = [
+        'id_historial',
         'estado_general',
         'fecha_generado',
         'observaciones',
         'recomendaciones',
         'resumen_emocional',
         'resumen_fisico',
+        'respuestas_fisico',
+        'respuestas_emocional',
     ];
 
     /**
