@@ -7,6 +7,10 @@
     --color-card: #ffffff;
     --color-texto-principal: #333333;
     --color-blanco: #f8f9fa;
+    --color-azul: #007bff;
+      --color-gris :#6c757d;
+
+
   }
 
   .infovoluntarios-container {
@@ -29,7 +33,7 @@
   .info-avatar {
     width: 80px;
     height: 80px;
-    background: linear-gradient(135deg, var(--color-amarillo) 0%, #FFB74D 100%);
+    background: linear-gradient(135deg, var(--color-azul) 0%, #419dff 100%);
     color: white;
     font-size: 32px;
     font-weight: bold;
@@ -100,12 +104,12 @@
   }
 
   .btn-formulario-enviar {
-    background-color: var(--color-amarillo);
+    background-color: var(--color-azul);
     color: white;
   }
 
   .btn-formulario-enviar:hover {
-    background-color: #FB8C00;
+    background-color:var(--color-azul);
     transform: translateY(-2px);
   }
 
@@ -144,7 +148,7 @@
   }
 
   .panel-hover h4 {
-    color: var(--color-amarillo);
+    color: var(--color-azul);
     font-size: 1.2rem;
     margin-bottom: 15px;
     display: flex;
@@ -187,8 +191,8 @@
   .btn-opcion {
     padding: 12px 20px;
     background: var(--color-card);
-    border: 2px solid var(--color-amarillo);
-    color: var(--color-amarillo);
+    border: 2px solid var(--color-azul);
+    color: var(--color-azul);
     border-radius: 8px;
     font-weight: 600;
     cursor: pointer;
@@ -199,7 +203,7 @@
   }
 
   .btn-opcion:hover {
-    background: var(--color-amarillo);
+    background: var(--color-azul);
     color: white;
     transform: translateY(-2px);
   }
@@ -213,7 +217,7 @@
   }
 
   .titulo-seccion {
-    color: var(--color-amarillo);
+    color: var(--color-azul);
     font-size: 1.8rem;
     margin-bottom: 20px;
     font-weight: bold;
@@ -295,7 +299,7 @@
     align-items: center;
     gap: 8px;
     padding: 10px 20px;
-    background: var(--color-amarillo);
+    background: var(--color-azul);
     color: white;
     text-decoration: none;
     border-radius: 8px;
@@ -305,7 +309,7 @@
   }
 
   .btn-volver:hover {
-    background: #FB8C00;
+    background: var(--color-azul);
     transform: translateY(-2px);
     text-decoration: none;
     color: white;
@@ -350,6 +354,9 @@
         </div>
         <button class="btn-formulario-enviar" onclick="alert('Funcionalidad de enviar formulario')">
           Enviar Formulario
+        </button>
+        <button class="btn-formulario-enviar" onclick="alert('Funcionalidad de enviar formulario')">
+          Descargar Historial Clinico
         </button>
         @if(count($reportes) > 0)
           <a href="#" class="btn-descargar-pdf">
@@ -438,10 +445,10 @@
         <i class="fas fa-certificate"></i> Capacitaciones
       </button>
       <button class="btn-opcion" onclick="mostrarVista('encuestas')">
-        <i class="fas fa-poll"></i> Encuestas
+        <i class="fas fa-poll"></i> Encuestas Realizadas
       </button>
-      <button class="btn-opcion" onclick="mostrarVista('cursos')">
-        <i class="fas fa-book"></i> Cursos
+      <button class="btn-opcion" onclick="mostrarVista('necesidades')">
+        <i class="fas fa-book"></i> Analisis de Necesdades
       </button>
     </div>
   </section>
@@ -557,9 +564,9 @@
         `;
         break;
 
-      case 'cursos':
+      case 'necesidades':
         contenido.innerHTML = `
-          <h2 class="titulo-seccion">Cursos</h2>
+          <h2 class="titulo-seccion">Analisis de Necesidades</h2>
           @if(count($cursos) > 0)
             @foreach($cursos as $curso)
               <div class="vista-card">
@@ -569,7 +576,7 @@
               </div>
             @endforeach
           @else
-            <p class="mensaje-vacio">No hay cursos asignados.</p>
+            <p class="mensaje-vacio">No hay necesidades asignadas.</p>
           @endif
         `;
         break;

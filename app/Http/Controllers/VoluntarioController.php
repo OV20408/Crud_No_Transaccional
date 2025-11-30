@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use App\Models\User;
 use App\Models\Rol;
+use App\Models\Capacitacion;
+use App\Models\ProgresoVoluntario;
+
 
 class VoluntarioController extends Controller
 {
