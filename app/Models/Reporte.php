@@ -38,6 +38,8 @@ class Reporte extends Model
         'recomendaciones',
         'resumen_emocional',
         'resumen_fisico',
+        'respuestas_fisico',
+        'respuestas_emocional',
     ];
 
     /**

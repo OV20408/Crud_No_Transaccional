@@ -157,8 +157,12 @@ class EvaluacionVoluntarioController extends Controller
             }
             
             // Crear reporte con los resultados
+            // respuestas_fisico/emocional = lo que respondió el usuario
+            // resumen_fisico/emocional = análisis de la IA
             $reporte = Reporte::create([
                 'id_historial' => $historial->id,
+                'respuestas_fisico' => $evaluacionFisica,
+                'respuestas_emocional' => $evaluacionEmocional,
                 'resumen_fisico' => $resumenFisico,
                 'resumen_emocional' => $resumenEmocional,
                 'estado_general' => $estadoGeneral,
@@ -249,12 +253,16 @@ class EvaluacionVoluntarioController extends Controller
         // Obtener universidades para el combo de asignar
         $universidades = DB::table('universidad')->orderBy('nombre')->get();
         
-        // Parsear las respuestas del resumen físico y emocional
-        $respuestasFisicas = $this->parsearRespuestas($reporte->resumen_fisico);
-        $respuestasEmocionales = $this->parsearRespuestas($reporte->resumen_emocional);
+        // Parsear las respuestas del usuario (de los nuevos campos respuestas_*)
+        // Si no existen, intentar parsear del resumen (para reportes antiguos)
+        $textoFisico = $reporte->respuestas_fisico ?? $reporte->resumen_fisico;
+        $textoEmocional = $reporte->respuestas_emocional ?? $reporte->resumen_emocional;
+        
+        $respuestasFisicas = $this->parsearRespuestas($textoFisico);
+        $respuestasEmocionales = $this->parsearRespuestas($textoEmocional);
         
         // Parsear el estado del cuerpo del resumen físico
-        $estadoCuerpo = $this->parsearEstadoCuerpo($reporte->resumen_fisico);
+        $estadoCuerpo = $this->parsearEstadoCuerpo($textoFisico);
         
         return view('reportes.detalle', compact(
             'reporte',
@@ -428,6 +436,37 @@ class EvaluacionVoluntarioController extends Controller
                 if (preg_match('/^(.+?):\s*(muybien|bien|normal|mal|muymal)$/i', trim($parte), $m)) {
                     $nombreParte = trim($m[1]);
                     $estado = strtolower(trim($m[2]));
+                    
+                    if (isset($mapeoPartes[$nombreParte])) {
+                        $estadoCuerpo[$mapeoPartes[$nombreParte]] = $estado;
+                    }
+                }
+            }
+        }
+        
+        // Formato nuevo: "Partes del cuerpo con molestias: Cabeza (muy mal), Brazo Izquierdo (mal)."
+        if (preg_match('/Partes del cuerpo con molestias:\s*(.+?)\.?$/i', $resumen, $matches)) {
+            $partesTexto = trim($matches[1]);
+            // Dividir por coma
+            $partes = preg_split('/,\s*/', $partesTexto);
+            
+            // Mapeo de estados con espacios a sin espacios
+            $estadosMap = [
+                'muy bien' => 'muybien',
+                'bien' => 'bien',
+                'normal' => 'normal',
+                'mal' => 'mal',
+                'muy mal' => 'muymal',
+            ];
+            
+            foreach ($partes as $parte) {
+                // Formato: "Nombre Parte (estado)"
+                if (preg_match('/^(.+?)\s*\((.+?)\)$/i', trim($parte), $m)) {
+                    $nombreParte = trim($m[1]);
+                    $estadoTexto = strtolower(trim($m[2]));
+                    
+                    // Convertir estado con espacio a sin espacio
+                    $estado = $estadosMap[$estadoTexto] ?? $estadoTexto;
                     
                     if (isset($mapeoPartes[$nombreParte])) {
                         $estadoCuerpo[$mapeoPartes[$nombreParte]] = $estado;
