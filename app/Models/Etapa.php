@@ -21,8 +21,7 @@ class Etapa extends Model
 
     protected $perPage = 20;
 
-    protected $fillable = ['nombre', 'orden', 'id_curso'];
-
+    protected $fillable = ['nombre', 'orden', 'id_curso', 'descripcion'];
     /**
      * Relación: etapa pertenece a un curso
      */

@@ -26,6 +26,12 @@ use App\Events\ConsultaRespondida;
 
 
 
+Route::post(
+    'voluntarios/{id}/necesidades/asignar',
+    [VoluntarioController::class, 'asignarNecesidad']
+)->name('voluntarios.necesidades.asignar');
+
+
 
 Route::get('/administradores', [AdministradorController::class, 'index'])
     ->name('administradores.index');

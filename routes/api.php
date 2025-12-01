@@ -12,6 +12,11 @@ use App\Http\Controllers\Api\CapacitacionApiController;
 use App\Http\Controllers\Api\SolicitudAyudaApiController;
 use App\Http\Controllers\Api\EtapaApiController;
 use App\Http\Controllers\Api\ReporteApiController;
+use App\Http\Controllers\Api\CursoApiController;
+
+
+// ✅ AGREGAR ESTA LÍNEA
+Route::get('/cursos/{cursoId}/progreso/{voluntarioId}', [CursoApiController::class, 'obtenerProgresoVoluntario']);
 
 
 Route::patch('/etapas/{etapa}/estado', [EtapaApiController::class, 'toggleEstado'])

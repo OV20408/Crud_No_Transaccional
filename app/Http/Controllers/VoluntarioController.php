@@ -12,18 +12,15 @@ use App\Models\Rol;
 use App\Models\Capacitacion;
 use App\Models\ProgresoVoluntario;
 
-
 class VoluntarioController extends Controller
 {
     public function index(Request $request)
     {
-        // Obtener solo usuarios con rol de "Voluntario"
         $query = DB::table('usuario')
             ->join('rol', 'usuario.id_rol', '=', 'rol.id')
             ->where('rol.nombre', 'Voluntario')
             ->select('usuario.*');
 
-        // Filtro por nombre
         if ($request->filled('q')) {
             $query->where(function ($q) use ($request) {
                 $q->where('usuario.nombres', 'ILIKE', '%' . $request->q . '%')
@@ -31,17 +28,14 @@ class VoluntarioController extends Controller
             });
         }
 
-        // Filtro por CI
         if ($request->filled('ci')) {
             $query->where('usuario.ci', 'LIKE', '%' . $request->ci . '%');
         }
 
-        // Filtro por tipo de sangre
         if ($request->filled('tipo_sangre')) {
             $query->where('usuario.tipo_sangre', $request->tipo_sangre);
         }
 
-        // Filtro por estado (disponibilidad)
         if ($request->filled('estado')) {
             $query->where('usuario.estado', 'ILIKE', $request->estado);
         }
@@ -51,20 +45,13 @@ class VoluntarioController extends Controller
         return view('voluntarios.index', compact('voluntarios'));
     }
 
-    /**
-     * Mostrar formulario multi-step para crear voluntario.
-     */
     public function create()
     {
         return view('voluntarios.create');
     }
 
-    /**
-     * Guardar voluntario y enviar correo de “configura tu contraseña”.
-     */
     public function store(Request $request)
     {
-        // Validación básica (puedes afinarla después)
         $validated = $request->validate([
             'nombres'             => 'required|string|max:255',
             'apellidos'           => 'required|string|max:255',
@@ -78,21 +65,16 @@ class VoluntarioController extends Controller
             'nivel_entrenamiento' => 'nullable|string|max:255',
             'entidad_pertenencia' => 'nullable|string|max:255',
             'tipo_sangre'         => 'nullable|string|max:10',
-            
         ]);
 
-        // Obtener ID del rol "Voluntario"
         $rolVoluntarioId = Rol::where('nombre', 'Voluntario')->value('id');
 
         if (!$rolVoluntarioId) {
             abort(500, 'Rol "Voluntario" no está configurado en la tabla rol.');
         }
 
-        // Contraseña temporal aleatoria (solo para cumplir NOT NULL).
-        // El usuario la cambiará vía link de reset.
         $passwordTemporal = Str::random(12);
 
-        // Crear usuario usando el modelo (mapea password -> contrasena)
         $user = User::create([
             'nombres'             => $validated['nombres'],
             'apellidos'           => $validated['apellidos'],
@@ -107,20 +89,15 @@ class VoluntarioController extends Controller
             'nivel_entrenamiento' => $validated['nivel_entrenamiento'] ?? null,
             'entidad_pertenencia' => $validated['entidad_pertenencia'] ?? null,
             'tipo_sangre'         => $validated['tipo_sangre'] ?? null,
-
-            // IMPORTANTE: este campo "password" dispara tu setPasswordAttribute
             'password'            => $passwordTemporal,
         ]);
 
-        // (Opcional) Crear historial clínico vacío al vuelo
         DB::table('historial_clinico')->insert([
             'id_usuario'         => $user->id_usuario,
             'fecha_inicio'       => now(),
             'fecha_actualizacion'=> now(),
         ]);
 
-        // Enviar link de reset de contraseña al correo del voluntario
-        // (mismo flujo que ya usas para admin)
         if (!empty($user->email)) {
             Password::sendResetLink(['email' => $user->email]);
         }
@@ -149,7 +126,7 @@ class VoluntarioController extends Controller
             ->where('id_usuario', $id)
             ->first();
 
-        // 3. Reportes del voluntario (incluye los de progreso Y los del historial clínico/IA)
+        // 3. Reportes del voluntario
         $reportes = DB::select("
             SELECT DISTINCT r.*
             FROM reporte r
@@ -163,7 +140,7 @@ class VoluntarioController extends Controller
         // 4. Reporte más reciente
         $reporteMasReciente = $reportes[0] ?? null;
 
-        // 5. Capacitaciones del último reporte (a través de progreso_voluntario)
+        // 5. Capacitaciones del último reporte
         $capacitaciones = [];
         if ($reporteMasReciente) {
             $capacitaciones = DB::select("
@@ -187,12 +164,29 @@ class VoluntarioController extends Controller
                 ->get();
         }
 
-        // 7. Cursos del voluntario
+        // 7. ✅ TODAS LAS NECESIDADES DEL SISTEMA (para asignar)
+        $necesidadesAll = DB::table('necesidad')
+            ->orderBy('tipo')
+            ->orderBy('descripcion')
+            ->get();
+
+        // 8. ✅ NECESIDADES ASIGNADAS AL VOLUNTARIO (todas, no solo del último reporte)
+        $necesidadesAsignadas = DB::table('reporte_necesidad')
+            ->join('reporte', 'reporte.id', '=', 'reporte_necesidad.id_reporte')
+            ->join('historial_clinico', 'historial_clinico.id', '=', 'reporte.id_historial')
+            ->join('necesidad', 'necesidad.id', '=', 'reporte_necesidad.id_necesidad')
+            ->where('historial_clinico.id_usuario', $id)
+            ->select('necesidad.*', 'reporte.fecha_generado')
+            ->orderBy('reporte.fecha_generado', 'desc')
+            ->get();
+
+        // 9. ✅ CURSOS DEL VOLUNTARIO (con capacitación)
         $cursos = DB::select("
             SELECT DISTINCT 
                 cu.id,
                 cu.nombre,
                 cu.descripcion,
+                cap.id AS capacitacion_id,
                 cap.nombre AS capacitacion_nombre
             FROM progreso_voluntario pv
             JOIN etapa e ON e.id = pv.id_etapa
@@ -202,7 +196,7 @@ class VoluntarioController extends Controller
             ORDER BY cu.nombre
         ", [$id]);
 
-        // 8. Evaluaciones del voluntario (a través de historial_clinico -> reporte -> evaluacion)
+        // 10. Evaluaciones del voluntario
         $evaluaciones = [];
         if ($historial) {
             $evaluaciones = DB::table('reporte')
@@ -223,9 +217,7 @@ class VoluntarioController extends Controller
                 ->get();
         }
         
-        // Si no hay evaluaciones por historial, intentar obtener los reportes directamente
         if (empty($evaluaciones) || count($evaluaciones) == 0) {
-            // Obtener reportes que tengan id_historial del usuario
             $reportesEvaluacion = DB::table('reporte')
                 ->join('historial_clinico', 'historial_clinico.id', '=', 'reporte.id_historial')
                 ->where('historial_clinico.id_usuario', $id)
@@ -239,7 +231,6 @@ class VoluntarioController extends Controller
                 ->orderBy('reporte.fecha_generado', 'desc')
                 ->get();
                 
-            // Convertir reportes a formato de evaluaciones para la vista
             $evaluaciones = $reportesEvaluacion->map(function($reporte) {
                 return (object)[
                     'reporte_id' => $reporte->reporte_id,
@@ -253,6 +244,7 @@ class VoluntarioController extends Controller
             });
         }
 
+        // 11. Capacitaciones con progreso
         $capacitacionesProgreso = DB::select("
             SELECT DISTINCT 
                 c.*
@@ -264,10 +256,10 @@ class VoluntarioController extends Controller
             ORDER BY c.nombre
         ", [$id]);
 
-        // 9. Todas las capacitaciones del sistema (para el combo de asignar)
+        // 12. Todas las capacitaciones del sistema
         $capacitacionesAll = Capacitacion::orderBy('nombre')->get();
 
-                return view('voluntarios.show', compact(
+        return view('voluntarios.show', compact(
             'voluntario',
             'historial',
             'reportes',
@@ -276,21 +268,18 @@ class VoluntarioController extends Controller
             'cursos',
             'evaluaciones',
             'capacitacionesProgreso',
-            'capacitacionesAll'
+            'capacitacionesAll',
+            'necesidadesAll',        // ✅ NUEVO
+            'necesidadesAsignadas'   // ✅ NUEVO
         ));
-
     }
 
-
-
-
-        public function asignarCapacitacion(Request $request, $idUsuario)
+    public function asignarCapacitacion(Request $request, $idUsuario)
     {
         $request->validate([
             'capacitacion_id' => 'required|exists:capacitacion,id',
         ]);
 
-        // Buscar todas las etapas de los cursos de esa capacitación
         $etapas = DB::table('etapa')
             ->join('curso', 'curso.id', '=', 'etapa.id_curso')
             ->where('curso.id_capacitacion', $request->capacitacion_id)
@@ -324,4 +313,44 @@ class VoluntarioController extends Controller
             ->with('success', 'Capacitación asignada al voluntario correctamente.');
     }
 
+    /**
+     * ✅ NUEVO: Asignar necesidad a un voluntario
+     */
+    public function asignarNecesidad(Request $request, $idUsuario)
+    {
+        $request->validate([
+            'necesidad_id' => 'required|exists:necesidad,id',
+        ]);
+
+        // 1. Obtener el historial clínico del voluntario
+        $historial = DB::table('historial_clinico')
+            ->where('id_usuario', $idUsuario)
+            ->first();
+
+        if (!$historial) {
+            return redirect()
+                ->back()
+                ->withErrors('El voluntario no tiene historial clínico configurado.');
+        }
+
+        // 2. Crear un nuevo reporte para registrar la necesidad
+        $reporteId = DB::table('reporte')->insertGetId([
+            'id_historial'     => $historial->id,
+            'estado_general'   => 'Necesidad asignada',
+            'observaciones'    => 'Necesidad asignada manualmente desde el perfil del voluntario.',
+            'fecha_generado'   => now(),
+        ]);
+
+        // 3. Asociar la necesidad al reporte
+        DB::table('reporte_necesidad')->insert([
+            'id_reporte'    => $reporteId,
+            'id_necesidad'  => $request->necesidad_id,
+            'created_at'    => now(),
+        ]);
+
+        return redirect()
+            ->route('voluntarios.show', $idUsuario)
+            ->with('success', 'Necesidad asignada correctamente.');
+    }
 }
+

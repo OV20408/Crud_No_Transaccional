@@ -655,6 +655,9 @@
       <button class="btn-opcion" onclick="mostrarVista('encuestas')">
         <i class="fas fa-poll"></i> Encuestas Realizadas
       </button>
+      <button class="btn-opcion" onclick="mostrarVista('cursos')">
+        <i class="fas fa-book"></i> Cursos del Voluntario
+      </button>
       <button class="btn-opcion" onclick="mostrarVista('necesidades')">
         <i class="fas fa-book"></i> Analisis de Necesidades
       </button>
@@ -707,7 +710,37 @@
 </div>
 
 
+{{-- Modal para asignar necesidad --}}
+<div class="modal fade" id="modalAsignarNecesidad" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <form method="POST" action="{{ route('voluntarios.necesidades.asignar', $voluntario->id_usuario) }}" class="modal-content">
+      @csrf
+      <div class="modal-header">
+        <h5 class="modal-title">Asignar Necesidad</h5>
+        <button type="button" class="close" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
+      </div>
 
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="necesidad_id">Necesidad</label>
+          <select name="necesidad_id" id="necesidad_id" class="form-control" required>
+            <option value="">-- Selecciona una necesidad --</option>
+            @foreach($necesidadesAll as $nec)
+              <option value="{{ $nec->id }}">{{ $nec->tipo }} - {{ $nec->descripcion }}</option>
+            @endforeach
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Asignar</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 
 
@@ -779,29 +812,94 @@
         `;
         break;
 
-            case 'capacitaciones':
-        contenido.innerHTML = `
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;">
-            <h2 class="titulo-seccion" style="margin-bottom:0;">Capacitaciones y Certificaciones</h2>
-            <button class="btn-formulario-enviar" data-toggle="modal" data-target="#modalAsignarCapacitacion">
-              <i class="fas fa-plus-circle"></i> Asignar capacitación
-            </button>
-          </div>
+case 'capacitaciones':
+  contenido.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;">
+      <h2 class="titulo-seccion" style="margin-bottom:0;">Capacitaciones y Certificaciones</h2>
+      <button class="btn-formulario-enviar" data-toggle="modal" data-target="#modalAsignarCapacitacion">
+        <i class="fas fa-plus-circle"></i> Asignar capacitación
+      </button>
+    </div>
 
-          <div style="margin-top:20px;">
-          @if(count($capacitacionesProgreso) > 0)
-            @foreach($capacitacionesProgreso as $cap)
-              <div class="vista-card">
-                <strong>{{ $cap->nombre }}</strong>
-                <p>{{ $cap->descripcion }}</p>
+    <div style="margin-top:20px;">
+    @if(count($capacitacionesProgreso) > 0)
+      <div class="row">
+        @foreach($capacitacionesProgreso as $cap)
+          <div class="col-md-6 mb-3">
+            <div class="vista-card curso-card" 
+                 style="cursor:pointer;transition:all 0.3s;" 
+                 onclick="toggleCursoDetalles({{ $cap->id }})">
+              
+              <div style="display:flex;justify-content:space-between;align-items:start;">
+                <div>
+                  <strong style="font-size:1.2rem;">{{ $cap->nombre }}</strong>
+                  <p style="margin:5px 0;color:#666;">{{ $cap->descripcion }}</p>
+                </div>
+                <i id="icono-curso-{{ $cap->id }}" class="fas fa-chevron-down" style="transition:transform 0.3s;"></i>
               </div>
-            @endforeach
-          @else
-            <p class="mensaje-vacio">No hay capacitaciones asignadas.</p>
-          @endif
+
+              {{-- 🔹 DETALLES DEL CURSO (inicialmente ocultos) --}}
+              <div id="detalles-curso-{{ $cap->id }}" style="display:none;margin-top:15px;border-top:2px solid #007bff;padding-top:15px;">
+                <h5 style="color:#007bff;margin-bottom:10px;">
+                  <i class="fas fa-tasks"></i> Progreso de Etapas
+                </h5>
+
+                @php
+                  // Obtener etapas del curso con su progreso
+                  $etapas = DB::table('etapa')
+                    ->join('curso', 'curso.id', '=', 'etapa.id_curso')
+                    ->leftJoin('progreso_voluntario', function($join) use ($voluntario, $cap) {
+                        $join->on('progreso_voluntario.id_etapa', '=', 'etapa.id')
+                             ->where('progreso_voluntario.id_usuario', '=', $voluntario->id_usuario);
+                    })
+                    ->where('curso.id_capacitacion', $cap->id)
+                    ->select(
+                        'etapa.id',
+                        'etapa.nombre',
+                        'etapa.orden',
+                        'progreso_voluntario.estado',
+                        'progreso_voluntario.fecha_inicio',
+                        'progreso_voluntario.fecha_finalizacion'
+                    )
+                    ->orderBy('etapa.orden')
+                    ->get();
+                @endphp
+
+                @foreach($etapas as $etapa)
+                  <div class="etapa-item" style="background:#f8f9fa;padding:10px;border-radius:6px;margin-bottom:10px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <span>
+                        <strong>{{ $etapa->orden }}.</strong> {{ $etapa->nombre }}
+                      </span>
+                      <span class="badge badge-{{ 
+                        $etapa->estado == 'completado' ? 'success' : 
+                        ($etapa->estado == 'en_progreso' ? 'warning' : 'secondary') 
+                      }}">
+                        {{ $etapa->estado ?? 'No iniciado' }}
+                      </span>
+                    </div>
+
+                    @if($etapa->fecha_inicio)
+                      <small style="color:#666;">
+                        Inicio: {{ \Carbon\Carbon::parse($etapa->fecha_inicio)->format('d/m/Y') }}
+                        @if($etapa->fecha_finalizacion)
+                          | Fin: {{ \Carbon\Carbon::parse($etapa->fecha_finalizacion)->format('d/m/Y') }}
+                        @endif
+                      </small>
+                    @endif
+                  </div>
+                @endforeach
+              </div>
+            </div>
           </div>
-        `;
-        break;
+        @endforeach
+      </div>
+    @else
+      <p class="mensaje-vacio">No hay capacitaciones asignadas.</p>
+    @endif
+    </div>
+  `;
+  break;
 
 
       case 'encuestas':
@@ -852,15 +950,52 @@
         `;
         break;
 
+      case 'cursos':
+        contenido.innerHTML = `
+          <h2 class="titulo-seccion">Cursos del Voluntario</h2>
+          @if(count($cursos) > 0)
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+              @foreach($cursos as $curso)
+                <div class="vista-card" 
+                    style="cursor: pointer; transition: all 0.3s ease;" 
+                    onclick="verDetalleCurso({{ $curso->id }}, {{ $voluntario->id_usuario }}, '{{ $curso->nombre }}', '{{ $curso->capacitacion_nombre }}', '{{ $curso->descripcion }}')">
+                  
+                  <strong>{{ $curso->nombre }}</strong>
+                  <p>{{ $curso->descripcion }}</p>
+                  <p><em>Capacitación: {{ $curso->capacitacion_nombre }}</em></p>
+                  <div style="margin-top: 10px; color: #007bff; font-weight: bold;">
+                    <i class="fas fa-eye"></i> Ver detalles y progreso
+                  </div>
+                </div>
+              @endforeach
+            </div>
+          @else
+            <p class="mensaje-vacio">No hay cursos asignados.</p>
+          @endif
+        `;
+        break;
+
       case 'necesidades':
         contenido.innerHTML = `
-          <h2 class="titulo-seccion">Analisis de Necesidades</h2>
-          @if(count($cursos) > 0)
-            @foreach($cursos as $curso)
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:20px;">
+            <h2 class="titulo-seccion" style="margin-bottom:0;">Análisis de Necesidades</h2>
+            <button class="btn-formulario-enviar" data-toggle="modal" data-target="#modalAsignarNecesidad">
+              <i class="fas fa-plus-circle"></i> Asignar Necesidad
+            </button>
+          </div>
+
+          @if(count($necesidadesAsignadas) > 0)
+            @foreach($necesidadesAsignadas as $nec)
               <div class="vista-card">
-                <strong>{{ $curso->nombre }}</strong>
-                <p>{{ $curso->descripcion }}</p>
-                <p><em>Capacitación: {{ $curso->capacitacion_nombre }}</em></p>
+                <div style="display:flex;justify-content:space-between;align-items:start;">
+                  <div>
+                    <strong>{{ $nec->tipo }}</strong>
+                    <p>{{ $nec->descripcion }}</p>
+                  </div>
+                  <span class="badge badge-info" style="white-space:nowrap;">
+                    {{ \Carbon\Carbon::parse($nec->fecha_generado)->format('d/m/Y') }}
+                  </span>
+                </div>
               </div>
             @endforeach
           @else
@@ -870,6 +1005,23 @@
         break;
     }
   }
+
+
+  function toggleCursoDetalles(cursoId) {
+  const detalles = document.getElementById('detalles-curso-' + cursoId);
+  const icono = document.getElementById('icono-curso-' + cursoId);
+  
+  if (detalles.style.display === 'none') {
+    detalles.style.display = 'block';
+    icono.classList.remove('fa-chevron-down');
+    icono.classList.add('fa-chevron-up');
+  } else {
+    detalles.style.display = 'none';
+    icono.classList.remove('fa-chevron-up');
+    icono.classList.add('fa-chevron-down');
+  }
+}
+
 
   function toggleHistorial(tipo) {
     const seccion = document.getElementById('seccion-' + tipo);
@@ -965,5 +1117,129 @@
   function descargarHistorialClinico(voluntarioId) {
     alert('Funcionalidad de descargar historial clínico en desarrollo');
   }
+
+  /**
+ * ✅ Mostrar detalles y progreso de un curso específico
+ */
+function verDetalleCurso(cursoId, voluntarioId, nombreCurso, nombreCapacitacion, descripcionCurso) {
+  const contenido = document.getElementById('vista-contenido');
+  
+  // Mostrar loading
+  contenido.innerHTML = `
+    <div style="text-align: center; padding: 40px;">
+      <div class="spinner-border text-primary" role="status">
+        <span class="sr-only">Cargando...</span>
+      </div>
+      <p style="margin-top: 15px; color: #666;">Cargando detalles del curso...</p>
+    </div>
+  `;
+
+  // Obtener las etapas del curso con su progreso
+  fetch(`/api/cursos/${cursoId}/progreso/${voluntarioId}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        const etapas = data.etapas;
+
+        let etapasHTML = '';
+        etapas.forEach((etapa, index) => {
+          const estadoColor = etapa.estado === 'completado' ? '#28a745' : 
+                              etapa.estado === 'en_progreso' ? '#007bff' : '#6c757d';
+          const estadoTexto = etapa.estado === 'completado' ? 'COMPLETADO' : 
+                              etapa.estado === 'en_progreso' ? 'EN PROGRESO' : 'NO INICIADO';
+          const estadoIcono = etapa.estado === 'completado' ? 'check-circle' : 
+                              etapa.estado === 'en_progreso' ? 'clock' : 'circle';
+
+          etapasHTML += `
+            <div class="vista-card" style="border-left: 4px solid ${estadoColor};">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                    <div style="
+                      width: 32px;
+                      height: 32px;
+                      border-radius: 50%;
+                      background: ${estadoColor};
+                      color: white;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      font-weight: bold;
+                    ">${index + 1}</div>
+                    <strong style="font-size: 1.1rem;">${etapa.nombre}</strong>
+                  </div>
+                  <p style="color: #666; margin-left: 42px;">${etapa.descripcion || 'Sin descripción'}</p>
+                </div>
+                <div style="text-align: right;">
+                  <span style="
+                    background: ${estadoColor};
+                    color: white;
+                    padding: 6px 12px;
+                    border-radius: 20px;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 5px;
+                  ">
+                    <i class="fas fa-${estadoIcono}"></i>
+                    ${estadoTexto}
+                  </span>
+                </div>
+              </div>
+              ${etapa.fecha_inicio ? `
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; font-size: 0.9rem; color: #666;">
+                  <i class="fas fa-calendar-alt"></i> Inicio: ${new Date(etapa.fecha_inicio).toLocaleDateString('es-ES')}
+                  ${etapa.fecha_finalizacion ? `
+                    <br><i class="fas fa-calendar-check"></i> Finalizado: ${new Date(etapa.fecha_finalizacion).toLocaleDateString('es-ES')}
+                  ` : ''}
+                </div>
+              ` : ''}
+            </div>
+          `;
+        });
+
+        contenido.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;">
+            <button class="btn-formulario-enviar" onclick="mostrarVista('cursos')" style="padding: 8px 16px;">
+              <i class="fas fa-arrow-left"></i> Volver
+            </button>
+            <div>
+              <h2 class="titulo-seccion" style="margin: 0;">${nombreCurso}</h2>
+              <p style="color: #666; margin: 5px 0 0 0;">
+                <i class="fas fa-certificate"></i> ${nombreCapacitacion}
+              </p>
+            </div>
+          </div>
+
+          <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <p style="margin: 0; color: #333;"><strong>Descripción:</strong> ${descripcionCurso || 'Sin descripción'}</p>
+          </div>
+
+          <h3 style="color: #007bff; margin-bottom: 15px;">
+            <i class="fas fa-list-ol"></i> Etapas del Curso
+          </h3>
+
+          ${etapasHTML}
+        `;
+      } else {
+        contenido.innerHTML = `
+          <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle"></i> ${data.message}
+          </div>
+        `;
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      contenido.innerHTML = `
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle"></i> Error al cargar el curso
+        </div>
+      `;
+    });
+}
+
+
 </script>
 @endsection
