@@ -16,18 +16,19 @@
             font-size: 10pt;
             color: #2c3e50;
             line-height: 1.5;
-            background: #ffffff; /* ✅ CAMBIAR A BLANCO PURO */
+            background: #0c4a6e;
         }
 
         /* HEADER MEJORADO */
+        /* HEADER MEJORADO */
         .header {
-            background: linear-gradient(135deg, #0c4a6e 0%, #0369a1 50%, #0284c7 100%);
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%);
             color: white;
             padding: 40px 30px;
             text-align: center;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 8px 24px rgba(12, 74, 110, 0.4);
+            box-shadow: 0 8px 24px rgba(30, 58, 138, 0.4);
         }
 
         .header::before {
