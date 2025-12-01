@@ -595,7 +595,7 @@
     </div>
 
     {{-- Evaluaciones Físicas --}}
-    <div class="panel-hover panel-fisico">
+    <div class="panel-hover panel-fisico" id="panel-evaluacion-fisica">
       <h4>
         <i class="fas fa-heartbeat"></i>
         Evaluaciones Físicas
@@ -619,7 +619,7 @@
     </div>
 
     {{-- Evaluaciones Psicológicas --}}
-    <div class="panel-hover panel-psicologico">
+    <div class="panel-hover panel-psicologico" id="panel-evaluacion-psicologica">
       <h4>
         <i class="fas fa-brain"></i>
         Evaluaciones Psicológicas
@@ -750,69 +750,166 @@
 </div>
 
 <script>
+  // Variables globales para datos dinámicos (se actualizan con polling)
+  let evaluacionesActuales = @json($evaluaciones ?? []);
+  let reportesActuales = @json($reportes ?? []);
+  
+  // Función para renderizar encuestas con datos dinámicos
+  function renderizarEncuestas() {
+    const contenido = document.getElementById('vista-contenido');
+    if (!contenido) return;
+    
+    let html = '<h2 class="titulo-seccion">Encuestas Realizadas</h2>';
+    
+    if (evaluacionesActuales && evaluacionesActuales.length > 0) {
+      html += '<div class="row">';
+      
+      // Columna Evaluación Física
+      html += '<div class="col-md-6">';
+      evaluacionesActuales.forEach(function(eval) {
+        const reporteId = eval.reporte_id || eval.id_reporte || eval.id || 'N/A';
+        const fechaRaw = eval.fecha_generado || eval.fecha;
+        const fecha = fechaRaw ? new Date(fechaRaw).toLocaleDateString('es-ES') : 'N/A';
+        html += `
+          <a href="/reporte/${reporteId}/fisico" style="text-decoration: none;">
+            <div class="card mb-3" style="border-left: 4px solid #353b41; background-color: #f4f6f9; cursor: pointer; transition: all 0.2s;">
+              <div class="card-body d-flex justify-content-between align-items-center py-3">
+                <div>
+                  <strong style="color: #353b41;">Evaluacion Fisica</strong>
+                  <p class="mb-0 text-muted" style="font-size: 0.9rem;">Fecha realizada: ${fecha}</p>
+                </div>
+                <span class="badge" style="background-color: #007bff; color: white; padding: 8px 12px; border-radius: 20px;">
+                  # Reporte #${reporteId}
+                </span>
+              </div>
+            </div>
+          </a>
+        `;
+      });
+      html += '</div>';
+      
+      // Columna Evaluación Emocional
+      html += '<div class="col-md-6">';
+      evaluacionesActuales.forEach(function(eval) {
+        const reporteId = eval.reporte_id || eval.id_reporte || eval.id || 'N/A';
+        const fechaRaw = eval.fecha_generado || eval.fecha;
+        const fecha = fechaRaw ? new Date(fechaRaw).toLocaleDateString('es-ES') : 'N/A';
+        html += `
+          <a href="/reporte/${reporteId}/emocional" style="text-decoration: none;">
+            <div class="card mb-3" style="border-left: 4px solid #353b41; background-color: #f4f6f9; cursor: pointer; transition: all 0.2s;">
+              <div class="card-body d-flex justify-content-between align-items-center py-3">
+                <div>
+                  <strong style="color: #353b41;">Evaluacion Emocional</strong>
+                  <p class="mb-0 text-muted" style="font-size: 0.9rem;">Fecha realizada: ${fecha}</p>
+                </div>
+                <span class="badge" style="background-color: #007bff; color: white; padding: 8px 12px; border-radius: 20px;">
+                  # Reporte #${reporteId}
+                </span>
+              </div>
+            </div>
+          </a>
+        `;
+      });
+      html += '</div>';
+      
+      html += '</div>';
+    } else {
+      html += '<p class="mensaje-vacio">No hay encuestas realizadas.</p>';
+    }
+    
+    contenido.innerHTML = html;
+  }
+
+  // Función para renderizar historial con datos dinámicos
+  function renderizarHistorial() {
+    const contenido = document.getElementById('vista-contenido');
+    if (!contenido) return;
+    
+    let html = '<h2 class="titulo-seccion">Historial</h2>';
+    
+    if (reportesActuales && reportesActuales.length > 0) {
+      html += '<div class="historial-tabla">';
+      
+      // Columna Clínico
+      html += '<div class="historial-columna">';
+      html += '<div class="historial-columna-header"><i class="fas fa-heartbeat mr-2"></i> Clínico</div>';
+      reportesActuales.forEach(function(reporte) {
+        if (reporte.resumen_fisico) {
+          const fecha = new Date(reporte.fecha_generado).toLocaleDateString('es-ES');
+          html += `
+            <div class="historial-item">
+              <div class="historial-item-content">${reporte.resumen_fisico}</div>
+              <div class="historial-item-fecha">${fecha}</div>
+            </div>
+          `;
+        }
+      });
+      html += '</div>';
+      
+      // Columna Psicológico
+      html += '<div class="historial-columna">';
+      html += '<div class="historial-columna-header psicologico"><i class="fas fa-brain mr-2"></i> Psicológico</div>';
+      reportesActuales.forEach(function(reporte) {
+        if (reporte.resumen_emocional) {
+          const fecha = new Date(reporte.fecha_generado).toLocaleDateString('es-ES');
+          html += `
+            <div class="historial-item psicologico">
+              <div class="historial-item-content">${reporte.resumen_emocional}</div>
+              <div class="historial-item-fecha">${fecha}</div>
+            </div>
+          `;
+        }
+      });
+      html += '</div>';
+      
+      html += '</div>';
+    } else {
+      html += '<p class="mensaje-vacio">No hay historial disponible.</p>';
+    }
+    
+    contenido.innerHTML = html;
+  }
+
+  // Función para renderizar reportes con datos dinámicos
+  function renderizarReportes() {
+    const contenido = document.getElementById('vista-contenido');
+    if (!contenido) return;
+    
+    let html = '<h2 class="titulo-seccion">Reportes</h2>';
+    
+    if (reportesActuales && reportesActuales.length > 0) {
+      reportesActuales.forEach(function(reporte) {
+        const fecha = new Date(reporte.fecha_generado).toLocaleString('es-ES');
+        html += `
+          <div class="vista-card">
+            <strong>Reporte #${reporte.id}</strong>
+            <p><strong>Estado:</strong></p>
+            <p>${reporte.estado_general || 'N/D'}</p>
+            <p><strong>Fecha:</strong></p>
+            <p>${fecha}</p>
+            ${reporte.observaciones ? `<p><strong>Observaciones:</strong></p><p>${reporte.observaciones}</p>` : ''}
+          </div>
+        `;
+      });
+    } else {
+      html += '<p class="mensaje-vacio">No hay reportes disponibles.</p>';
+    }
+    
+    contenido.innerHTML = html;
+  }
+
   function mostrarVista(vista) {
     const contenido = document.getElementById('vista-contenido');
     
     switch(vista) {
       case 'historial':
-        contenido.innerHTML = `
-          <h2 class="titulo-seccion">Historial</h2>
-          @if(count($reportes) > 0)
-            <div class="historial-tabla">
-              <!-- Columna Clínico -->
-              <div class="historial-columna">
-                <div class="historial-columna-header">
-                  <i class="fas fa-heartbeat mr-2"></i> Clínico
-                </div>
-                @foreach($reportes as $reporte)
-                  @if($reporte->resumen_fisico)
-                    <div class="historial-item">
-                      <div class="historial-item-content">{{ $reporte->resumen_fisico }}</div>
-                      <div class="historial-item-fecha">{{ \Carbon\Carbon::parse($reporte->fecha_generado)->format('d/m/Y') }}</div>
-                    </div>
-                  @endif
-                @endforeach
-              </div>
-
-              <!-- Columna Psicológico -->
-              <div class="historial-columna">
-                <div class="historial-columna-header psicologico">
-                  <i class="fas fa-brain mr-2"></i> Psicológico
-                </div>
-                @foreach($reportes as $reporte)
-                  @if($reporte->resumen_emocional)
-                    <div class="historial-item psicologico">
-                      <div class="historial-item-content">{{ $reporte->resumen_emocional }}</div>
-                      <div class="historial-item-fecha">{{ \Carbon\Carbon::parse($reporte->fecha_generado)->format('d/m/Y') }}</div>
-                    </div>
-                  @endif
-                @endforeach
-              </div>
-            </div>
-          @else
-            <p class="mensaje-vacio">No hay historial disponible.</p>
-          @endif
-        `;
+        // Usar función dinámica para historial
+        renderizarHistorial();
         break;
 
       case 'reportes':
-        contenido.innerHTML = `
-          <h2 class="titulo-seccion">Reportes</h2>
-          @if(count($reportes) > 0)
-            @foreach($reportes as $reporte)
-              <div class="vista-card">
-                <strong>Reporte #{{ $reporte->id }}</strong>
-                <p><strong>Estado:</strong> {{ $reporte->estado_general ?? 'N/D' }}</p>
-                <p><strong>Fecha:</strong> {{ \Carbon\Carbon::parse($reporte->fecha_generado)->format('d/m/Y H:i') }}</p>
-                @if($reporte->observaciones)
-                  <p><strong>Observaciones:</strong> {{ $reporte->observaciones }}</p>
-                @endif
-              </div>
-            @endforeach
-          @else
-            <p class="mensaje-vacio">No hay reportes disponibles.</p>
-          @endif
-        `;
+        // Usar función dinámica para reportes
+        renderizarReportes();
         break;
 
 case 'capacitaciones':
@@ -878,7 +975,7 @@ case 'capacitaciones':
                         $etapa->estado == 'completado' ? 'success' : 
                         ($etapa->estado == 'en_progreso' ? 'warning' : 'secondary') 
                       }}">
-                        {{ $etapa->estado ?? 'No iniciado' }}
+                        {{ $etapa->estado == 'en_progreso' ? 'En progreso' : ($etapa->estado == 'completado' ? 'Completado' : ($etapa->estado ?? 'No iniciado')) }}
                       </span>
                     </div>
 
@@ -906,51 +1003,8 @@ case 'capacitaciones':
 
 
       case 'encuestas':
-        contenido.innerHTML = `
-          <h2 class="titulo-seccion">Encuestas Realizadas</h2>
-          @if(count($evaluaciones) > 0)
-            <div class="row">
-              {{-- Columna Evaluación Física --}}
-              <div class="col-md-6">
-                @foreach($evaluaciones as $evaluacion)
-                  <a href="{{ route('reporte.ver', ['id' => $evaluacion->reporte_id ?? $evaluacion->id_reporte ?? $evaluacion->id, 'tipo' => 'fisico']) }}" style="text-decoration: none;">
-                    <div class="card mb-3" style="border-left: 4px solid #353b41; background-color: #f4f6f9; cursor: pointer; transition: all 0.2s;">
-                      <div class="card-body d-flex justify-content-between align-items-center py-3">
-                        <div>
-                          <strong style="color: #353b41;">Evaluacion Fisica</strong>
-                          <p class="mb-0 text-muted" style="font-size: 0.9rem;">Fecha realizada: {{ \Carbon\Carbon::parse($evaluacion->fecha_generado ?? $evaluacion->fecha)->format('j/n/Y') }}</p>
-                        </div>
-                        <span class="badge" style="background-color: #007bff; color: white; padding: 8px 12px; border-radius: 20px;">
-                          # Reporte #{{ $evaluacion->reporte_id ?? $evaluacion->id_reporte ?? 'N/A' }}
-                        </span>
-                      </div>
-                    </div>
-                  </a>
-                @endforeach
-              </div>
-              {{-- Columna Evaluación Emocional --}}
-              <div class="col-md-6">
-                @foreach($evaluaciones as $evaluacion)
-                  <a href="{{ route('reporte.ver', ['id' => $evaluacion->reporte_id ?? $evaluacion->id_reporte ?? $evaluacion->id, 'tipo' => 'emocional']) }}" style="text-decoration: none;">
-                    <div class="card mb-3" style="border-left: 4px solid #353b41; background-color: #f4f6f9; cursor: pointer; transition: all 0.2s;">
-                      <div class="card-body d-flex justify-content-between align-items-center py-3">
-                        <div>
-                          <strong style="color: #353b41;">Evaluacion Emocional</strong>
-                          <p class="mb-0 text-muted" style="font-size: 0.9rem;">Fecha realizada: {{ \Carbon\Carbon::parse($evaluacion->fecha_generado ?? $evaluacion->fecha)->format('j/n/Y') }}</p>
-                        </div>
-                        <span class="badge" style="background-color: #007bff; color: white; padding: 8px 12px; border-radius: 20px;">
-                          # Reporte #{{ $evaluacion->reporte_id ?? $evaluacion->id_reporte ?? 'N/A' }}
-                        </span>
-                      </div>
-                    </div>
-                  </a>
-                @endforeach
-              </div>
-            </div>
-          @else
-            <p class="mensaje-vacio">No hay encuestas realizadas.</p>
-          @endif
-        `;
+        // Usar la función dinámica para renderizar encuestas con datos actualizados
+        renderizarEncuestas();
         break;
 
       case 'cursos':
@@ -1238,6 +1292,196 @@ function verDetalleCurso(cursoId, voluntarioId, nombreCurso, nombreCapacitacion,
       `;
     });
 }
+
+// ========================================
+// ACTUALIZACIÓN AUTOMÁTICA DE DATOS
+// ========================================
+let ultimoTotalReportes = {{ count($reportes ?? []) }};
+const voluntarioId = {{ $voluntario->id_usuario }};
+const INTERVALO_POLLING = 3000; // 3 segundos
+
+// Variable para detectar cambios
+let ultimaFechaEvaluacion = evaluacionesActuales.length > 0 ? (evaluacionesActuales[0].fecha_generado || evaluacionesActuales[0].fecha || '') : '';
+
+function actualizarDatosVoluntario() {
+  fetch(`/voluntarios/${voluntarioId}/datos-actualizados`, {
+    method: 'GET',
+    headers: {
+      'Accept': 'application/json',
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      const nuevosDatos = data.data;
+      
+      // Verificar si hay nuevos reportes O si cambió la última fecha de evaluación
+      const nuevaFechaEvaluacion = nuevosDatos.evaluaciones && nuevosDatos.evaluaciones.length > 0 
+        ? (nuevosDatos.evaluaciones[0].fecha_generado || nuevosDatos.evaluaciones[0].fecha || '') 
+        : '';
+      
+      const hayNuevosDatos = nuevosDatos.totalReportes > ultimoTotalReportes || 
+                             nuevaFechaEvaluacion !== ultimaFechaEvaluacion ||
+                             nuevosDatos.evaluaciones.length !== evaluacionesActuales.length ||
+                             nuevosDatos.reportes.length !== reportesActuales.length;
+      
+      if (hayNuevosDatos) {
+        console.log('Nuevos datos detectados, actualizando vista...');
+        console.log('Total reportes anterior:', ultimoTotalReportes, '-> nuevo:', nuevosDatos.totalReportes);
+        console.log('Evaluaciones anterior:', evaluacionesActuales.length, '-> nuevo:', nuevosDatos.evaluaciones.length);
+        
+        ultimoTotalReportes = nuevosDatos.totalReportes;
+        evaluacionesActuales = nuevosDatos.evaluaciones;
+        reportesActuales = nuevosDatos.reportes;
+        ultimaFechaEvaluacion = nuevaFechaEvaluacion;
+        
+        // Actualizar paneles de evaluación
+        actualizarPanelEvaluacionFisica(nuevosDatos.reporteMasReciente);
+        actualizarPanelEvaluacionPsicologica(nuevosDatos.reporteMasReciente);
+        
+        // Actualizar secciones dinámicas si están visibles
+        actualizarSeccionEncuestas(nuevosDatos.evaluaciones);
+        actualizarSeccionHistorial();
+        actualizarSeccionReportes();
+        
+        // Mostrar notificación de actualización
+        mostrarNotificacionActualizacion();
+      }
+    }
+  })
+  .catch(error => {
+    console.error('Error en polling:', error);
+  });
+}
+
+// Función para actualizar la sección de historial si está visible
+function actualizarSeccionHistorial() {
+  const contenido = document.getElementById('vista-contenido');
+  if (!contenido) return;
+  if (!contenido.innerHTML.includes('Historial') || contenido.innerHTML.includes('Encuestas')) return;
+  
+  console.log('Actualizando sección de historial');
+  renderizarHistorial();
+}
+
+// Función para actualizar la sección de reportes si está visible
+function actualizarSeccionReportes() {
+  const contenido = document.getElementById('vista-contenido');
+  if (!contenido) return;
+  if (!contenido.innerHTML.includes('<h2 class="titulo-seccion">Reportes</h2>')) return;
+  
+  console.log('Actualizando sección de reportes');
+  renderizarReportes();
+}
+
+function actualizarPanelEvaluacionFisica(reporte) {
+  const panel = document.getElementById('panel-evaluacion-fisica');
+  if (!panel) return;
+  
+  let contenido = `
+    <h4>
+      <i class="fas fa-heartbeat"></i>
+      Evaluaciones Físicas
+    </h4>
+  `;
+  
+  if (reporte && reporte.resumen_fisico) {
+    const fecha = new Date(reporte.fecha_generado).toLocaleDateString('es-ES');
+    contenido += `
+      <div class="item-evaluacion">
+        <i class="fas fa-file-alt"></i>
+        <span>Última evaluación: ${fecha}</span>
+      </div>
+      <div class="item-evaluacion">
+        <i class="fas fa-chart-line"></i>
+        <span>Reporte #${reporte.id}</span>
+      </div>
+      <p>${reporte.resumen_fisico}</p>
+    `;
+  } else {
+    contenido += `
+      <div class="no-evaluacion">
+        <i class="fas fa-file-alt icono-vacio"></i>
+        <p>No hay evaluaciones físicas registradas.</p>
+      </div>
+    `;
+  }
+  
+  panel.innerHTML = contenido;
+}
+
+function actualizarPanelEvaluacionPsicologica(reporte) {
+  const panel = document.getElementById('panel-evaluacion-psicologica');
+  if (!panel) return;
+  
+  let contenido = `
+    <h4>
+      <i class="fas fa-brain"></i>
+      Evaluaciones Psicológicas
+    </h4>
+  `;
+  
+  if (reporte && reporte.resumen_emocional) {
+    const fecha = new Date(reporte.fecha_generado).toLocaleDateString('es-ES');
+    contenido += `
+      <div class="item-evaluacion">
+        <i class="fas fa-file-alt"></i>
+        <span>Última evaluación: ${fecha}</span>
+      </div>
+      <div class="item-evaluacion">
+        <i class="fas fa-chart-line"></i>
+        <span>Reporte #${reporte.id}</span>
+      </div>
+      <p>${reporte.resumen_emocional}</p>
+    `;
+  } else {
+    contenido += `
+      <div class="no-evaluacion">
+        <i class="fas fa-file-alt icono-vacio"></i>
+        <p>No hay evaluaciones psicológicas registradas.</p>
+      </div>
+    `;
+  }
+  
+  panel.innerHTML = contenido;
+}
+
+function mostrarNotificacionActualizacion() {
+  hideAllToasts();
+  document.getElementById('toast-success-msg').textContent = '¡Nuevos datos de evaluación recibidos!';
+  showToast('toast-success');
+  
+  setTimeout(() => {
+    hideToast('toast-success');
+  }, 5000);
+}
+
+function actualizarSeccionEncuestas(evaluaciones) {
+  // Actualizar la variable global
+  evaluacionesActuales = evaluaciones;
+  
+  const contenido = document.getElementById('vista-contenido');
+  if (!contenido) return;
+  
+  // Verificar si estamos en la vista de encuestas
+  const enVistaEncuestas = contenido.innerHTML.includes('Encuestas Realizadas');
+  if (!enVistaEncuestas) {
+    console.log('No estamos en vista de encuestas, datos guardados para cuando se abra');
+    return;
+  }
+  
+  console.log('Actualizando sección de encuestas con', evaluaciones.length, 'evaluaciones');
+  renderizarEncuestas();
+}
+
+// Iniciar polling automático
+setInterval(actualizarDatosVoluntario, INTERVALO_POLLING);
+
+// También verificar al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('Polling de datos activado (cada ' + (INTERVALO_POLLING/1000) + ' segundos)');
+});
 
 
 </script>
