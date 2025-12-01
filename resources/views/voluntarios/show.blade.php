@@ -747,6 +747,75 @@
 </div>
 
 <script>
+  // Variable global para evaluaciones (se actualiza con polling)
+  let evaluacionesActuales = @json($evaluaciones ?? []);
+  
+  // Función para renderizar encuestas con datos dinámicos
+  function renderizarEncuestas() {
+    const contenido = document.getElementById('vista-contenido');
+    if (!contenido) return;
+    
+    let html = '<h2 class="titulo-seccion">Encuestas Realizadas</h2>';
+    
+    if (evaluacionesActuales && evaluacionesActuales.length > 0) {
+      html += '<div class="row">';
+      
+      // Columna Evaluación Física
+      html += '<div class="col-md-6">';
+      evaluacionesActuales.forEach(function(eval) {
+        const reporteId = eval.reporte_id || eval.id_reporte || eval.id || 'N/A';
+        const fechaRaw = eval.fecha_generado || eval.fecha;
+        const fecha = fechaRaw ? new Date(fechaRaw).toLocaleDateString('es-ES') : 'N/A';
+        html += `
+          <a href="/reporte/${reporteId}/fisico" style="text-decoration: none;">
+            <div class="card mb-3" style="border-left: 4px solid #353b41; background-color: #f4f6f9; cursor: pointer; transition: all 0.2s;">
+              <div class="card-body d-flex justify-content-between align-items-center py-3">
+                <div>
+                  <strong style="color: #353b41;">Evaluacion Fisica</strong>
+                  <p class="mb-0 text-muted" style="font-size: 0.9rem;">Fecha realizada: ${fecha}</p>
+                </div>
+                <span class="badge" style="background-color: #007bff; color: white; padding: 8px 12px; border-radius: 20px;">
+                  # Reporte #${reporteId}
+                </span>
+              </div>
+            </div>
+          </a>
+        `;
+      });
+      html += '</div>';
+      
+      // Columna Evaluación Emocional
+      html += '<div class="col-md-6">';
+      evaluacionesActuales.forEach(function(eval) {
+        const reporteId = eval.reporte_id || eval.id_reporte || eval.id || 'N/A';
+        const fechaRaw = eval.fecha_generado || eval.fecha;
+        const fecha = fechaRaw ? new Date(fechaRaw).toLocaleDateString('es-ES') : 'N/A';
+        html += `
+          <a href="/reporte/${reporteId}/emocional" style="text-decoration: none;">
+            <div class="card mb-3" style="border-left: 4px solid #353b41; background-color: #f4f6f9; cursor: pointer; transition: all 0.2s;">
+              <div class="card-body d-flex justify-content-between align-items-center py-3">
+                <div>
+                  <strong style="color: #353b41;">Evaluacion Emocional</strong>
+                  <p class="mb-0 text-muted" style="font-size: 0.9rem;">Fecha realizada: ${fecha}</p>
+                </div>
+                <span class="badge" style="background-color: #007bff; color: white; padding: 8px 12px; border-radius: 20px;">
+                  # Reporte #${reporteId}
+                </span>
+              </div>
+            </div>
+          </a>
+        `;
+      });
+      html += '</div>';
+      
+      html += '</div>';
+    } else {
+      html += '<p class="mensaje-vacio">No hay encuestas realizadas.</p>';
+    }
+    
+    contenido.innerHTML = html;
+  }
+
   function mostrarVista(vista) {
     const contenido = document.getElementById('vista-contenido');
     
@@ -1204,8 +1273,7 @@ let ultimoTotalReportes = {{ count($reportes ?? []) }};
 const voluntarioId = {{ $voluntario->id_usuario }};
 const INTERVALO_POLLING = 3000; // 3 segundos
 
-// Guardar evaluaciones actuales para comparar
-let evaluacionesActuales = @json($evaluaciones ?? []);
+// Variable para detectar cambios
 let ultimaFechaEvaluacion = evaluacionesActuales.length > 0 ? (evaluacionesActuales[0].fecha_generado || evaluacionesActuales[0].fecha || '') : '';
 
 function actualizarDatosVoluntario() {
@@ -1342,7 +1410,7 @@ function actualizarSeccionEncuestas(evaluaciones) {
   // Actualizar la variable global
   evaluacionesActuales = evaluaciones;
   
-  const contenido = document.getElementById('contenido-dinamico');
+  const contenido = document.getElementById('vista-contenido');
   if (!contenido) return;
   
   // Verificar si estamos en la vista de encuestas
@@ -1354,72 +1422,6 @@ function actualizarSeccionEncuestas(evaluaciones) {
   
   console.log('Actualizando sección de encuestas con', evaluaciones.length, 'evaluaciones');
   renderizarEncuestas();
-}
-
-// Función para renderizar encuestas con datos dinámicos
-function renderizarEncuestas() {
-  const contenido = document.getElementById('contenido-dinamico');
-  if (!contenido) return;
-  
-  let html = '<h2 class="titulo-seccion">Encuestas Realizadas</h2>';
-  
-  if (evaluacionesActuales && evaluacionesActuales.length > 0) {
-    html += '<div class="row">';
-    
-    // Columna Evaluación Física
-    html += '<div class="col-md-6">';
-    evaluacionesActuales.forEach(eval => {
-      const reporteId = eval.reporte_id || eval.id_reporte || eval.id || 'N/A';
-      const fechaRaw = eval.fecha_generado || eval.fecha;
-      const fecha = fechaRaw ? new Date(fechaRaw).toLocaleDateString('es-ES') : 'N/A';
-      html += `
-        <a href="/reporte/${reporteId}/fisico" style="text-decoration: none;">
-          <div class="card mb-3" style="border-left: 4px solid #353b41; background-color: #f4f6f9; cursor: pointer; transition: all 0.2s;">
-            <div class="card-body d-flex justify-content-between align-items-center py-3">
-              <div>
-                <strong style="color: #353b41;">Evaluacion Fisica</strong>
-                <p class="mb-0 text-muted" style="font-size: 0.9rem;">Fecha realizada: ${fecha}</p>
-              </div>
-              <span class="badge" style="background-color: #007bff; color: white; padding: 8px 12px; border-radius: 20px;">
-                # Reporte #${reporteId}
-              </span>
-            </div>
-          </div>
-        </a>
-      `;
-    });
-    html += '</div>';
-    
-    // Columna Evaluación Emocional
-    html += '<div class="col-md-6">';
-    evaluacionesActuales.forEach(eval => {
-      const reporteId = eval.reporte_id || eval.id_reporte || eval.id || 'N/A';
-      const fechaRaw = eval.fecha_generado || eval.fecha;
-      const fecha = fechaRaw ? new Date(fechaRaw).toLocaleDateString('es-ES') : 'N/A';
-      html += `
-        <a href="/reporte/${reporteId}/emocional" style="text-decoration: none;">
-          <div class="card mb-3" style="border-left: 4px solid #353b41; background-color: #f4f6f9; cursor: pointer; transition: all 0.2s;">
-            <div class="card-body d-flex justify-content-between align-items-center py-3">
-              <div>
-                <strong style="color: #353b41;">Evaluacion Emocional</strong>
-                <p class="mb-0 text-muted" style="font-size: 0.9rem;">Fecha realizada: ${fecha}</p>
-              </div>
-              <span class="badge" style="background-color: #007bff; color: white; padding: 8px 12px; border-radius: 20px;">
-                # Reporte #${reporteId}
-              </span>
-            </div>
-          </div>
-        </a>
-      `;
-    });
-    html += '</div>';
-    
-    html += '</div>';
-  } else {
-    html += '<p class="mensaje-vacio">No hay encuestas realizadas.</p>';
-  }
-  
-  contenido.innerHTML = html;
 }
 
 // Iniciar polling automático
