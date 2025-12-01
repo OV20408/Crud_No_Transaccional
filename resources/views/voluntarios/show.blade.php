@@ -875,7 +875,7 @@ case 'capacitaciones':
                         $etapa->estado == 'completado' ? 'success' : 
                         ($etapa->estado == 'en_progreso' ? 'warning' : 'secondary') 
                       }}">
-                        {{ $etapa->estado ?? 'No iniciado' }}
+                        {{ $etapa->estado == 'en_progreso' ? 'En progreso' : ($etapa->estado == 'completado' ? 'Completado' : ($etapa->estado ?? 'No iniciado')) }}
                       </span>
                     </div>
 

@@ -137,12 +137,21 @@ class VoluntarioController extends Controller
             ORDER BY r.fecha_generado DESC
         ", [$id, $id]);
 
-        // 4. Reporte más reciente
-        $reporteMasReciente = $reportes[0] ?? null;
+        // 4. Reporte más reciente (para capacitaciones y necesidades)
+        $reporteMasRecienteGeneral = $reportes[0] ?? null;
+        
+        // 4.1 Reporte más reciente CON evaluaciones (para mostrar en la vista)
+        $reporteMasReciente = null;
+        foreach ($reportes as $reporte) {
+            if ($reporte->resumen_fisico || $reporte->resumen_emocional) {
+                $reporteMasReciente = $reporte;
+                break;
+            }
+        }
 
         // 5. Capacitaciones del último reporte
         $capacitaciones = [];
-        if ($reporteMasReciente) {
+        if ($reporteMasRecienteGeneral) {
             $capacitaciones = DB::select("
                 SELECT DISTINCT c.*
                 FROM reporte_progreso_voluntario rpv
@@ -151,15 +160,15 @@ class VoluntarioController extends Controller
                 JOIN curso cu ON cu.id = e.id_curso
                 JOIN capacitacion c ON c.id = cu.id_capacitacion
                 WHERE rpv.id_reporte = ?
-            ", [$reporteMasReciente->id]);
+            ", [$reporteMasRecienteGeneral->id]);
         }
 
         // 6. Necesidades del último reporte
         $necesidades = [];
-        if ($reporteMasReciente) {
+        if ($reporteMasRecienteGeneral) {
             $necesidades = DB::table('reporte_necesidad')
                 ->join('necesidad', 'reporte_necesidad.id_necesidad', '=', 'necesidad.id')
-                ->where('reporte_necesidad.id_reporte', $reporteMasReciente->id)
+                ->where('reporte_necesidad.id_reporte', $reporteMasRecienteGeneral->id)
                 ->select('necesidad.*')
                 ->get();
         }
