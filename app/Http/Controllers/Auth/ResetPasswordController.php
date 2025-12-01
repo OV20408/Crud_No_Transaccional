@@ -13,7 +13,7 @@ class ResetPasswordController extends Controller
     use ResetsPasswords;
 
     
-    protected $redirectTo = '/login';
+    protected $redirectTo = 'https://www.google.com';
 
     /**
      * Muestra el formulario de reset de contraseña.
