@@ -747,8 +747,9 @@
 </div>
 
 <script>
-  // Variable global para evaluaciones (se actualiza con polling)
+  // Variables globales para datos dinámicos (se actualizan con polling)
   let evaluacionesActuales = @json($evaluaciones ?? []);
+  let reportesActuales = @json($reportes ?? []);
   
   // Función para renderizar encuestas con datos dinámicos
   function renderizarEncuestas() {
@@ -816,69 +817,96 @@
     contenido.innerHTML = html;
   }
 
+  // Función para renderizar historial con datos dinámicos
+  function renderizarHistorial() {
+    const contenido = document.getElementById('vista-contenido');
+    if (!contenido) return;
+    
+    let html = '<h2 class="titulo-seccion">Historial</h2>';
+    
+    if (reportesActuales && reportesActuales.length > 0) {
+      html += '<div class="historial-tabla">';
+      
+      // Columna Clínico
+      html += '<div class="historial-columna">';
+      html += '<div class="historial-columna-header"><i class="fas fa-heartbeat mr-2"></i> Clínico</div>';
+      reportesActuales.forEach(function(reporte) {
+        if (reporte.resumen_fisico) {
+          const fecha = new Date(reporte.fecha_generado).toLocaleDateString('es-ES');
+          html += `
+            <div class="historial-item">
+              <div class="historial-item-content">${reporte.resumen_fisico}</div>
+              <div class="historial-item-fecha">${fecha}</div>
+            </div>
+          `;
+        }
+      });
+      html += '</div>';
+      
+      // Columna Psicológico
+      html += '<div class="historial-columna">';
+      html += '<div class="historial-columna-header psicologico"><i class="fas fa-brain mr-2"></i> Psicológico</div>';
+      reportesActuales.forEach(function(reporte) {
+        if (reporte.resumen_emocional) {
+          const fecha = new Date(reporte.fecha_generado).toLocaleDateString('es-ES');
+          html += `
+            <div class="historial-item psicologico">
+              <div class="historial-item-content">${reporte.resumen_emocional}</div>
+              <div class="historial-item-fecha">${fecha}</div>
+            </div>
+          `;
+        }
+      });
+      html += '</div>';
+      
+      html += '</div>';
+    } else {
+      html += '<p class="mensaje-vacio">No hay historial disponible.</p>';
+    }
+    
+    contenido.innerHTML = html;
+  }
+
+  // Función para renderizar reportes con datos dinámicos
+  function renderizarReportes() {
+    const contenido = document.getElementById('vista-contenido');
+    if (!contenido) return;
+    
+    let html = '<h2 class="titulo-seccion">Reportes</h2>';
+    
+    if (reportesActuales && reportesActuales.length > 0) {
+      reportesActuales.forEach(function(reporte) {
+        const fecha = new Date(reporte.fecha_generado).toLocaleString('es-ES');
+        html += `
+          <div class="vista-card">
+            <strong>Reporte #${reporte.id}</strong>
+            <p><strong>Estado:</strong></p>
+            <p>${reporte.estado_general || 'N/D'}</p>
+            <p><strong>Fecha:</strong></p>
+            <p>${fecha}</p>
+            ${reporte.observaciones ? `<p><strong>Observaciones:</strong></p><p>${reporte.observaciones}</p>` : ''}
+          </div>
+        `;
+      });
+    } else {
+      html += '<p class="mensaje-vacio">No hay reportes disponibles.</p>';
+    }
+    
+    contenido.innerHTML = html;
+  }
+
   function mostrarVista(vista) {
     const contenido = document.getElementById('vista-contenido');
     
     switch(vista) {
       case 'historial':
-        contenido.innerHTML = `
-          <h2 class="titulo-seccion">Historial</h2>
-          @if(count($reportes) > 0)
-            <div class="historial-tabla">
-              <!-- Columna Clínico -->
-              <div class="historial-columna">
-                <div class="historial-columna-header">
-                  <i class="fas fa-heartbeat mr-2"></i> Clínico
-                </div>
-                @foreach($reportes as $reporte)
-                  @if($reporte->resumen_fisico)
-                    <div class="historial-item">
-                      <div class="historial-item-content">{{ $reporte->resumen_fisico }}</div>
-                      <div class="historial-item-fecha">{{ \Carbon\Carbon::parse($reporte->fecha_generado)->format('d/m/Y') }}</div>
-                    </div>
-                  @endif
-                @endforeach
-              </div>
-
-              <!-- Columna Psicológico -->
-              <div class="historial-columna">
-                <div class="historial-columna-header psicologico">
-                  <i class="fas fa-brain mr-2"></i> Psicológico
-                </div>
-                @foreach($reportes as $reporte)
-                  @if($reporte->resumen_emocional)
-                    <div class="historial-item psicologico">
-                      <div class="historial-item-content">{{ $reporte->resumen_emocional }}</div>
-                      <div class="historial-item-fecha">{{ \Carbon\Carbon::parse($reporte->fecha_generado)->format('d/m/Y') }}</div>
-                    </div>
-                  @endif
-                @endforeach
-              </div>
-            </div>
-          @else
-            <p class="mensaje-vacio">No hay historial disponible.</p>
-          @endif
-        `;
+        // Usar función dinámica para historial
+        renderizarHistorial();
         break;
 
       case 'reportes':
-        contenido.innerHTML = `
-          <h2 class="titulo-seccion">Reportes</h2>
-          @if(count($reportes) > 0)
-            @foreach($reportes as $reporte)
-              <div class="vista-card">
-                <strong>Reporte #{{ $reporte->id }}</strong>
-                <p><strong>Estado:</strong> {{ $reporte->estado_general ?? 'N/D' }}</p>
-                <p><strong>Fecha:</strong> {{ \Carbon\Carbon::parse($reporte->fecha_generado)->format('d/m/Y H:i') }}</p>
-                @if($reporte->observaciones)
-                  <p><strong>Observaciones:</strong> {{ $reporte->observaciones }}</p>
-                @endif
-              </div>
-            @endforeach
-          @else
-            <p class="mensaje-vacio">No hay reportes disponibles.</p>
-          @endif
-        `;
+        // Usar función dinámica para reportes
+        renderizarReportes();
         break;
 
 case 'capacitaciones':
@@ -1296,7 +1324,8 @@ function actualizarDatosVoluntario() {
       
       const hayNuevosDatos = nuevosDatos.totalReportes > ultimoTotalReportes || 
                              nuevaFechaEvaluacion !== ultimaFechaEvaluacion ||
-                             nuevosDatos.evaluaciones.length !== evaluacionesActuales.length;
+                             nuevosDatos.evaluaciones.length !== evaluacionesActuales.length ||
+                             nuevosDatos.reportes.length !== reportesActuales.length;
       
       if (hayNuevosDatos) {
         console.log('Nuevos datos detectados, actualizando vista...');
@@ -1305,14 +1334,17 @@ function actualizarDatosVoluntario() {
         
         ultimoTotalReportes = nuevosDatos.totalReportes;
         evaluacionesActuales = nuevosDatos.evaluaciones;
+        reportesActuales = nuevosDatos.reportes;
         ultimaFechaEvaluacion = nuevaFechaEvaluacion;
         
         // Actualizar paneles de evaluación
         actualizarPanelEvaluacionFisica(nuevosDatos.reporteMasReciente);
         actualizarPanelEvaluacionPsicologica(nuevosDatos.reporteMasReciente);
         
-        // Actualizar sección de encuestas (siempre, no solo si está visible)
+        // Actualizar secciones dinámicas si están visibles
         actualizarSeccionEncuestas(nuevosDatos.evaluaciones);
+        actualizarSeccionHistorial();
+        actualizarSeccionReportes();
         
         // Mostrar notificación de actualización
         mostrarNotificacionActualizacion();
@@ -1322,6 +1354,26 @@ function actualizarDatosVoluntario() {
   .catch(error => {
     console.error('Error en polling:', error);
   });
+}
+
+// Función para actualizar la sección de historial si está visible
+function actualizarSeccionHistorial() {
+  const contenido = document.getElementById('vista-contenido');
+  if (!contenido) return;
+  if (!contenido.innerHTML.includes('Historial') || contenido.innerHTML.includes('Encuestas')) return;
+  
+  console.log('Actualizando sección de historial');
+  renderizarHistorial();
+}
+
+// Función para actualizar la sección de reportes si está visible
+function actualizarSeccionReportes() {
+  const contenido = document.getElementById('vista-contenido');
+  if (!contenido) return;
+  if (!contenido.innerHTML.includes('<h2 class="titulo-seccion">Reportes</h2>')) return;
+  
+  console.log('Actualizando sección de reportes');
+  renderizarReportes();
 }
 
 function actualizarPanelEvaluacionFisica(reporte) {

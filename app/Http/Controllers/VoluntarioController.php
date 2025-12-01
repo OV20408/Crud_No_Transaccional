@@ -469,6 +469,7 @@ class VoluntarioController extends Controller
                 'success' => true,
                 'data' => [
                     'reporteMasReciente' => $reporteMasReciente,
+                    'reportes' => $reportes,
                     'evaluaciones' => $evaluaciones,
                     'necesidadesAsignadas' => $necesidadesAsignadas,
                     'capacitaciones' => $capacitaciones,
