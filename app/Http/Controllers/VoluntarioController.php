@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\Rol;
 use App\Models\Capacitacion;
 use App\Models\ProgresoVoluntario;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class VoluntarioController extends Controller
 {
@@ -352,5 +353,87 @@ class VoluntarioController extends Controller
             ->route('voluntarios.show', $idUsuario)
             ->with('success', 'Necesidad asignada correctamente.');
     }
+
+
+
+    public function descargarHistorialPDF($id)
+{
+    // 1. Obtener voluntario
+    $voluntario = DB::table('usuario')
+        ->join('rol', 'usuario.id_rol', '=', 'rol.id')
+        ->where('usuario.id_usuario', $id)
+        ->where('rol.nombre', 'Voluntario')
+        ->select('usuario.*')
+        ->first();
+
+    if (!$voluntario) {
+        abort(404, 'Voluntario no encontrado');
+    }
+
+    // 2. Obtener historial clínico
+    $historial = DB::table('historial_clinico')
+        ->where('id_usuario', $id)
+        ->first();
+
+    // 3. Obtener reportes (ordenados por fecha)
+    $reportes = DB::select("
+        SELECT DISTINCT r.*
+        FROM reporte r
+        LEFT JOIN reporte_progreso_voluntario rpv ON rpv.id_reporte = r.id
+        LEFT JOIN progreso_voluntario pv ON pv.id = rpv.id_progreso
+        LEFT JOIN historial_clinico hc ON hc.id = r.id_historial
+        WHERE pv.id_usuario = ? OR hc.id_usuario = ?
+        ORDER BY r.fecha_generado DESC
+    ", [$id, $id]);
+
+    // 4. Obtener capacitaciones con progreso
+    $capacitaciones = DB::select("
+        SELECT DISTINCT 
+            c.id AS capacitacion_id,
+            c.nombre AS capacitacion,
+            cu.id AS curso_id,
+            cu.nombre AS curso,
+            e.id AS etapa_id,
+            e.nombre AS etapa,
+            e.orden AS etapa_orden,
+            pv.estado,
+            pv.fecha_inicio,
+            pv.fecha_finalizacion
+        FROM progreso_voluntario pv
+        JOIN etapa e ON e.id = pv.id_etapa
+        JOIN curso cu ON cu.id = e.id_curso
+        JOIN capacitacion c ON c.id = cu.id_capacitacion
+        WHERE pv.id_usuario = ?
+        ORDER BY c.nombre, cu.nombre, e.orden
+    ", [$id]);
+
+    // 5. Obtener necesidades
+    $necesidades = DB::table('reporte_necesidad')
+        ->join('reporte', 'reporte.id', '=', 'reporte_necesidad.id_reporte')
+        ->join('historial_clinico', 'historial_clinico.id', '=', 'reporte.id_historial')
+        ->join('necesidad', 'necesidad.id', '=', 'reporte_necesidad.id_necesidad')
+        ->where('historial_clinico.id_usuario', $id)
+        ->select('necesidad.tipo', 'necesidad.descripcion', 'reporte.fecha_generado')
+        ->orderBy('reporte.fecha_generado', 'desc')
+        ->get();
+
+    // 6. Generar PDF
+    $pdf = PDF::loadView('voluntarios.historial-pdf', compact(
+        'voluntario',
+        'historial',
+        'reportes',
+        'capacitaciones',
+        'necesidades'
+    ));
+
+    // Configurar PDF
+    $pdf->setPaper('letter', 'portrait');
+
+    // Descargar con nombre personalizado
+    $nombreArchivo = 'Historial_' . str_replace(' ', '_', $voluntario->nombres . '_' . $voluntario->apellidos) . '.pdf';
+
+    return $pdf->download($nombreArchivo);
+}
+
 }
 

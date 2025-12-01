@@ -223,10 +223,11 @@
   }
 
   .btn-formulario-enviar:hover {
-    background-color:var(--color-azul);
-    transform: translateY(-2px);
+    transform: none;
+    background-color: var(--color-azul);
+    text-decoration: none;
+    color: white;
   }
-
   .btn-descargar-pdf {
     background-color: #1976D2;
     color: white;
@@ -568,9 +569,11 @@
         <button class="btn-formulario-enviar" onclick="enviarFormularioVoluntario({{ $voluntario->id_usuario }})" id="btn-enviar-formulario">
           <i class="fas fa-paper-plane"></i> Enviar Formulario
         </button>
-        <button class="btn-formulario-enviar" onclick="descargarHistorialClinico({{ $voluntario->id_usuario }})">
-          <i class="fas fa-file-medical"></i> Descargar Historial Clínico
-        </button>
+        <a href="{{ route('voluntarios.historial.pdf', $voluntario->id_usuario) }}?v={{ time() }}" 
+          class="btn-formulario-enviar" 
+          style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+            <i class="fas fa-file-pdf"></i> Descargar Historial Clínico
+        </a>
       </div>
     </div>
   </header>
@@ -1113,10 +1116,6 @@ case 'capacitaciones':
     });
   }
 
-  // Función para descargar historial clínico
-  function descargarHistorialClinico(voluntarioId) {
-    alert('Funcionalidad de descargar historial clínico en desarrollo');
-  }
 
   /**
  * ✅ Mostrar detalles y progreso de un curso específico

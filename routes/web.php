@@ -24,6 +24,8 @@ use App\Http\Controllers\EvaluacionVoluntarioController;
 use App\Models\Consulta;
 use App\Events\ConsultaRespondida;
 
+Route::get('/voluntarios/{id}/historial-pdf', [VoluntarioController::class, 'descargarHistorialPDF'])
+    ->name('voluntarios.historial.pdf');
 
 
 Route::post(
