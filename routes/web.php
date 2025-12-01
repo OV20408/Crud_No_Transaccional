@@ -176,6 +176,10 @@ Route::post('/evaluacion-voluntario/{token}/procesar', [EvaluacionVoluntarioCont
 Route::get('/voluntarios/{id}/historial-encuestas', [EvaluacionVoluntarioController::class, 'historialEncuestas'])
     ->name('voluntarios.historial-encuestas');
 
+// API: Datos actualizados del voluntario (para refresh automático)
+Route::get('/voluntarios/{id}/datos-actualizados', [VoluntarioController::class, 'getDatosActualizados'])
+    ->name('voluntarios.datos-actualizados');
+
 // Ver detalle de un reporte/encuesta realizada (físico o emocional)
 Route::get('/reporte/{id}/{tipo}', [EvaluacionVoluntarioController::class, 'verReporte'])
     ->name('reporte.ver')

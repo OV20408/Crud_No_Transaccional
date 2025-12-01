@@ -361,5 +361,126 @@ class VoluntarioController extends Controller
             ->route('voluntarios.show', $idUsuario)
             ->with('success', 'Necesidad asignada correctamente.');
     }
-}
 
+    /**
+     * API: Obtener datos actualizados del voluntario para refresh automático
+     */
+    public function getDatosActualizados($id)
+    {
+        try {
+            // 1. Obtener historial clínico
+            $historial = DB::table('historial_clinico')
+                ->where('id_usuario', $id)
+                ->first();
+
+            // 2. Reportes del voluntario
+            $reportes = DB::select("
+                SELECT DISTINCT r.*
+                FROM reporte r
+                LEFT JOIN reporte_progreso_voluntario rpv ON rpv.id_reporte = r.id
+                LEFT JOIN progreso_voluntario pv ON pv.id = rpv.id_progreso
+                LEFT JOIN historial_clinico hc ON hc.id = r.id_historial
+                WHERE pv.id_usuario = ? OR hc.id_usuario = ?
+                ORDER BY r.fecha_generado DESC
+            ", [$id, $id]);
+
+            // 3. Reporte más reciente CON evaluaciones
+            $reporteMasReciente = null;
+            foreach ($reportes as $reporte) {
+                if ($reporte->resumen_fisico || $reporte->resumen_emocional) {
+                    $reporteMasReciente = $reporte;
+                    break;
+                }
+            }
+
+            // 4. Evaluaciones del voluntario
+            $evaluaciones = [];
+            if ($historial) {
+                $evaluaciones = DB::table('reporte')
+                    ->join('evaluacion', 'evaluacion.id_reporte', '=', 'reporte.id')
+                    ->join('test', 'evaluacion.id_test', '=', 'test.id')
+                    ->where('reporte.id_historial', $historial->id)
+                    ->select(
+                        'reporte.id as reporte_id',
+                        'reporte.resumen_fisico',
+                        'reporte.resumen_emocional',
+                        'reporte.estado_general',
+                        'reporte.fecha_generado',
+                        'evaluacion.id as evaluacion_id',
+                        'evaluacion.fecha',
+                        'test.nombre as test_nombre'
+                    )
+                    ->orderBy('reporte.fecha_generado', 'desc')
+                    ->get();
+            }
+
+            if (empty($evaluaciones) || count($evaluaciones) == 0) {
+                $reportesEvaluacion = DB::table('reporte')
+                    ->join('historial_clinico', 'historial_clinico.id', '=', 'reporte.id_historial')
+                    ->where('historial_clinico.id_usuario', $id)
+                    ->select(
+                        'reporte.id as reporte_id',
+                        'reporte.resumen_fisico',
+                        'reporte.resumen_emocional',
+                        'reporte.estado_general',
+                        'reporte.fecha_generado'
+                    )
+                    ->orderBy('reporte.fecha_generado', 'desc')
+                    ->get();
+
+                $evaluaciones = $reportesEvaluacion->map(function($reporte) {
+                    return [
+                        'reporte_id' => $reporte->reporte_id,
+                        'resumen_fisico' => $reporte->resumen_fisico,
+                        'resumen_emocional' => $reporte->resumen_emocional,
+                        'estado_general' => $reporte->estado_general,
+                        'fecha_generado' => $reporte->fecha_generado,
+                        'fecha' => $reporte->fecha_generado,
+                        'test_nombre' => 'Evaluación Física y Psicológica'
+                    ];
+                });
+            }
+
+            // 5. Necesidades asignadas
+            $necesidadesAsignadas = DB::table('reporte_necesidad')
+                ->join('reporte', 'reporte.id', '=', 'reporte_necesidad.id_reporte')
+                ->join('historial_clinico', 'historial_clinico.id', '=', 'reporte.id_historial')
+                ->join('necesidad', 'necesidad.id', '=', 'reporte_necesidad.id_necesidad')
+                ->where('historial_clinico.id_usuario', $id)
+                ->select('necesidad.*', 'reporte.fecha_generado')
+                ->orderBy('reporte.fecha_generado', 'desc')
+                ->get();
+
+            // 6. Capacitaciones asignadas
+            $capacitaciones = DB::select("
+                SELECT DISTINCT c.*
+                FROM progreso_voluntario pv
+                JOIN etapa e ON e.id = pv.id_etapa
+                JOIN curso cu ON cu.id = e.id_curso
+                JOIN capacitacion c ON c.id = cu.id_capacitacion
+                WHERE pv.id_usuario = ?
+                ORDER BY c.nombre
+            ", [$id]);
+
+            // 7. Total de reportes para detectar nuevos
+            $totalReportes = count($reportes);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'reporteMasReciente' => $reporteMasReciente,
+                    'evaluaciones' => $evaluaciones,
+                    'necesidadesAsignadas' => $necesidadesAsignadas,
+                    'capacitaciones' => $capacitaciones,
+                    'totalReportes' => $totalReportes
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+}

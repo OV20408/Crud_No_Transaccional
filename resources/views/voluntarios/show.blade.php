@@ -592,7 +592,7 @@
     </div>
 
     {{-- Evaluaciones Físicas --}}
-    <div class="panel-hover panel-fisico">
+    <div class="panel-hover panel-fisico" id="panel-evaluacion-fisica">
       <h4>
         <i class="fas fa-heartbeat"></i>
         Evaluaciones Físicas
@@ -616,7 +616,7 @@
     </div>
 
     {{-- Evaluaciones Psicológicas --}}
-    <div class="panel-hover panel-psicologico">
+    <div class="panel-hover panel-psicologico" id="panel-evaluacion-psicologica">
       <h4>
         <i class="fas fa-brain"></i>
         Evaluaciones Psicológicas
@@ -1239,6 +1239,135 @@ function verDetalleCurso(cursoId, voluntarioId, nombreCurso, nombreCapacitacion,
       `;
     });
 }
+
+// ========================================
+// ACTUALIZACIÓN AUTOMÁTICA DE DATOS
+// ========================================
+let ultimoTotalReportes = {{ count($reportes ?? []) }};
+const voluntarioId = {{ $voluntario->id_usuario }};
+const INTERVALO_POLLING = 10000; // 10 segundos
+
+function actualizarDatosVoluntario() {
+  fetch(`/voluntarios/${voluntarioId}/datos-actualizados`, {
+    method: 'GET',
+    headers: {
+      'Accept': 'application/json',
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      const nuevosDatos = data.data;
+      
+      // Verificar si hay nuevos reportes
+      if (nuevosDatos.totalReportes > ultimoTotalReportes) {
+        console.log('Nuevos datos detectados, actualizando vista...');
+        ultimoTotalReportes = nuevosDatos.totalReportes;
+        
+        // Actualizar paneles de evaluación
+        actualizarPanelEvaluacionFisica(nuevosDatos.reporteMasReciente);
+        actualizarPanelEvaluacionPsicologica(nuevosDatos.reporteMasReciente);
+        
+        // Mostrar notificación de actualización
+        mostrarNotificacionActualizacion();
+      }
+    }
+  })
+  .catch(error => {
+    console.error('Error en polling:', error);
+  });
+}
+
+function actualizarPanelEvaluacionFisica(reporte) {
+  const panel = document.getElementById('panel-evaluacion-fisica');
+  if (!panel) return;
+  
+  let contenido = `
+    <h4>
+      <i class="fas fa-heartbeat"></i>
+      Evaluaciones Físicas
+    </h4>
+  `;
+  
+  if (reporte && reporte.resumen_fisico) {
+    const fecha = new Date(reporte.fecha_generado).toLocaleDateString('es-ES');
+    contenido += `
+      <div class="item-evaluacion">
+        <i class="fas fa-file-alt"></i>
+        <span>Última evaluación: ${fecha}</span>
+      </div>
+      <div class="item-evaluacion">
+        <i class="fas fa-chart-line"></i>
+        <span>Reporte #${reporte.id}</span>
+      </div>
+      <p>${reporte.resumen_fisico}</p>
+    `;
+  } else {
+    contenido += `
+      <div class="no-evaluacion">
+        <i class="fas fa-file-alt icono-vacio"></i>
+        <p>No hay evaluaciones físicas registradas.</p>
+      </div>
+    `;
+  }
+  
+  panel.innerHTML = contenido;
+}
+
+function actualizarPanelEvaluacionPsicologica(reporte) {
+  const panel = document.getElementById('panel-evaluacion-psicologica');
+  if (!panel) return;
+  
+  let contenido = `
+    <h4>
+      <i class="fas fa-brain"></i>
+      Evaluaciones Psicológicas
+    </h4>
+  `;
+  
+  if (reporte && reporte.resumen_emocional) {
+    const fecha = new Date(reporte.fecha_generado).toLocaleDateString('es-ES');
+    contenido += `
+      <div class="item-evaluacion">
+        <i class="fas fa-file-alt"></i>
+        <span>Última evaluación: ${fecha}</span>
+      </div>
+      <div class="item-evaluacion">
+        <i class="fas fa-chart-line"></i>
+        <span>Reporte #${reporte.id}</span>
+      </div>
+      <p>${reporte.resumen_emocional}</p>
+    `;
+  } else {
+    contenido += `
+      <div class="no-evaluacion">
+        <i class="fas fa-file-alt icono-vacio"></i>
+        <p>No hay evaluaciones psicológicas registradas.</p>
+      </div>
+    `;
+  }
+  
+  panel.innerHTML = contenido;
+}
+
+function mostrarNotificacionActualizacion() {
+  hideAllToasts();
+  document.getElementById('toast-success-msg').textContent = '¡Nuevos datos de evaluación recibidos!';
+  showToast('toast-success');
+  
+  setTimeout(() => {
+    hideToast('toast-success');
+  }, 5000);
+}
+
+// Iniciar polling automático
+setInterval(actualizarDatosVoluntario, INTERVALO_POLLING);
+
+// También verificar al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('Polling de datos activado (cada ' + (INTERVALO_POLLING/1000) + ' segundos)');
+});
 
 
 </script>
