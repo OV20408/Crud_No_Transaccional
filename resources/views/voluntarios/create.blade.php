@@ -1,4 +1,3 @@
-{{-- resources/views/voluntarios/create.blade.php --}}
 @extends('adminlte::page')
 
 @section('title', 'Registrar Voluntario')
@@ -21,7 +20,6 @@
         </div>
     @endif
 
-    {{-- Indicador de pasos mejorado --}}
     <div class="row mb-4">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center position-relative step-progress">
@@ -223,15 +221,9 @@
                             <select name="estado" 
                                     id="estado"
                                     class="form-control select2 @error('estado') is-invalid @enderror">
-                                <option value="activo" {{ old('estado','activo')=='activo' ? 'selected' : '' }}>
-                                    <i class="fas fa-check-circle text-success"></i> Activo
-                                </option>
-                                <option value="inactivo" {{ old('estado')=='inactivo' ? 'selected' : '' }}>
-                                    <i class="fas fa-pause-circle text-warning"></i> Inactivo
-                                </option>
-                                <option value="baja" {{ old('estado')=='baja' ? 'selected' : '' }}>
-                                    <i class="fas fa-times-circle text-danger"></i> De baja
-                                </option>
+                                <option value="activo" {{ old('estado','activo')=='activo' ? 'selected' : '' }}>Activo</option>
+                                <option value="inactivo" {{ old('estado')=='inactivo' ? 'selected' : '' }}>Inactivo</option>
+                                <option value="baja" {{ old('estado')=='baja' ? 'selected' : '' }}>De baja</option>
                             </select>
                             @error('estado')
                                 <span class="invalid-feedback">{{ $message }}</span>
@@ -320,7 +312,6 @@
             </div>
         </div>
 
-        {{-- Botones de navegación --}}
         <div class="row">
             <div class="col-12">
                 <div class="d-flex justify-content-between">
@@ -332,22 +323,44 @@
                             Cancelar
                         </a>
                         <button type="button" class="btn btn-primary" id="btn-next">
-                            Siguiente 
+                            Siguiente <i class="fas fa-arrow-right"></i>
                         </button>
                         <button type="submit" class="btn btn-success" id="btn-submit" style="display:none;">
-                            Guardar voluntario
+                            <i class="fas fa-save"></i> Guardar voluntario
                         </button>
                     </div>
                 </div>
             </div>
         </div>
     </form>
+
+    <div class="modal fade modal-validacion" id="modalValidacion" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>Error de validación
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0" id="mensajeValidacion"></p>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-close-modal" data-dismiss="modal">
+                        Entendido
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 @stop
 
 @section('css')
 <style>
-    /* Estilos para el indicador de pasos */
     .step-progress {
         padding: 0 50px;
     }
@@ -412,7 +425,6 @@
         color: #28a745;
     }
     
-    /* Animación suave para las tarjetas */
     .step-card {
         animation: fadeIn 0.3s ease-in;
     }
@@ -428,7 +440,6 @@
         }
     }
     
-    /* Mejorar apariencia de los inputs */
     .form-control:focus {
         border-color: #007bff;
         box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
@@ -437,13 +448,48 @@
     .invalid-feedback {
         display: block;
     }
+    
+    .modal-validacion .modal-content {
+        border-radius: 8px;
+        border: none;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    
+    .modal-validacion .modal-header {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        border-radius: 8px 8px 0 0;
+        padding: 15px 20px;
+    }
+    
+    .modal-validacion .modal-title {
+        font-weight: 600;
+    }
+    
+    .modal-validacion .modal-body {
+        padding: 20px;
+    }
+    
+    .modal-validacion .btn-close-modal {
+        background: #dc3545;
+        border: none;
+        color: white;
+        padding: 8px 20px;
+        border-radius: 4px;
+        transition: all 0.3s;
+    }
+    
+    .modal-validacion .btn-close-modal:hover {
+        background: #c82333;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 5px rgba(220, 53, 69, 0.3);
+    }
 </style>
 @stop
 
 @section('js')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar Select2 para los selectores (si jQuery está disponible)
     if (typeof $ !== 'undefined' && $.fn.select2) {
         $('.select2').select2({
             theme: 'bootstrap4',
@@ -460,13 +506,51 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnNext = document.getElementById('btn-next');
     const btnSubmit = document.getElementById('btn-submit');
 
+    function mostrarModalValidacion(mensaje) {
+        document.getElementById('mensajeValidacion').textContent = mensaje;
+        $('#modalValidacion').modal('show');
+    }
+
+    function validarFechaNacimiento(fecha) {
+        if (!fecha) return { valido: true };
+
+        const fechaNac = new Date(fecha);
+        const hoy = new Date();
+        
+        hoy.setHours(0, 0, 0, 0);
+        fechaNac.setHours(0, 0, 0, 0);
+
+        if (fechaNac > hoy) {
+            return {
+                valido: false,
+                mensaje: 'La fecha de nacimiento no puede ser posterior a la fecha actual.'
+            };
+        }
+
+        let edad = hoy.getFullYear() - fechaNac.getFullYear();
+        const mes = hoy.getMonth() - fechaNac.getMonth();
+        
+        if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
+            edad--;
+        }
+
+        // Validar edad mínima de 18 años
+        if (edad < 18) {
+            return {
+                valido: false,
+                mensaje: 'El voluntario debe ser mayor de 18 años. Edad calculada: ' + edad + ' años.'
+            };
+        }
+
+        return { valido: true };
+    }
+
     function renderSteps() {
         // Ocultar todos los pasos
         steps.forEach(step => {
             step.style.display = 'none';
         });
         
-        // Mostrar paso actual
         const currentCard = document.querySelector(`.step-card[data-step="${currentStep}"]`);
         if (currentCard) {
             currentCard.style.display = 'block';
@@ -504,6 +588,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentCard = document.querySelector(`.step-card[data-step="${currentStep}"]`);
         const requiredInputs = currentCard.querySelectorAll('[required]');
         let isValid = true;
+        let mensajeError = 'Por favor completa todos los campos obligatorios';
 
         requiredInputs.forEach(input => {
             const value = input.value.trim();
@@ -512,7 +597,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 isValid = false;
                 input.classList.add('is-invalid');
                 
-                // Agregar mensaje de error si no existe
                 let errorMsg = input.nextElementSibling;
                 if (!errorMsg || !errorMsg.classList.contains('invalid-feedback')) {
                     const span = document.createElement('span');
@@ -529,22 +613,54 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Validación especial para email
-        const emailInput = document.getElementById('email');
-        if (currentStep === 2 && emailInput && emailInput.value) {
-            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailPattern.test(emailInput.value)) {
-                isValid = false;
-                emailInput.classList.add('is-invalid');
+        // Validación especial para fecha de nacimiento (Paso 1)
+        if (currentStep === 1) {
+            const fechaNacInput = document.getElementById('fecha_nacimiento');
+            if (fechaNacInput && fechaNacInput.value) {
+                const resultadoValidacion = validarFechaNacimiento(fechaNacInput.value);
                 
-                let errorMsg = emailInput.nextElementSibling;
-                if (!errorMsg || !errorMsg.classList.contains('invalid-feedback')) {
-                    const span = document.createElement('span');
-                    span.className = 'invalid-feedback';
-                    span.textContent = 'Ingrese un email válido';
-                    emailInput.parentNode.insertBefore(span, emailInput.nextSibling);
+                if (!resultadoValidacion.valido) {
+                    isValid = false;
+                    mensajeError = resultadoValidacion.mensaje;
+                    fechaNacInput.classList.add('is-invalid');
+                    
+                    let errorMsg = fechaNacInput.nextElementSibling;
+                    if (!errorMsg || !errorMsg.classList.contains('invalid-feedback')) {
+                        const span = document.createElement('span');
+                        span.className = 'invalid-feedback';
+                        span.textContent = resultadoValidacion.mensaje;
+                        fechaNacInput.parentNode.insertBefore(span, fechaNacInput.nextSibling);
+                    } else {
+                        errorMsg.textContent = resultadoValidacion.mensaje;
+                    }
                 }
             }
+        }
+
+        // Validación especial para email (Paso 2)
+        if (currentStep === 2) {
+            const emailInput = document.getElementById('email');
+            if (emailInput && emailInput.value) {
+                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailPattern.test(emailInput.value)) {
+                    isValid = false;
+                    mensajeError = 'Por favor ingrese un correo electrónico válido';
+                    emailInput.classList.add('is-invalid');
+                    
+                    let errorMsg = emailInput.nextElementSibling;
+                    if (!errorMsg || !errorMsg.classList.contains('invalid-feedback')) {
+                        const span = document.createElement('span');
+                        span.className = 'invalid-feedback';
+                        span.textContent = 'Ingrese un email válido';
+                        emailInput.parentNode.insertBefore(span, emailInput.nextSibling);
+                    }
+                }
+            }
+        }
+
+        // Mostrar modal si hay errores
+        if (!isValid) {
+            mostrarModalValidacion(mensajeError);
         }
 
         return isValid;
@@ -569,34 +685,45 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     btnNext.addEventListener('click', function() {
-        console.log('Botón siguiente clickeado. Paso actual:', currentStep);
-        
         if (validateCurrentStep() && currentStep < totalSteps) {
             currentStep++;
-            console.log('Avanzando al paso:', currentStep);
             
             if (currentStep === 3) {
                 updateEmailPreview();
             }
             renderSteps();
-        } else if (!validateCurrentStep()) {
-            console.log('Validación falló');
-            
-            // Mostrar alerta simple si no hay toasts
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error de validación',
-                    text: 'Por favor completa todos los campos obligatorios',
-                    confirmButtonColor: '#007bff'
-                });
-            } else {
-                alert('Por favor completa todos los campos obligatorios');
-            }
         }
     });
 
-    // Validación en tiempo real
+    // Validación en tiempo real para fecha de nacimiento
+    const fechaNacInput = document.getElementById('fecha_nacimiento');
+    if (fechaNacInput) {
+        fechaNacInput.addEventListener('change', function() {
+            const resultadoValidacion = validarFechaNacimiento(this.value);
+            
+            if (!resultadoValidacion.valido) {
+                this.classList.add('is-invalid');
+                
+                let errorMsg = this.nextElementSibling;
+                if (!errorMsg || !errorMsg.classList.contains('invalid-feedback')) {
+                    const span = document.createElement('span');
+                    span.className = 'invalid-feedback';
+                    span.textContent = resultadoValidacion.mensaje;
+                    this.parentNode.insertBefore(span, this.nextSibling);
+                } else {
+                    errorMsg.textContent = resultadoValidacion.mensaje;
+                }
+            } else {
+                this.classList.remove('is-invalid');
+                const errorMsg = this.nextElementSibling;
+                if (errorMsg && errorMsg.classList.contains('invalid-feedback')) {
+                    errorMsg.remove();
+                }
+            }
+        });
+    }
+
+    // Validación en tiempo real para otros inputs
     const allInputs = document.querySelectorAll('input[required], select[required]');
     allInputs.forEach(input => {
         input.addEventListener('blur', function() {
@@ -625,22 +752,10 @@ document.addEventListener('DOMContentLoaded', function() {
     form.addEventListener('submit', function(e) {
         if (!validateCurrentStep()) {
             e.preventDefault();
-            
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error de validación',
-                    text: 'Por favor completa todos los campos obligatorios',
-                    confirmButtonColor: '#007bff'
-                });
-            } else {
-                alert('Por favor completa todos los campos obligatorios');
-            }
         }
     });
 
     // Inicializar
-    console.log('Inicializando wizard...');
     renderSteps();
 });
 </script>

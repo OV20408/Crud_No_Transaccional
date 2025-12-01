@@ -35,7 +35,9 @@
         </div>
 
         @if ($errors->any())
-            <div class="alert alert-danger">
+            <div class="alert alert-danger alert-dismissible fade show">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <h5><i class="icon fas fa-ban"></i> Por favor, revisa los siguientes campos:</h5>
                 <ul class="mb-0">
                     @foreach ($errors->all() as $e)
                         <li>{{ $e }}</li>
@@ -59,15 +61,21 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="nombre">Nombre <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control" id="nombre" name="nombre"
-                         placeholder="Ingrese el nombre" maxlength="30"
-                         value="{{ old('nombre') }}" required>
+                  <input type="text" 
+                         class="form-control @error('nombre') is-invalid @enderror" 
+                         id="nombre" 
+                         name="nombre"
+                         placeholder="Ingrese el nombre" 
+                         minlength="2"
+                         maxlength="30"
+                         value="{{ old('nombre') }}" 
+                         required>
                   <small class="form-text text-muted">
-                    <span id="contadorNombre">{{ strlen(old('nombre')) }}</span>/30 caracteres
+                    <span id="contadorNombre">{{ strlen(old('nombre')) }}</span>/30 caracteres (mínimo 2)
                   </small>
-                  <span class="error-message" id="errorNombre">
-                      @error('nombre') {{ $message }} @enderror
-                  </span>
+                  @error('nombre')
+                      <span class="invalid-feedback d-block">{{ $message }}</span>
+                  @enderror
                 </div>
               </div>
 
@@ -75,15 +83,21 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="apellido">Apellido <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control" id="apellido" name="apellido"
-                         placeholder="Ingrese el apellido" maxlength="30"
-                         value="{{ old('apellido') }}" required>
+                  <input type="text" 
+                         class="form-control @error('apellido') is-invalid @enderror" 
+                         id="apellido" 
+                         name="apellido"
+                         placeholder="Ingrese el apellido" 
+                         minlength="2"
+                         maxlength="30"
+                         value="{{ old('apellido') }}" 
+                         required>
                   <small class="form-text text-muted">
-                    <span id="contadorApellido">{{ strlen(old('apellido')) }}</span>/30 caracteres
+                    <span id="contadorApellido">{{ strlen(old('apellido')) }}</span>/30 caracteres (mínimo 2)
                   </small>
-                  <span class="error-message" id="errorApellido">
-                      @error('apellido') {{ $message }} @enderror
-                  </span>
+                  @error('apellido')
+                      <span class="invalid-feedback d-block">{{ $message }}</span>
+                  @enderror
                 </div>
               </div>
 
@@ -95,13 +109,19 @@
                     <div class="input-group-prepend">
                       <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                     </div>
-                    <input type="email" class="form-control" id="correo" name="correo"
-                           placeholder="ejemplo@correo.com" maxlength="50"
-                           value="{{ old('correo') }}" required>
+                    <input type="email" 
+                           class="form-control @error('correo') is-invalid @enderror" 
+                           id="correo" 
+                           name="correo"
+                           placeholder="ejemplo@correo.com" 
+                           maxlength="50"
+                           value="{{ old('correo') }}" 
+                           required>
                   </div>
-                  <span class="error-message" id="errorCorreo">
-                      @error('correo') {{ $message }} @enderror
-                  </span>
+                  <small class="form-text text-muted">Debe ser un correo válido</small>
+                  @error('correo')
+                      <span class="invalid-feedback d-block">{{ $message }}</span>
+                  @enderror
                 </div>
               </div>
 
@@ -110,16 +130,37 @@
                 <div class="form-group">
                   <label for="ci">Cédula de Identidad <span class="text-danger">*</span></label>
                   <div class="ci-inputs d-flex gap-2">
-                    <input type="text" class="form-control" id="ci" name="ci"
-                           placeholder="Ingrese el CI" maxlength="8"
-                           value="{{ old('ci') }}" required>
-                    <input type="text" class="form-control extension-input" id="extension"
-                           name="extension" placeholder="Ext." maxlength="2"
-                           value="{{ old('extension') }}">
+                    <input type="text" 
+                           class="form-control @error('ci') is-invalid @enderror" 
+                           id="ci" 
+                           name="ci"
+                           placeholder="Ingrese el CI" 
+                           minlength="6"
+                           maxlength="8"
+                           value="{{ old('ci') }}" 
+                           required>
+                    <select class="form-control extension-input @error('extension') is-invalid @enderror" 
+                            id="extension"
+                            name="extension">
+                      <option value="">Ext.</option>
+                      <option value="LP" {{ old('extension')=='LP' ? 'selected' : '' }}>LP</option>
+                      <option value="CB" {{ old('extension')=='CB' ? 'selected' : '' }}>CB</option>
+                      <option value="SC" {{ old('extension')=='SC' ? 'selected' : '' }}>SC</option>
+                      <option value="OR" {{ old('extension')=='OR' ? 'selected' : '' }}>OR</option>
+                      <option value="PT" {{ old('extension')=='PT' ? 'selected' : '' }}>PT</option>
+                      <option value="TJ" {{ old('extension')=='TJ' ? 'selected' : '' }}>TJ</option>
+                      <option value="CH" {{ old('extension')=='CH' ? 'selected' : '' }}>CH</option>
+                      <option value="BE" {{ old('extension')=='BE' ? 'selected' : '' }}>BE</option>
+                      <option value="PD" {{ old('extension')=='PD' ? 'selected' : '' }}>PD</option>
+                    </select>
                   </div>
-                  <span class="error-message" id="errorCi">
-                      @error('ci') {{ $message }} @enderror
-                  </span>
+                  <small class="form-text text-muted">6-8 dígitos, solo números</small>
+                  @error('ci')
+                      <span class="invalid-feedback d-block">{{ $message }}</span>
+                  @enderror
+                  @error('extension')
+                      <span class="invalid-feedback d-block">{{ $message }}</span>
+                  @enderror
                 </div>
               </div>
 
@@ -131,13 +172,19 @@
                     <div class="input-group-prepend">
                       <span class="input-group-text"><i class="fas fa-phone"></i></span>
                     </div>
-                    <input type="text" class="form-control" id="telefono" name="telefono"
-                           placeholder="Ingrese el teléfono" maxlength="8"
+                    <input type="text" 
+                           class="form-control @error('telefono') is-invalid @enderror" 
+                           id="telefono" 
+                           name="telefono"
+                           placeholder="Ej: 71234567" 
+                           minlength="7"
+                           maxlength="8"
                            value="{{ old('telefono') }}">
                   </div>
-                  <span class="error-message" id="errorTelefono">
-                      @error('telefono') {{ $message }} @enderror
-                  </span>
+                  <small class="form-text text-muted">7-8 dígitos (opcional)</small>
+                  @error('telefono')
+                      <span class="invalid-feedback d-block">{{ $message }}</span>
+                  @enderror
                 </div>
               </div>
             </div>
@@ -156,14 +203,75 @@
       </div>
   </div>
 </div>
+
+{{-- Modal de validación --}}
+<div class="modal fade modal-validacion" id="modalValidacion" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>Error de validación
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0" id="mensajeValidacion"></p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-close-modal" data-dismiss="modal">
+                    Entendido
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('css')
 <style>
   .form-group.has-error .form-control { border-color: #dc3545; }
-  .error-message { color: #dc3545; font-size: 0.875rem; margin-top: 0.25rem; }
   .ci-inputs { display: flex; gap: 10px; }
-  .extension-input { width: 80px; }
+  .extension-input { width: 100px !important; }
+  .invalid-feedback { display: block; }
+  
+  /* Estilos para modal de validación */
+  .modal-validacion .modal-content {
+      border-radius: 8px;
+      border: none;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  }
+  
+  .modal-validacion .modal-header {
+      background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+      color: white;
+      border-radius: 8px 8px 0 0;
+      padding: 15px 20px;
+  }
+  
+  .modal-validacion .modal-title {
+      font-weight: 600;
+  }
+  
+  .modal-validacion .modal-body {
+      padding: 20px;
+  }
+  
+  .modal-validacion .btn-close-modal {
+      background: #dc3545;
+      border: none;
+      color: white;
+      padding: 8px 20px;
+      border-radius: 4px;
+      transition: all 0.3s;
+  }
+  
+  .modal-validacion .btn-close-modal:hover {
+      background: #c82333;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 5px rgba(220, 53, 69, 0.3);
+  }
 </style>
 @endsection
 
@@ -180,71 +288,164 @@ document.addEventListener('DOMContentLoaded', function() {
     telefono: document.getElementById('telefono')
   };
 
-  // Contadores
-  inputs.nombre.addEventListener('input', () => {
-    document.getElementById('contadorNombre').textContent = inputs.nombre.value.length;
+  // Función para mostrar modal de validación
+  function mostrarModalValidacion(mensaje) {
+    document.getElementById('mensajeValidacion').textContent = mensaje;
+    $('#modalValidacion').modal('show');
+  }
+
+  // Contadores con validación de caracteres
+  inputs.nombre.addEventListener('input', function() {
+    // Solo letras y espacios
+    this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+    document.getElementById('contadorNombre').textContent = this.value.length;
     limpiarError('nombre');
   });
-  inputs.apellido.addEventListener('input', () => {
-    document.getElementById('contadorApellido').textContent = inputs.apellido.value.length;
+
+  inputs.apellido.addEventListener('input', function() {
+    // Solo letras y espacios
+    this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+    document.getElementById('contadorApellido').textContent = this.value.length;
     limpiarError('apellido');
   });
 
-  // Solo números en CI / teléfono
-  ['ci','telefono'].forEach(campo => {
-    inputs[campo].addEventListener('input', function() {
-      this.value = this.value.replace(/[^0-9]/g, '');
-      limpiarError(campo);
-    });
+  // Solo números en CI
+  inputs.ci.addEventListener('input', function() {
+    this.value = this.value.replace(/[^0-9]/g, '');
+    limpiarError('ci');
+    
+    // Validación de longitud
+    if (this.value.length > 0 && this.value.length < 6) {
+      mostrarErrorEnLinea('ci', 'El CI debe tener entre 6 y 8 dígitos');
+    }
+  });
+
+  // Solo números en teléfono
+  inputs.telefono.addEventListener('input', function() {
+    this.value = this.value.replace(/[^0-9]/g, '');
+    limpiarError('telefono');
+    
+    // Validación de longitud si tiene contenido
+    if (this.value.length > 0 && this.value.length < 7) {
+      mostrarErrorEnLinea('telefono', 'El teléfono debe tener 7 u 8 dígitos');
+    }
+  });
+
+  // Validación de correo en tiempo real
+  inputs.correo.addEventListener('blur', function() {
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (this.value && !emailPattern.test(this.value)) {
+      mostrarErrorEnLinea('correo', 'Ingrese un correo electrónico válido');
+      this.classList.add('is-invalid');
+    } else {
+      limpiarError('correo');
+    }
   });
 
   inputs.correo.addEventListener('input', () => limpiarError('correo'));
+  inputs.extension.addEventListener('change', () => limpiarError('extension'));
 
   function limpiarError(campo) {
-    const span = document.getElementById('error' + campo.charAt(0).toUpperCase() + campo.slice(1));
     const input = inputs[campo];
-    if (span) span.textContent = '';
-    if (input) input.classList.remove('is-invalid');
+    if (input) {
+      input.classList.remove('is-invalid');
+      const feedback = input.parentElement.querySelector('.invalid-feedback:not(.d-block)');
+      if (feedback) feedback.remove();
+    }
   }
 
-  function mostrarError(campo, msg) {
-    const span = document.getElementById('error' + campo.charAt(0).toUpperCase() + campo.slice(1));
+  function mostrarErrorEnLinea(campo, msg) {
     const input = inputs[campo];
-    if (span) span.textContent = msg;
-    if (input) input.classList.add('is-invalid');
+    if (input) {
+      input.classList.add('is-invalid');
+      
+      // Buscar si ya existe un mensaje de error dinámico
+      let feedback = input.parentElement.querySelector('.invalid-feedback:not(.d-block)');
+      if (!feedback) {
+        feedback = document.createElement('span');
+        feedback.className = 'invalid-feedback';
+        feedback.style.display = 'block';
+        input.parentElement.appendChild(feedback);
+      }
+      feedback.textContent = msg;
+    }
   }
 
   function validar() {
-    let ok = true;
+    let isValid = true;
+    let mensajeError = 'Por favor completa correctamente todos los campos obligatorios';
 
+    // Validar nombre
     if (!inputs.nombre.value.trim()) {
-      mostrarError('nombre','El nombre es requerido'); ok = false;
+      mostrarErrorEnLinea('nombre', 'El nombre es requerido');
+      isValid = false;
+    } else if (inputs.nombre.value.trim().length < 2) {
+      mostrarErrorEnLinea('nombre', 'El nombre debe tener al menos 2 caracteres');
+      isValid = false;
     }
+
+    // Validar apellido
     if (!inputs.apellido.value.trim()) {
-      mostrarError('apellido','El apellido es requerido'); ok = false;
+      mostrarErrorEnLinea('apellido', 'El apellido es requerido');
+      isValid = false;
+    } else if (inputs.apellido.value.trim().length < 2) {
+      mostrarErrorEnLinea('apellido', 'El apellido debe tener al menos 2 caracteres');
+      isValid = false;
     }
+
+    // Validar correo
     if (!inputs.correo.value.trim()) {
-      mostrarError('correo','El correo es requerido'); ok = false;
-    } else if (!/\S+@\S+\.\S+/.test(inputs.correo.value)) {
-      mostrarError('correo','Formato de correo inválido'); ok = false;
+      mostrarErrorEnLinea('correo', 'El correo es requerido');
+      isValid = false;
+    } else {
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailPattern.test(inputs.correo.value)) {
+        mostrarErrorEnLinea('correo', 'Formato de correo inválido');
+        mensajeError = 'Por favor ingrese un correo electrónico válido';
+        isValid = false;
+      }
     }
+
+    // Validar CI
     if (!inputs.ci.value.trim()) {
-      mostrarError('ci','El CI es requerido'); ok = false;
-    } else if (inputs.ci.value.length < 7 || inputs.ci.value.length > 8) {
-      mostrarError('ci','El CI debe tener 7-8 dígitos'); ok = false;
+      mostrarErrorEnLinea('ci', 'El CI es requerido');
+      isValid = false;
+    } else if (inputs.ci.value.length < 6 || inputs.ci.value.length > 8) {
+      mostrarErrorEnLinea('ci', 'El CI debe tener entre 6 y 8 dígitos');
+      mensajeError = 'El CI debe tener entre 6 y 8 dígitos';
+      isValid = false;
     }
-    if (inputs.telefono.value &&
+
+    // Validar teléfono (solo si tiene valor)
+    if (inputs.telefono.value && 
         (inputs.telefono.value.length < 7 || inputs.telefono.value.length > 8)) {
-      mostrarError('telefono','Teléfono inválido'); ok = false;
+      mostrarErrorEnLinea('telefono', 'El teléfono debe tener 7 u 8 dígitos');
+      mensajeError = 'El teléfono debe tener 7 u 8 dígitos';
+      isValid = false;
     }
-    return ok;
+
+    // Mostrar modal si hay errores
+    if (!isValid) {
+      mostrarModalValidacion(mensajeError);
+    }
+
+    return isValid;
   }
 
-  form.addEventListener('submit', e => {
+  // Validación al enviar formulario
+  form.addEventListener('submit', function(e) {
     if (!validar()) {
-      e.preventDefault(); // solo cancela si hay errores de frontend
+      e.preventDefault();
+    }
+  });
+
+  // Limpiar errores al escribir
+  Object.keys(inputs).forEach(campo => {
+    if (inputs[campo]) {
+      inputs[campo].addEventListener('focus', () => limpiarError(campo));
     }
   });
 });
 </script>
 @endsection
+

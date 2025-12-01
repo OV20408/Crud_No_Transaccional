@@ -57,7 +57,12 @@ class VoluntarioController extends Controller
             'nombres'             => 'required|string|max:255',
             'apellidos'           => 'required|string|max:255',
             'ci'                  => 'required|string|max:255|unique:usuario,ci',
-            'fecha_nacimiento'    => 'nullable|date',
+            'fecha_nacimiento'    => [
+                'nullable',
+                'date',
+                'before:today',
+                'before_or_equal:' . now()->subYears(18)->format('Y-m-d')
+            ],
             'genero'              => 'nullable|string|max:50',
             'telefono'            => 'nullable|string|max:255',
             'email'               => 'required|email|max:255|unique:usuario,email',
@@ -66,6 +71,10 @@ class VoluntarioController extends Controller
             'nivel_entrenamiento' => 'nullable|string|max:255',
             'entidad_pertenencia' => 'nullable|string|max:255',
             'tipo_sangre'         => 'nullable|string|max:10',
+        ],
+        [
+            'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser una fecha pasada.',
+            'fecha_nacimiento.before_or_equal' => 'El voluntario debe tener al menos 18 años de edad.',
         ]);
 
         $rolVoluntarioId = Rol::where('nombre', 'Voluntario')->value('id');
