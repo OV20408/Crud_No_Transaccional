@@ -903,51 +903,8 @@ case 'capacitaciones':
 
 
       case 'encuestas':
-        contenido.innerHTML = `
-          <h2 class="titulo-seccion">Encuestas Realizadas</h2>
-          @if(count($evaluaciones) > 0)
-            <div class="row">
-              {{-- Columna Evaluación Física --}}
-              <div class="col-md-6">
-                @foreach($evaluaciones as $evaluacion)
-                  <a href="{{ route('reporte.ver', ['id' => $evaluacion->reporte_id ?? $evaluacion->id_reporte ?? $evaluacion->id, 'tipo' => 'fisico']) }}" style="text-decoration: none;">
-                    <div class="card mb-3" style="border-left: 4px solid #353b41; background-color: #f4f6f9; cursor: pointer; transition: all 0.2s;">
-                      <div class="card-body d-flex justify-content-between align-items-center py-3">
-                        <div>
-                          <strong style="color: #353b41;">Evaluacion Fisica</strong>
-                          <p class="mb-0 text-muted" style="font-size: 0.9rem;">Fecha realizada: {{ \Carbon\Carbon::parse($evaluacion->fecha_generado ?? $evaluacion->fecha)->format('j/n/Y') }}</p>
-                        </div>
-                        <span class="badge" style="background-color: #007bff; color: white; padding: 8px 12px; border-radius: 20px;">
-                          # Reporte #{{ $evaluacion->reporte_id ?? $evaluacion->id_reporte ?? 'N/A' }}
-                        </span>
-                      </div>
-                    </div>
-                  </a>
-                @endforeach
-              </div>
-              {{-- Columna Evaluación Emocional --}}
-              <div class="col-md-6">
-                @foreach($evaluaciones as $evaluacion)
-                  <a href="{{ route('reporte.ver', ['id' => $evaluacion->reporte_id ?? $evaluacion->id_reporte ?? $evaluacion->id, 'tipo' => 'emocional']) }}" style="text-decoration: none;">
-                    <div class="card mb-3" style="border-left: 4px solid #353b41; background-color: #f4f6f9; cursor: pointer; transition: all 0.2s;">
-                      <div class="card-body d-flex justify-content-between align-items-center py-3">
-                        <div>
-                          <strong style="color: #353b41;">Evaluacion Emocional</strong>
-                          <p class="mb-0 text-muted" style="font-size: 0.9rem;">Fecha realizada: {{ \Carbon\Carbon::parse($evaluacion->fecha_generado ?? $evaluacion->fecha)->format('j/n/Y') }}</p>
-                        </div>
-                        <span class="badge" style="background-color: #007bff; color: white; padding: 8px 12px; border-radius: 20px;">
-                          # Reporte #{{ $evaluacion->reporte_id ?? $evaluacion->id_reporte ?? 'N/A' }}
-                        </span>
-                      </div>
-                    </div>
-                  </a>
-                @endforeach
-              </div>
-            </div>
-          @else
-            <p class="mensaje-vacio">No hay encuestas realizadas.</p>
-          @endif
-        `;
+        // Usar la función dinámica para renderizar encuestas con datos actualizados
+        renderizarEncuestas();
         break;
 
       case 'cursos':
@@ -1249,6 +1206,7 @@ const INTERVALO_POLLING = 3000; // 3 segundos
 
 // Guardar evaluaciones actuales para comparar
 let evaluacionesActuales = @json($evaluaciones ?? []);
+let ultimaFechaEvaluacion = evaluacionesActuales.length > 0 ? (evaluacionesActuales[0].fecha_generado || evaluacionesActuales[0].fecha || '') : '';
 
 function actualizarDatosVoluntario() {
   fetch(`/voluntarios/${voluntarioId}/datos-actualizados`, {
@@ -1263,17 +1221,29 @@ function actualizarDatosVoluntario() {
     if (data.success) {
       const nuevosDatos = data.data;
       
-      // Verificar si hay nuevos reportes
-      if (nuevosDatos.totalReportes > ultimoTotalReportes) {
+      // Verificar si hay nuevos reportes O si cambió la última fecha de evaluación
+      const nuevaFechaEvaluacion = nuevosDatos.evaluaciones && nuevosDatos.evaluaciones.length > 0 
+        ? (nuevosDatos.evaluaciones[0].fecha_generado || nuevosDatos.evaluaciones[0].fecha || '') 
+        : '';
+      
+      const hayNuevosDatos = nuevosDatos.totalReportes > ultimoTotalReportes || 
+                             nuevaFechaEvaluacion !== ultimaFechaEvaluacion ||
+                             nuevosDatos.evaluaciones.length !== evaluacionesActuales.length;
+      
+      if (hayNuevosDatos) {
         console.log('Nuevos datos detectados, actualizando vista...');
+        console.log('Total reportes anterior:', ultimoTotalReportes, '-> nuevo:', nuevosDatos.totalReportes);
+        console.log('Evaluaciones anterior:', evaluacionesActuales.length, '-> nuevo:', nuevosDatos.evaluaciones.length);
+        
         ultimoTotalReportes = nuevosDatos.totalReportes;
         evaluacionesActuales = nuevosDatos.evaluaciones;
+        ultimaFechaEvaluacion = nuevaFechaEvaluacion;
         
         // Actualizar paneles de evaluación
         actualizarPanelEvaluacionFisica(nuevosDatos.reporteMasReciente);
         actualizarPanelEvaluacionPsicologica(nuevosDatos.reporteMasReciente);
         
-        // Actualizar sección de encuestas si está visible
+        // Actualizar sección de encuestas (siempre, no solo si está visible)
         actualizarSeccionEncuestas(nuevosDatos.evaluaciones);
         
         // Mostrar notificación de actualización
@@ -1369,22 +1339,39 @@ function mostrarNotificacionActualizacion() {
 }
 
 function actualizarSeccionEncuestas(evaluaciones) {
+  // Actualizar la variable global
+  evaluacionesActuales = evaluaciones;
+  
   const contenido = document.getElementById('contenido-dinamico');
   if (!contenido) return;
   
-  // Solo actualizar si la vista actual es 'encuestas'
-  if (!contenido.innerHTML.includes('Encuestas Realizadas')) return;
+  // Verificar si estamos en la vista de encuestas
+  const enVistaEncuestas = contenido.innerHTML.includes('Encuestas Realizadas');
+  if (!enVistaEncuestas) {
+    console.log('No estamos en vista de encuestas, datos guardados para cuando se abra');
+    return;
+  }
+  
+  console.log('Actualizando sección de encuestas con', evaluaciones.length, 'evaluaciones');
+  renderizarEncuestas();
+}
+
+// Función para renderizar encuestas con datos dinámicos
+function renderizarEncuestas() {
+  const contenido = document.getElementById('contenido-dinamico');
+  if (!contenido) return;
   
   let html = '<h2 class="titulo-seccion">Encuestas Realizadas</h2>';
   
-  if (evaluaciones && evaluaciones.length > 0) {
+  if (evaluacionesActuales && evaluacionesActuales.length > 0) {
     html += '<div class="row">';
     
     // Columna Evaluación Física
     html += '<div class="col-md-6">';
-    evaluaciones.forEach(eval => {
+    evaluacionesActuales.forEach(eval => {
       const reporteId = eval.reporte_id || eval.id_reporte || eval.id || 'N/A';
-      const fecha = new Date(eval.fecha_generado || eval.fecha).toLocaleDateString('es-ES');
+      const fechaRaw = eval.fecha_generado || eval.fecha;
+      const fecha = fechaRaw ? new Date(fechaRaw).toLocaleDateString('es-ES') : 'N/A';
       html += `
         <a href="/reporte/${reporteId}/fisico" style="text-decoration: none;">
           <div class="card mb-3" style="border-left: 4px solid #353b41; background-color: #f4f6f9; cursor: pointer; transition: all 0.2s;">
@@ -1405,9 +1392,10 @@ function actualizarSeccionEncuestas(evaluaciones) {
     
     // Columna Evaluación Emocional
     html += '<div class="col-md-6">';
-    evaluaciones.forEach(eval => {
+    evaluacionesActuales.forEach(eval => {
       const reporteId = eval.reporte_id || eval.id_reporte || eval.id || 'N/A';
-      const fecha = new Date(eval.fecha_generado || eval.fecha).toLocaleDateString('es-ES');
+      const fechaRaw = eval.fecha_generado || eval.fecha;
+      const fecha = fechaRaw ? new Date(fechaRaw).toLocaleDateString('es-ES') : 'N/A';
       html += `
         <a href="/reporte/${reporteId}/emocional" style="text-decoration: none;">
           <div class="card mb-3" style="border-left: 4px solid #353b41; background-color: #f4f6f9; cursor: pointer; transition: all 0.2s;">
