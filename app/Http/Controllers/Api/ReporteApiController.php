@@ -33,6 +33,13 @@ class ReporteApiController extends Controller
             ->orderBy('fecha_generado', 'desc')
             ->get()
             ->map(function ($reporte) {
+                // Obtener necesidades del reporte
+                $necesidades = DB::table('reporte_necesidad')
+                    ->join('necesidad', 'reporte_necesidad.id_necesidad', '=', 'necesidad.id')
+                    ->where('reporte_necesidad.id_reporte', $reporte->id)
+                    ->select('necesidad.id', 'necesidad.tipo', 'necesidad.descripcion')
+                    ->get();
+
                 return [
                     'id' => $reporte->id,
                     'fechaGenerado' => $reporte->fecha_generado ? $reporte->fecha_generado->format('Y-m-d H:i:s') : null,
@@ -43,6 +50,7 @@ class ReporteApiController extends Controller
                     'respuestasEmocional' => $reporte->respuestas_emocional,
                     'observaciones' => $reporte->observaciones,
                     'recomendaciones' => $reporte->recomendaciones,
+                    'necesidades' => $necesidades,
                 ];
             });
 
@@ -82,6 +90,13 @@ class ReporteApiController extends Controller
             ]);
         }
 
+        // Obtener necesidades del reporte
+        $necesidades = DB::table('reporte_necesidad')
+            ->join('necesidad', 'reporte_necesidad.id_necesidad', '=', 'necesidad.id')
+            ->where('reporte_necesidad.id_reporte', $reporte->id)
+            ->select('necesidad.id', 'necesidad.tipo', 'necesidad.descripcion')
+            ->get();
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -94,7 +109,77 @@ class ReporteApiController extends Controller
                 'respuestasEmocional' => $reporte->respuestas_emocional,
                 'observaciones' => $reporte->observaciones,
                 'recomendaciones' => $reporte->recomendaciones,
+                'necesidades' => $necesidades,
             ],
+        ]);
+    }
+
+    /**
+     * Obtener necesidades asignadas a un voluntario (a través de sus reportes)
+     * GET /api/voluntarios/{id}/necesidades
+     */
+    public function getNecesidadesByVoluntario($voluntarioId)
+    {
+        $historial = DB::table('historial_clinico')
+            ->where('id_usuario', $voluntarioId)
+            ->first();
+
+        if (!$historial) {
+            return response()->json([
+                'success' => true,
+                'data' => [],
+                'message' => 'El voluntario no tiene historial clínico'
+            ]);
+        }
+
+        // Obtener todas las necesidades de todos los reportes del voluntario
+        $necesidades = DB::table('reporte')
+            ->join('reporte_necesidad', 'reporte.id', '=', 'reporte_necesidad.id_reporte')
+            ->join('necesidad', 'reporte_necesidad.id_necesidad', '=', 'necesidad.id')
+            ->where('reporte.id_historial', $historial->id)
+            ->select(
+                'necesidad.id',
+                'necesidad.tipo',
+                'necesidad.descripcion',
+                'reporte.fecha_generado as fechaAsignacion',
+                'reporte.id as reporteId'
+            )
+            ->orderBy('reporte.fecha_generado', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $necesidades,
+        ]);
+    }
+
+    /**
+     * Obtener capacitaciones asignadas a un voluntario (a través de progreso_voluntario)
+     * GET /api/voluntarios/{id}/capacitaciones
+     */
+    public function getCapacitacionesByVoluntario($voluntarioId)
+    {
+        // Obtener capacitaciones a través de los cursos asignados al voluntario
+        $capacitaciones = DB::table('progreso_voluntario')
+            ->join('etapa', 'progreso_voluntario.id_etapa', '=', 'etapa.id')
+            ->join('curso', 'etapa.id_curso', '=', 'curso.id')
+            ->join('capacitacion', 'curso.id_capacitacion', '=', 'capacitacion.id')
+            ->where('progreso_voluntario.id_usuario', $voluntarioId)
+            ->select(
+                'capacitacion.id',
+                'capacitacion.nombre',
+                'capacitacion.descripcion',
+                'curso.nombre as cursoNombre',
+                DB::raw('MIN(progreso_voluntario.fecha_inicio) as fechaInicio'),
+                DB::raw('MAX(progreso_voluntario.fecha_finalizacion) as fechaFinalizacion'),
+                DB::raw("CASE WHEN COUNT(CASE WHEN progreso_voluntario.estado != 'completado' THEN 1 END) = 0 THEN 'completado' ELSE 'en_progreso' END as estado")
+            )
+            ->groupBy('capacitacion.id', 'capacitacion.nombre', 'capacitacion.descripcion', 'curso.nombre')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $capacitaciones,
         ]);
     }
 }

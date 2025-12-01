@@ -72,6 +72,8 @@ Route::post('/voluntarios/asignar-curso', [CapacitacionApiController::class, 'as
 // ==================== REPORTES POR VOLUNTARIO ====================
 Route::get('/voluntarios/{id}/reportes', [ReporteApiController::class, 'getByVoluntario']);
 Route::get('/voluntarios/{id}/reportes/ultimo', [ReporteApiController::class, 'getUltimoByVoluntario']);
+Route::get('/voluntarios/{id}/necesidades', [ReporteApiController::class, 'getNecesidadesByVoluntario']);
+Route::get('/voluntarios/{id}/capacitaciones-asignadas', [ReporteApiController::class, 'getCapacitacionesByVoluntario']);
 
 // ==================== CONSULTAS ====================
 Route::post('/consultas', [ConsultaApiController::class, 'store']);
