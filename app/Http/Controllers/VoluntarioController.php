@@ -112,10 +112,14 @@ class VoluntarioController extends Controller
             Password::sendResetLink(['email' => $user->email]);
         }
 
+        // Guardar el ID del voluntario recién creado en la sesión
         return redirect()
-            ->route('voluntarios.show', $user->id_usuario)
+            ->route('voluntarios.index')
+            ->with('nuevo_voluntario_id', $user->id_usuario)
             ->with('success', 'Voluntario creado correctamente. Se envió un correo para que configure su contraseña.');
     }
+
+
 
     public function show($id)
     {
@@ -292,6 +296,8 @@ class VoluntarioController extends Controller
             'necesidadesAsignadas'   // ✅ NUEVO
         ));
     }
+
+
 
     public function asignarCapacitacion(Request $request, $idUsuario)
     {

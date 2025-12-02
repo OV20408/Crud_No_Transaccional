@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -35,19 +34,13 @@ class ChatMensajeApiController extends Controller
             'texto'         => 'required|string|max:1000',
         ]);
 
-        // FORZAR A INTEGER para consistencia
+        // 🔴 FORZAR A INTEGER para consistencia
         $validated['voluntario_id'] = (int) $validated['voluntario_id'];
 
         $mensaje = ChatMensaje::create($validated);
         $mensaje->load('voluntario');
 
-        // Intentar broadcast, pero no fallar si WebSocket no está disponible
-        try {
-            MensajeChatCreado::dispatch($mensaje);
-        } catch (\Exception $e) {
-            // Log del error pero continuar - el mensaje ya se guardó
-            \Log::warning('Broadcast falló (WebSocket no disponible): ' . $e->getMessage());
-        }
+        MensajeChatCreado::dispatch($mensaje);
 
         return response()->json([
             'success' => true,
