@@ -948,7 +948,7 @@
         renderizarReportes();
         break;
 
-case 'capacitaciones':
+        case 'capacitaciones':
   contenido.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;">
       <h2 class="titulo-seccion" style="margin-bottom:0;">Capacitaciones y Certificaciones</h2>
@@ -961,10 +961,31 @@ case 'capacitaciones':
     @if(count($capacitacionesProgreso) > 0)
       <div class="row">
         @foreach($capacitacionesProgreso as $cap)
+          @php
+            // Verificar si todas las etapas están completadas
+            $etapas = DB::table('progreso_voluntario')
+                ->join('etapa', 'etapa.id', '=', 'progreso_voluntario.id_etapa')
+                ->join('curso', 'curso.id', '=', 'etapa.id_curso')
+                ->where('curso.id_capacitacion', $cap->id)
+                ->where('progreso_voluntario.id_usuario', $voluntario->id_usuario)
+                ->get();
+            
+            $todasCompletadas = $etapas->every(function($etapa) {
+                return $etapa->estado === 'completado';
+            });
+
+            // Verificar si ya tiene certificado
+            $tieneCertificado = DB::table('certificados')
+                ->where('id_usuario', $voluntario->id_usuario)
+                ->where('id_capacitacion', $cap->id)
+                ->where('estado', 'activo')
+                ->exists();
+          @endphp
+
           <div class="col-md-6 mb-3">
             <div class="vista-card curso-card" 
-                 style="cursor:pointer;transition:all 0.3s;" 
-                 onclick="toggleCursoDetalles({{ $cap->id }})">
+                style="cursor:pointer;transition:all 0.3s;" 
+                onclick="toggleCursoDetalles({{ $cap->id }})">
               
               <div style="display:flex;justify-content:space-between;align-items:start;">
                 <div>
@@ -979,27 +1000,6 @@ case 'capacitaciones':
                 <h5 style="color:#007bff;margin-bottom:10px;">
                   <i class="fas fa-tasks"></i> Progreso de Etapas
                 </h5>
-
-                @php
-                  // Obtener etapas del curso con su progreso
-                  $etapas = DB::table('etapa')
-                    ->join('curso', 'curso.id', '=', 'etapa.id_curso')
-                    ->leftJoin('progreso_voluntario', function($join) use ($voluntario, $cap) {
-                        $join->on('progreso_voluntario.id_etapa', '=', 'etapa.id')
-                             ->where('progreso_voluntario.id_usuario', '=', $voluntario->id_usuario);
-                    })
-                    ->where('curso.id_capacitacion', $cap->id)
-                    ->select(
-                        'etapa.id',
-                        'etapa.nombre',
-                        'etapa.orden',
-                        'progreso_voluntario.estado',
-                        'progreso_voluntario.fecha_inicio',
-                        'progreso_voluntario.fecha_finalizacion'
-                    )
-                    ->orderBy('etapa.orden')
-                    ->get();
-                @endphp
 
                 @foreach($etapas as $etapa)
                   <div class="etapa-item" style="background:#f8f9fa;padding:10px;border-radius:6px;margin-bottom:10px;">
@@ -1025,6 +1025,21 @@ case 'capacitaciones':
                     @endif
                   </div>
                 @endforeach
+
+                {{-- ✅ BOTÓN DE CERTIFICADO (si todas las etapas están completadas) --}}
+                @if($todasCompletadas)
+                  <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid #28a745;">
+                    @if($tieneCertificado)
+                      <button class="btn-formulario-enviar" style="background:#28a745;width:100%;" onclick="event.stopPropagation(); verCertificado({{ $voluntario->id_usuario }}, {{ $cap->id }})">
+                        <i class="fas fa-certificate"></i> Ver Certificado
+                      </button>
+                    @else
+                      <button class="btn-formulario-enviar" style="background:#007bff;color:#fff;width:100%;" onclick="event.stopPropagation(); generarCertificado({{ $voluntario->id_usuario }}, {{ $cap->id }})">
+                        <i class="fas fa-award"></i> Generar Certificado
+                      </button>
+                    @endif
+                  </div>
+                @endif
               </div>
             </div>
           </div>
@@ -1036,6 +1051,7 @@ case 'capacitaciones':
     </div>
   `;
   break;
+
 
 
       case 'encuestas':
@@ -1097,6 +1113,9 @@ case 'capacitaciones':
         `;
         break;
     }
+
+
+    
   }
 
 
@@ -1509,6 +1528,77 @@ function actualizarSeccionEncuestas(evaluaciones) {
   
   console.log('Actualizando sección de encuestas con', evaluaciones.length, 'evaluaciones');
   renderizarEncuestas();
+}
+
+
+// ========================================
+// FUNCIONES PARA CERTIFICADOS
+// ========================================
+
+function generarCertificado(idUsuario, idCapacitacion) {
+  if (!confirm('¿Generar certificado para esta capacitación?')) return;
+
+  const btn = event.target;
+  const textoOriginal = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+
+  fetch(`/certificados/generar/${idUsuario}/${idCapacitacion}`, {
+    method: 'POST',
+    headers: {
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      hideAllToasts();
+      document.getElementById('toast-success-msg').textContent = '¡Certificado generado y enviado por email!';
+      showToast('toast-success');
+      
+      setTimeout(() => {
+        hideToast('toast-success');
+        location.reload(); // Recargar para mostrar botón "Ver Certificado"
+      }, 2000);
+    } else {
+      hideAllToasts();
+      document.getElementById('toast-error-msg').textContent = 'Error: ' + data.message;
+      showToast('toast-error');
+      btn.disabled = false;
+      btn.innerHTML = textoOriginal;
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    hideAllToasts();
+    document.getElementById('toast-error-msg').textContent = 'Error al generar certificado';
+    showToast('toast-error');
+    btn.disabled = false;
+    btn.innerHTML = textoOriginal;
+  });
+}
+
+function verCertificado(idUsuario, idCapacitacion) {
+  // Obtener el ID del certificado
+  fetch(`/api/certificados/${idUsuario}/${idCapacitacion}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.success && data.certificado) {
+        window.open(`/certificados/descargar/${data.certificado.id}`, '_blank');
+      } else {
+        hideAllToasts();
+        document.getElementById('toast-error-msg').textContent = 'Certificado no encontrado';
+        showToast('toast-error');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      hideAllToasts();
+      document.getElementById('toast-error-msg').textContent = 'Error al obtener certificado';
+      showToast('toast-error');
+    });
 }
 
 // Iniciar polling automático

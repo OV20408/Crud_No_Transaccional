@@ -21,15 +21,34 @@ use App\Http\Controllers\VoluntarioController;
 use App\Http\Controllers\AdministradorController;
 use App\Http\Controllers\AyudasSolicitadasController;
 use App\Http\Controllers\EvaluacionVoluntarioController;
+use App\Http\Controllers\CertificadoController;
+
 use App\Models\Consulta;
 use App\Events\ConsultaRespondida;
 
+Route::post('/certificados/forzar/{idUsuario}/{idCapacitacion}', [CertificadoController::class, 'forzarRegeneracion']);
+
+// Certificados
+Route::post('/certificados/generar/{idUsuario}/{idCapacitacion}', [CertificadoController::class, 'generarCertificado']);
+Route::get('/certificados/descargar/{id}', [CertificadoController::class, 'descargarCertificado'])->name('certificados.descargar');
+Route::get('/api/certificados/{idUsuario}/{idCapacitacion}', function($idUsuario, $idCapacitacion) {
+    $certificado = DB::table('certificados')
+        ->where('id_usuario', $idUsuario)
+        ->where('id_capacitacion', $idCapacitacion)
+        ->where('estado', 'activo')
+        ->first();
+    
+    return response()->json([
+        'success' => !!$certificado,
+        'certificado' => $certificado
+    ]);
+});
 
 Route::get('/voluntarios/{voluntarioId}/reporte/{reporteId}/{tipo}/marcar-visto', 
     [VoluntarioController::class, 'marcarReporteVisto'])
     ->name('voluntarios.marcar-reporte-visto')
     ->where('tipo', 'fisico|emocional');
-    
+
 
 Route::get('/voluntarios/{id}/historial-pdf', [VoluntarioController::class, 'descargarHistorialPDF'])
     ->name('voluntarios.historial.pdf');
