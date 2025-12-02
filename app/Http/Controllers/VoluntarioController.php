@@ -187,13 +187,13 @@ class VoluntarioController extends Controller
                 ->get();
         }
 
-        // 7. ✅ TODAS LAS NECESIDADES DEL SISTEMA (para asignar)
+        // 7. TODAS LAS NECESIDADES DEL SISTEMA (para asignar)
         $necesidadesAll = DB::table('necesidad')
             ->orderBy('tipo')
             ->orderBy('descripcion')
             ->get();
 
-        // 8. ✅ NECESIDADES ASIGNADAS AL VOLUNTARIO (todas, no solo del último reporte)
+        // 8. NECESIDADES ASIGNADAS AL VOLUNTARIO
         $necesidadesAsignadas = DB::table('reporte_necesidad')
             ->join('reporte', 'reporte.id', '=', 'reporte_necesidad.id_reporte')
             ->join('historial_clinico', 'historial_clinico.id', '=', 'reporte.id_historial')
@@ -203,7 +203,7 @@ class VoluntarioController extends Controller
             ->orderBy('reporte.fecha_generado', 'desc')
             ->get();
 
-        // 9. ✅ CURSOS DEL VOLUNTARIO (con capacitación)
+        // 9. CURSOS DEL VOLUNTARIO
         $cursos = DB::select("
             SELECT DISTINCT 
                 cu.id,
@@ -279,8 +279,18 @@ class VoluntarioController extends Controller
             ORDER BY c.nombre
         ", [$id]);
 
-        // 12. Todas las capacitaciones del sistema
         $capacitacionesAll = Capacitacion::orderBy('nombre')->get();
+
+        $reportesVistos = session()->get('reportes_vistos', []);
+        
+        $reportesNoVistos = [];
+        foreach ($reportes as $reporte) {
+            $reportesNoVistos[] = [
+                'reporte_id' => $reporte->id,
+                'fisico_no_visto' => !in_array($reporte->id . '_fisico', $reportesVistos) && $reporte->resumen_fisico ? 'fisico' : null,
+                'emocional_no_visto' => !in_array($reporte->id . '_emocional', $reportesVistos) && $reporte->resumen_emocional ? 'emocional' : null,
+            ];
+        }
 
         return view('voluntarios.show', compact(
             'voluntario',
@@ -292,10 +302,33 @@ class VoluntarioController extends Controller
             'evaluaciones',
             'capacitacionesProgreso',
             'capacitacionesAll',
-            'necesidadesAll',        // ✅ NUEVO
-            'necesidadesAsignadas'   // ✅ NUEVO
+            'necesidadesAll',
+            'necesidadesAsignadas',
+            'reportesNoVistos'  
         ));
     }
+
+
+    public function marcarReporteVisto($voluntarioId, $reporteId, $tipo)
+    {
+        if (!in_array($tipo, ['fisico', 'emocional'])) {
+            abort(404);
+        }
+
+        $reportesVistos = session()->get('reportes_vistos', []);
+        $key = $reporteId . '_' . $tipo;
+        
+        if (!in_array($key, $reportesVistos)) {
+            $reportesVistos[] = $key;
+            session()->put('reportes_vistos', $reportesVistos);
+        }
+
+        return redirect()
+            ->route('voluntarios.show', $voluntarioId)
+            ->with('success', 'Reporte marcado como visto');
+    }
+
+
 
 
 

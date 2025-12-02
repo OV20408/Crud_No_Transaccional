@@ -513,6 +513,15 @@
       width: 100%;
     }
   }
+
+  @keyframes pulseNuevo {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
 </style>
 
 <div class="infovoluntarios-container">
@@ -750,14 +759,16 @@
 </div>
 
 <script>
-  // Variables globales para datos dinámicos (se actualizan con polling)
   let evaluacionesActuales = @json($evaluaciones ?? []);
   let reportesActuales = @json($reportes ?? []);
   
-  // Función para renderizar encuestas con datos dinámicos
+
   function renderizarEncuestas() {
     const contenido = document.getElementById('vista-contenido');
     if (!contenido) return;
+    
+    // ✅ Obtener reportes no vistos desde PHP
+    const reportesNoVistos = @json($reportesNoVistos ?? []);
     
     let html = '<h2 class="titulo-seccion">Encuestas Realizadas</h2>';
     
@@ -770,9 +781,20 @@
         const reporteId = eval.reporte_id || eval.id_reporte || eval.id || 'N/A';
         const fechaRaw = eval.fecha_generado || eval.fecha;
         const fecha = fechaRaw ? new Date(fechaRaw).toLocaleDateString('es-ES') : 'N/A';
+        
+        // ✅ Verificar si este reporte físico NO ha sido visto
+        const reporteNoVisto = reportesNoVistos.find(r => r.reporte_id == reporteId);
+        const esNuevoFisico = reporteNoVisto && reporteNoVisto.fisico_no_visto === 'fisico';
+        
         html += `
-          <a href="/reporte/${reporteId}/fisico" style="text-decoration: none;">
+          <a href="/reporte/${reporteId}/fisico" style="text-decoration: none; position: relative;">
             <div class="card mb-3" style="border-left: 4px solid #353b41; background-color: #f4f6f9; cursor: pointer; transition: all 0.2s;">
+              ${esNuevoFisico ? `
+                <div style="position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; align-items: center; gap: 5px; animation: pulseNuevo 2s infinite;">
+                  <div style="width: 12px; height: 12px; background-color: #007bff; border-radius: 50%; box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.3);"></div>
+                  <span style="background-color: #007bff; color: white; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Nueva</span>
+                </div>
+              ` : ''}
               <div class="card-body d-flex justify-content-between align-items-center py-3">
                 <div>
                   <strong style="color: #353b41;">Evaluacion Fisica</strong>
@@ -794,9 +816,20 @@
         const reporteId = eval.reporte_id || eval.id_reporte || eval.id || 'N/A';
         const fechaRaw = eval.fecha_generado || eval.fecha;
         const fecha = fechaRaw ? new Date(fechaRaw).toLocaleDateString('es-ES') : 'N/A';
+        
+        // ✅ Verificar si este reporte emocional NO ha sido visto
+        const reporteNoVisto = reportesNoVistos.find(r => r.reporte_id == reporteId);
+        const esNuevoEmocional = reporteNoVisto && reporteNoVisto.emocional_no_visto === 'emocional';
+        
         html += `
-          <a href="/reporte/${reporteId}/emocional" style="text-decoration: none;">
+          <a href="/reporte/${reporteId}/emocional" style="text-decoration: none; position: relative;">
             <div class="card mb-3" style="border-left: 4px solid #353b41; background-color: #f4f6f9; cursor: pointer; transition: all 0.2s;">
+              ${esNuevoEmocional ? `
+                <div style="position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; align-items: center; gap: 5px; animation: pulseNuevo 2s infinite;">
+                  <div style="width: 12px; height: 12px; background-color: #007bff; border-radius: 50%; box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.3);"></div>
+                  <span style="background-color: #007bff; color: white; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Nueva</span>
+                </div>
+              ` : ''}
               <div class="card-body d-flex justify-content-between align-items-center py-3">
                 <div>
                   <strong style="color: #353b41;">Evaluacion Emocional</strong>
@@ -819,6 +852,9 @@
     
     contenido.innerHTML = html;
   }
+
+
+
 
   // Función para renderizar historial con datos dinámicos
   function renderizarHistorial() {

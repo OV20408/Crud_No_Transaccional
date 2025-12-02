@@ -235,46 +235,58 @@ class EvaluacionVoluntarioController extends Controller
      * Ver detalle de un reporte/encuesta realizada
      */
     public function verReporte($id, $tipo = 'fisico')
-    {
-        $reporte = Reporte::find($id);
-        
-        if (!$reporte) {
-            abort(404, 'Reporte no encontrado');
-        }
-        
-        // Obtener el voluntario a través del historial clínico
-        $historial = HistorialClinico::find($reporte->id_historial);
-        $voluntario = null;
-        
-        if ($historial) {
-            $voluntario = User::where('id_usuario', $historial->id_usuario)->first();
-        }
-        
-        // Obtener universidades para el combo de asignar
-        $universidades = DB::table('universidad')->orderBy('nombre')->get();
-        
-        // Parsear las respuestas del usuario (de los nuevos campos respuestas_*)
-        // Si no existen, intentar parsear del resumen (para reportes antiguos)
-        $textoFisico = $reporte->respuestas_fisico ?? $reporte->resumen_fisico;
-        $textoEmocional = $reporte->respuestas_emocional ?? $reporte->resumen_emocional;
-        
-        $respuestasFisicas = $this->parsearRespuestas($textoFisico);
-        $respuestasEmocionales = $this->parsearRespuestas($textoEmocional);
-        
-        // Parsear el estado del cuerpo del resumen físico
-        $estadoCuerpo = $this->parsearEstadoCuerpo($textoFisico);
-        
-        return view('reportes.detalle', compact(
-            'reporte',
-            'voluntario',
-            'universidades',
-            'respuestasFisicas',
-            'respuestasEmocionales',
-            'estadoCuerpo',
-            'tipo'
-        ));
+{
+    // ✅ AGREGAR: Marcar como visto en la sesión
+    $reportesVistos = session()->get('reportes_vistos', []);
+    $key = $id . '_' . $tipo;
+    
+    if (!in_array($key, $reportesVistos)) {
+        $reportesVistos[] = $key;
+        session()->put('reportes_vistos', $reportesVistos);
+    }
+
+    // ... MANTENER TODO LO DEMÁS TAL CUAL ESTÁ ...
+    $reporte = Reporte::find($id);
+    
+    if (!$reporte) {
+        abort(404, 'Reporte no encontrado');
     }
     
+    // Obtener el voluntario a través del historial clínico
+    $historial = HistorialClinico::find($reporte->id_historial);
+    $voluntario = null;
+    
+    if ($historial) {
+        $voluntario = User::where('id_usuario', $historial->id_usuario)->first();
+    }
+    
+    // Obtener universidades para el combo de asignar
+    $universidades = DB::table('universidad')->orderBy('nombre')->get();
+    
+    // Parsear las respuestas del usuario (de los nuevos campos respuestas_*)
+    // Si no existen, intentar parsear del resumen (para reportes antiguos)
+    $textoFisico = $reporte->respuestas_fisico ?? $reporte->resumen_fisico;
+    $textoEmocional = $reporte->respuestas_emocional ?? $reporte->resumen_emocional;
+    
+    $respuestasFisicas = $this->parsearRespuestas($textoFisico);
+    $respuestasEmocionales = $this->parsearRespuestas($textoEmocional);
+    
+    // Parsear el estado del cuerpo del resumen físico
+    $estadoCuerpo = $this->parsearEstadoCuerpo($textoFisico);
+    
+    return view('reportes.detalle', compact(
+        'reporte',
+        'voluntario',
+        'universidades',
+        'respuestasFisicas',
+        'respuestasEmocionales',
+        'estadoCuerpo',
+        'tipo'
+    ));
+}
+    
+
+
     /**
      * Parsear respuestas del resumen
      */

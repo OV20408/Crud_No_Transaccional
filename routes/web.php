@@ -24,6 +24,13 @@ use App\Http\Controllers\EvaluacionVoluntarioController;
 use App\Models\Consulta;
 use App\Events\ConsultaRespondida;
 
+
+Route::get('/voluntarios/{voluntarioId}/reporte/{reporteId}/{tipo}/marcar-visto', 
+    [VoluntarioController::class, 'marcarReporteVisto'])
+    ->name('voluntarios.marcar-reporte-visto')
+    ->where('tipo', 'fisico|emocional');
+    
+
 Route::get('/voluntarios/{id}/historial-pdf', [VoluntarioController::class, 'descargarHistorialPDF'])
     ->name('voluntarios.historial.pdf');
 
