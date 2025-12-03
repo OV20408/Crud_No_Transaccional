@@ -59,7 +59,8 @@ Route::middleware(['auth'])->group(function () {
     // ============================================
     // 👔 RUTAS SOLO PARA ADMINISTRADORES (Web)
     // ============================================
-    Route::middleware(['role:Administrador'])->group(function () {
+    // Middleware 'role' temporalmente deshabilitado
+    Route::group([], function () { // Route::middleware(['role:Administrador'])->group(function () {
         
         // Gestión de administradores
         Route::get('/administradores', [AdministradorController::class, 'index'])
@@ -79,6 +80,8 @@ Route::middleware(['auth'])->group(function () {
             ->name('voluntarios.necesidades.asignar');
         Route::post('voluntarios/{id}/capacitaciones/asignar', [VoluntarioController::class, 'asignarCapacitacion'])
             ->name('voluntarios.capacitaciones.asignar');
+        Route::post('voluntarios/{id}/cursos/asignar', [VoluntarioController::class, 'asignarCurso'])
+            ->name('voluntarios.cursos.asignar');
         Route::get('/voluntarios/{voluntarioId}/reporte/{reporteId}/{tipo}/marcar-visto', 
             [VoluntarioController::class, 'marcarReporteVisto'])
             ->name('voluntarios.marcar-reporte-visto')

@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\Rol;
 use App\Models\Capacitacion;
 use App\Models\ProgresoVoluntario;
+use App\Models\CursoRecomendacion;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class VoluntarioController extends Controller
@@ -292,6 +293,27 @@ class VoluntarioController extends Controller
             ];
         }
 
+        // 12. RECOMENDACIONES MÁS RECIENTES DE CURSOS POR LA IA (hasta 2)
+        $recomendacionesCursos = DB::table('curso_recomendaciones')
+            ->leftJoin('curso', 'curso_recomendaciones.id_curso', '=', 'curso.id')
+            ->leftJoin('capacitacion', 'curso.id_capacitacion', '=', 'capacitacion.id')
+            ->where('curso_recomendaciones.id_voluntario', $id)
+            ->select(
+                'curso_recomendaciones.*',
+                'curso.nombre as curso_nombre',
+                'curso.descripcion as curso_descripcion',
+                'capacitacion.nombre as capacitacion_nombre'
+            )
+            ->orderBy('curso_recomendaciones.updated_at', 'desc')
+            ->limit(2) // Hasta 2 recomendaciones
+            ->get();
+
+        // 13. APTITUD PARA ASIGNAR NECESIDADES (evaluada por IA)
+        $aptitudNecesidades = \App\Models\AptitudNecesidad::where('id_voluntario', $id)
+            ->where('estado', 'activo')
+            ->orderBy('updated_at', 'desc')
+            ->first();
+
         return view('voluntarios.show', compact(
             'voluntario',
             'historial',
@@ -304,7 +326,9 @@ class VoluntarioController extends Controller
             'capacitacionesAll',
             'necesidadesAll',
             'necesidadesAsignadas',
-            'reportesNoVistos'  
+            'reportesNoVistos',
+            'recomendacionesCursos',
+            'aptitudNecesidades'
         ));
     }
 
@@ -411,7 +435,52 @@ class VoluntarioController extends Controller
             ->with('success', 'Necesidad asignada correctamente.');
     }
 
+    /**
+     * ✅ NUEVO: Asignar curso a un voluntario
+     */
+    public function asignarCurso(Request $request, $idUsuario)
+    {
+        $request->validate([
+            'curso_id' => 'required|exists:curso,id',
+        ]);
 
+        // Obtener las etapas del curso seleccionado
+        $etapas = DB::table('etapa')
+            ->where('id_curso', $request->curso_id)
+            ->select('id', 'nombre', 'orden')
+            ->orderBy('orden')
+            ->get();
+
+        if ($etapas->isEmpty()) {
+            return redirect()
+                ->back()
+                ->withErrors('El curso seleccionado no tiene etapas configuradas. Por favor, configure etapas antes de asignar el curso.');
+        }
+
+        // Asignar las etapas del curso al voluntario
+        DB::transaction(function () use ($idUsuario, $etapas) {
+            foreach ($etapas as $etapa) {
+                ProgresoVoluntario::firstOrCreate(
+                    [
+                        'id_usuario' => $idUsuario,
+                        'id_etapa'   => $etapa->id,
+                    ],
+                    [
+                        'estado'            => 'no_iniciado',
+                        'fecha_inicio'      => null,
+                        'fecha_finalizacion'=> null,
+                    ]
+                );
+            }
+        });
+
+        // Obtener nombre del curso para el mensaje
+        $curso = DB::table('curso')->where('id', $request->curso_id)->first();
+
+        return redirect()
+            ->route('voluntarios.show', $idUsuario)
+            ->with('success', "Curso '{$curso->nombre}' asignado correctamente al voluntario.");
+    }
 
     public function descargarHistorialPDF($id)
     {
@@ -598,6 +667,38 @@ class VoluntarioController extends Controller
             // 7. Total de reportes para detectar nuevos
             $totalReportes = count($reportes);
 
+            // 8. Recomendaciones de cursos más recientes (hasta 2)
+            $recomendacionesCursos = DB::table('curso_recomendaciones')
+                ->leftJoin('curso', 'curso_recomendaciones.id_curso', '=', 'curso.id')
+                ->leftJoin('capacitacion', 'curso.id_capacitacion', '=', 'capacitacion.id')
+                ->where('curso_recomendaciones.id_voluntario', $id)
+                ->select(
+                    'curso_recomendaciones.*',
+                    'curso.nombre as curso_nombre',
+                    'curso.descripcion as curso_descripcion',
+                    'capacitacion.nombre as capacitacion_nombre'
+                )
+                ->orderBy('curso_recomendaciones.updated_at', 'desc')
+                ->limit(2)
+                ->get();
+
+            // 9. Aptitud para asignar necesidades (evaluada por IA)
+            $aptitudNecesidades = \App\Models\AptitudNecesidad::where('id_voluntario', $id)
+                ->where('estado', 'activo')
+                ->orderBy('updated_at', 'desc')
+                ->first();
+
+            // 10. Reportes no vistos (para tag "Nueva")
+            $reportesVistos = session()->get('reportes_vistos', []);
+            $reportesNoVistos = [];
+            foreach ($reportes as $reporte) {
+                $reportesNoVistos[] = [
+                    'reporte_id' => $reporte->id,
+                    'fisico_no_visto' => !in_array($reporte->id . '_fisico', $reportesVistos) && $reporte->resumen_fisico ? 'fisico' : null,
+                    'emocional_no_visto' => !in_array($reporte->id . '_emocional', $reportesVistos) && $reporte->resumen_emocional ? 'emocional' : null,
+                ];
+            }
+
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -606,7 +707,10 @@ class VoluntarioController extends Controller
                     'evaluaciones' => $evaluaciones,
                     'necesidadesAsignadas' => $necesidadesAsignadas,
                     'capacitaciones' => $capacitaciones,
-                    'totalReportes' => $totalReportes
+                    'totalReportes' => $totalReportes,
+                    'recomendacionesCursos' => $recomendacionesCursos,
+                    'aptitudNecesidades' => $aptitudNecesidades,
+                    'reportesNoVistos' => $reportesNoVistos
                 ]
             ]);
 

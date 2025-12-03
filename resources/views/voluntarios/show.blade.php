@@ -53,6 +53,17 @@
     }
   }
 
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
   .toast-notification.toast-success {
     background-color: #f8f9fa;
     border-color: #6c757d;
@@ -803,21 +814,89 @@
   </div>
 </div>
 
+{{-- Modal para asignar curso --}}
+<div class="modal fade" id="modalAsignarCurso" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <form method="POST" action="{{ route('voluntarios.cursos.asignar', $voluntario->id_usuario) }}" class="modal-content">
+      @csrf
+      <div class="modal-header">
+        <h5 class="modal-title">Asignar Curso al Voluntario</h5>
+        <button type="button" class="close" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
+      </div>
 
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="curso_id">Selecciona un Curso</label>
+          <select name="curso_id" id="curso_id" class="form-control" required onchange="mostrarInfoCurso(this.value)">
+            <option value="">-- Selecciona un curso --</option>
+            @php
+              $cursosDisponibles = DB::table('curso')
+                ->join('capacitacion', 'curso.id_capacitacion', '=', 'capacitacion.id')
+                ->select('curso.id', 'curso.nombre', 'curso.descripcion', 'capacitacion.nombre as capacitacion_nombre')
+                ->orderBy('capacitacion.nombre')
+                ->orderBy('curso.nombre')
+                ->get();
+            @endphp
+            @foreach($cursosDisponibles as $curso)
+              <option value="{{ $curso->id }}" 
+                      data-descripcion="{{ $curso->descripcion }}"
+                      data-capacitacion="{{ $curso->capacitacion_nombre }}">
+                {{ $curso->nombre }} ({{ $curso->capacitacion_nombre }})
+              </option>
+            @endforeach
+          </select>
+        </div>
+
+        <div id="info-curso" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 15px;">
+          <p style="margin: 0 0 5px 0;"><strong>Descripción:</strong></p>
+          <p id="curso-descripcion" style="margin: 0; color: #666; font-size: 14px;"></p>
+        </div>
+
+        @if($errors->any())
+          <div class="alert alert-danger mt-2">
+            {{ $errors->first() }}
+          </div>
+        @endif
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Asignar Curso</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function mostrarInfoCurso(cursoId) {
+  const select = document.getElementById('curso_id');
+  const selectedOption = select.options[select.selectedIndex];
+  const infoCurso = document.getElementById('info-curso');
+  const descripcion = document.getElementById('curso-descripcion');
+  
+  if (cursoId && selectedOption) {
+    const desc = selectedOption.getAttribute('data-descripcion');
+    descripcion.textContent = desc || 'Sin descripción';
+    infoCurso.style.display = 'block';
+  } else {
+    infoCurso.style.display = 'none';
+  }
+}
+</script>
 
 </div>
 
 <script>
   let evaluacionesActuales = @json($evaluaciones ?? []);
   let reportesActuales = @json($reportes ?? []);
+  let reportesNoVistos = @json($reportesNoVistos ?? []);
   
 
   function renderizarEncuestas() {
     const contenido = document.getElementById('vista-contenido');
     if (!contenido) return;
-    
-    // ✅ Obtener reportes no vistos desde PHP
-    const reportesNoVistos = @json($reportesNoVistos ?? []);
     
     let html = '<h2 class="titulo-seccion">Encuestas Realizadas</h2>';
     
@@ -1110,13 +1189,33 @@
 
       case 'cursos':
         contenido.innerHTML = `
-          <h2 class="titulo-seccion">Cursos del Voluntario</h2>
+          {{-- HEADER CON TÍTULO, RECOMENDACIÓN Y BOTÓN EN UNA FILA --}}
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 30px; flex-wrap: wrap;">
+            
+            {{-- TÍTULO A LA IZQUIERDA --}}
+            <div style="flex: 0 0 auto;">
+              <h2 class="titulo-seccion" style="margin: 0; white-space: nowrap;">Cursos del Voluntario</h2>
+            </div>
+            
+            {{-- RECOMENDACIÓN DE LA IA EN EL CENTRO (DINÁMICO) --}}
+            <div id="recomendacion-ia-container" style="flex: 1; display: flex; justify-content: center; margin: 0 20px;">
+            </div>
+
+            {{-- BOTÓN A LA DERECHA --}}
+            <div style="flex: 0 0 auto;">
+              <button class="btn-formulario-enviar" data-toggle="modal" data-target="#modalAsignarCurso" style="white-space: nowrap;">
+                <i class="fas fa-plus-circle"></i> Asignar Curso
+              </button>
+            </div>
+          </div>
+
+          {{-- CURSOS ASIGNADOS --}}
           @if(count($cursos) > 0)
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
               @foreach($cursos as $curso)
                 <div class="vista-card" 
                     style="cursor: pointer; transition: all 0.3s ease;" 
-                    onclick="verDetalleCurso({{ $curso->id }}, {{ $voluntario->id_usuario }}, '{{ $curso->nombre }}', '{{ $curso->capacitacion_nombre }}', '{{ $curso->descripcion }}')">
+                    onclick="verDetalleCurso({{ $curso->id }}, {{ $voluntario->id_usuario }}, '{{ addslashes($curso->nombre) }}', '{{ addslashes($curso->capacitacion_nombre) }}', '{{ addslashes($curso->descripcion ?? '') }}')">
                   
                   <strong>{{ $curso->nombre }}</strong>
                   <p>{{ $curso->descripcion }}</p>
@@ -1128,16 +1227,23 @@
               @endforeach
             </div>
           @else
-            <p class="mensaje-vacio">No hay cursos asignados.</p>
+            <p class="mensaje-vacio">No hay cursos asignados aún. Usa el botón de arriba para asignar cursos.</p>
           @endif
         `;
+        
+        // Renderizar recomendaciones dinámicamente
+        renderizarRecomendaciones();
         break;
 
       case 'necesidades':
         contenido.innerHTML = `
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:20px;">
-            <h2 class="titulo-seccion" style="margin-bottom:0;">Análisis de Necesidades</h2>
-            <button class="btn-formulario-enviar" data-toggle="modal" data-target="#modalAsignarNecesidad">
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
+            <h2 class="titulo-seccion" style="margin-bottom:0;flex-shrink:0;">Análisis de Necesidades</h2>
+            
+            <!-- Aptitud del voluntario evaluada por IA -->
+            <div id="aptitud-necesidades-container" style="flex:1;"></div>
+            
+            <button class="btn-formulario-enviar" data-toggle="modal" data-target="#modalAsignarNecesidad" style="flex-shrink:0;">
               <i class="fas fa-plus-circle"></i> Asignar Necesidad
             </button>
           </div>
@@ -1160,6 +1266,8 @@
             <p class="mensaje-vacio">No hay necesidades asignadas.</p>
           @endif
         `;
+        // Renderizar aptitud después de crear el contenedor
+        renderizarAptitudNecesidades();
         break;
     }
 
@@ -1398,6 +1506,197 @@ function verDetalleCurso(cursoId, voluntarioId, nombreCurso, nombreCapacitacion,
 }
 
 // ========================================
+// RENDERIZAR RECOMENDACIONES DE CURSOS (MÚLTIPLES)
+// ========================================
+function renderizarRecomendaciones() {
+  const container = document.getElementById('recomendacion-ia-container');
+  if (!container) return;
+  
+  if (recomendacionesActuales && recomendacionesActuales.length > 0) {
+    // Crear un wrapper flex para las recomendaciones
+    let html = '<div style="display: flex; gap: 10px; width: 100%;">';
+    
+    recomendacionesActuales.forEach((recom, index) => {
+      const fechaCreacion = new Date(recom.created_at);
+      const fechaActualizacion = new Date(recom.updated_at);
+      const esActualizado = fechaActualizacion > fechaCreacion;
+      
+      const fechaMostrar = esActualizado 
+        ? '<i class="fas fa-sync-alt"></i> Actualizado' 
+        : '<i class="fas fa-clock"></i> ' + fechaCreacion.toLocaleDateString('es-ES');
+      
+      const badgeCapacitacion = recom.capacitacion_nombre 
+        ? `<span style="background: #e3f2fd; color: #1976d2; padding: 2px 8px; border-radius: 10px; font-size: 10px;">
+             ${recom.capacitacion_nombre}
+           </span>` 
+        : '';
+      
+      const razonTexto = recom.razon 
+        ? `<span style="color: #666; font-weight: normal;"> - ${recom.razon}</span>` 
+        : '';
+      
+      html += `
+        <div style="
+          background: var(--color-card); 
+          border-left: 4px solid var(--color-azul);
+          padding: 10px 20px; 
+          border-radius: 8px; 
+          box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+          flex: 1;
+          animation: fadeIn 0.3s ease;
+        ">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 8px; color: var(--color-azul);">
+              <i class="fas fa-robot" style="font-size: 14px;"></i>
+              <strong style="font-size: 13px;">Recomendación ${recomendacionesActuales.length > 1 ? (index + 1) : 'de IA'}</strong>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 15px; font-size: 11px; color: #999;">
+              <span>${fechaMostrar}</span>
+              ${badgeCapacitacion}
+            </div>
+          </div>
+          
+          <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
+            <i class="fas fa-lightbulb" style="color: #ffc107; font-size: 13px; flex-shrink: 0;"></i>
+            <p style="margin: 0; font-size: 13px; color: var(--color-texto-principal); line-height: 1.3;">
+              <strong>${recom.curso_nombre}</strong>
+              ${razonTexto}
+            </p>
+          </div>
+        </div>
+      `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+  } else {
+    container.innerHTML = '';
+  }
+}
+
+// ========================================
+// RENDERIZAR APTITUD PARA NECESIDADES (IA)
+// ========================================
+function renderizarAptitudNecesidades() {
+  const container = document.getElementById('aptitud-necesidades-container');
+  if (!container) return;
+  
+  console.log('renderizarAptitudNecesidades - aptitudActual:', aptitudActual);
+  
+  if (aptitudActual) {
+    let colorBorde, colorFondo, colorTexto, icono, titulo;
+    
+    // Determinar estilo según nivel de aptitud
+    switch(aptitudActual.nivel_aptitud) {
+      case 'APTO_TODAS':
+        colorBorde = '#4caf50';
+        colorFondo = '#e8f5e9';
+        colorTexto = '#2e7d32';
+        icono = 'fa-check-circle';
+        titulo = 'Apto para Todas';
+        break;
+      case 'APTO_ALGUNAS':
+        colorBorde = '#ff9800';
+        colorFondo = '#fff3e0';
+        colorTexto = '#e65100';
+        icono = 'fa-exclamation-triangle';
+        titulo = 'Apto para Algunas';
+        break;
+      case 'NO_APTO':
+        colorBorde = '#f44336';
+        colorFondo = '#ffebee';
+        colorTexto = '#c62828';
+        icono = 'fa-times-circle';
+        titulo = 'No Apto';
+        break;
+      default:
+        colorBorde = '#9e9e9e';
+        colorFondo = '#f5f5f5';
+        colorTexto = '#616161';
+        icono = 'fa-question-circle';
+        titulo = 'Sin Evaluar';
+    }
+    
+    // Mapeo de IDs a nombres de necesidades
+    const necesidadesMap = {
+      2: 'Asistencia Médica Básica',
+      3: 'Apoyo Psicológico',
+      4: 'Distribución de Alimentos',
+      5: 'Logística y Coordinación',
+      6: 'Rescate en Zonas de Riesgo',
+      7: 'Atención a Niños',
+      8: 'Transporte de Heridos',
+      9: 'Comunicación y Registro'
+    };
+    
+    // Construir lista de necesidades recomendadas
+    let necesidadesHTML = '';
+    if (aptitudActual.nivel_aptitud === 'APTO_TODAS') {
+      necesidadesHTML = `<div style="margin-top: 6px; font-size: 10px; color: ${colorTexto};">✓ Puede realizar todas las necesidades disponibles</div>`;
+    } else if (aptitudActual.nivel_aptitud === 'APTO_ALGUNAS' && aptitudActual.necesidades_recomendadas) {
+      try {
+        let necesidades = [];
+        
+        // Intentar parsear de diferentes formas
+        if (Array.isArray(aptitudActual.necesidades_recomendadas)) {
+          necesidades = aptitudActual.necesidades_recomendadas;
+        } else if (typeof aptitudActual.necesidades_recomendadas === 'string') {
+          necesidades = JSON.parse(aptitudActual.necesidades_recomendadas);
+        }
+        
+        console.log('Necesidades parseadas:', necesidades);
+        
+        if (Array.isArray(necesidades) && necesidades.length > 0) {
+          const listaNecesidades = necesidades.map(id => necesidadesMap[id] || `ID ${id}`).join(', ');
+          necesidadesHTML = `<div style="margin-top: 6px; font-size: 10px; color: ${colorTexto};">✓ Puede realizar: ${listaNecesidades}</div>`;
+        }
+      } catch (e) {
+        console.error('Error parseando necesidades_recomendadas:', e, aptitudActual.necesidades_recomendadas);
+      }
+    } else if (aptitudActual.nivel_aptitud === 'NO_APTO') {
+      necesidadesHTML = `<div style="margin-top: 6px; font-size: 10px; color: ${colorTexto};">✗ No se recomienda asignar necesidades en este momento</div>`;
+    }
+    
+    const html = `
+      <div style="
+        background: ${colorFondo}; 
+        border-left: 4px solid ${colorBorde};
+        padding: 6px 12px; 
+        border-radius: 6px; 
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        animation: fadeIn 0.3s ease;
+      ">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <i class="fas ${icono}" style="font-size: 12px; color: ${colorTexto}; flex-shrink: 0;"></i>
+          <strong style="font-size: 11px; color: ${colorTexto}; flex-shrink: 0;">${titulo}:</strong>
+          <span style="font-size: 11px; color: ${colorTexto};">${aptitudActual.razon_ia || 'Sin evaluación'}</span>
+        </div>
+        ${necesidadesHTML}
+      </div>
+    `;
+    
+    container.innerHTML = html;
+  } else {
+    // Mostrar mensaje compacto cuando no hay datos
+    container.innerHTML = `
+      <div style="
+        background: #f5f5f5; 
+        border-left: 4px solid #9e9e9e;
+        padding: 6px 12px; 
+        border-radius: 6px; 
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      ">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <i class="fas fa-info-circle" style="font-size: 12px; color: #616161; flex-shrink: 0;"></i>
+          <span style="font-size: 11px; color: #757575;">Sin evaluación. Se generará tras la primera evaluación.</span>
+        </div>
+      </div>
+    `;
+  }
+}
+
+// ========================================
 // ACTUALIZACIÓN AUTOMÁTICA DE DATOS
 // ========================================
 let ultimoTotalReportes = {{ count($reportes ?? []) }};
@@ -1406,6 +1705,15 @@ const INTERVALO_POLLING = 3000; // 3 segundos
 
 // Variable para detectar cambios
 let ultimaFechaEvaluacion = evaluacionesActuales.length > 0 ? (evaluacionesActuales[0].fecha_generado || evaluacionesActuales[0].fecha || '') : '';
+
+// Variable para recomendaciones de cursos (múltiples)
+let ultimoTotalRecomendaciones = {{ count($recomendacionesCursos ?? []) }};
+let ultimaRecomendacionFecha = '{{ count($recomendacionesCursos ?? []) > 0 ? $recomendacionesCursos[0]->updated_at : "" }}';
+let recomendacionesActuales = @json($recomendacionesCursos ?? []);
+
+// Variable para aptitud de necesidades
+let aptitudActual = @json($aptitudNecesidades ?? null);
+let ultimaAptitudFecha = '{{ $aptitudNecesidades->updated_at ?? "" }}';
 
 function actualizarDatosVoluntario() {
   fetch(`/voluntarios/${voluntarioId}/datos-actualizados`, {
@@ -1425,10 +1733,19 @@ function actualizarDatosVoluntario() {
         ? (nuevosDatos.evaluaciones[0].fecha_generado || nuevosDatos.evaluaciones[0].fecha || '') 
         : '';
       
+      // Verificar cambios en recomendaciones de cursos
+      const nuevoTotalRecomendaciones = nuevosDatos.recomendacionesCursos ? nuevosDatos.recomendacionesCursos.length : 0;
+      const nuevaRecomendacionFecha = nuevosDatos.recomendacionesCursos && nuevosDatos.recomendacionesCursos.length > 0 
+        ? nuevosDatos.recomendacionesCursos[0].updated_at 
+        : '';
+      
       const hayNuevosDatos = nuevosDatos.totalReportes > ultimoTotalReportes || 
                              nuevaFechaEvaluacion !== ultimaFechaEvaluacion ||
                              nuevosDatos.evaluaciones.length !== evaluacionesActuales.length ||
                              nuevosDatos.reportes.length !== reportesActuales.length;
+      
+      const hayCambioRecomendacion = nuevoTotalRecomendaciones !== ultimoTotalRecomendaciones || 
+                                     nuevaRecomendacionFecha !== ultimaRecomendacionFecha;
       
       if (hayNuevosDatos) {
         console.log('Nuevos datos detectados, actualizando vista...');
@@ -1451,6 +1768,47 @@ function actualizarDatosVoluntario() {
         
         // Mostrar notificación de actualización
         mostrarNotificacionActualizacion();
+      }
+      
+      // Actualizar recomendaciones de cursos si cambiaron
+      if (hayCambioRecomendacion) {
+        console.log('Cambio en recomendaciones detectado:', nuevoTotalRecomendaciones, 'recomendación(es)');
+        ultimoTotalRecomendaciones = nuevoTotalRecomendaciones;
+        ultimaRecomendacionFecha = nuevaRecomendacionFecha;
+        recomendacionesActuales = nuevosDatos.recomendacionesCursos || [];
+        actualizarSeccionCursos(nuevosDatos.recomendacionesCursos);
+      }
+      
+      // Verificar cambios en aptitud de necesidades
+      const nuevaAptitudFecha = nuevosDatos.aptitudNecesidades ? nuevosDatos.aptitudNecesidades.updated_at : '';
+      const hayCambioAptitud = nuevaAptitudFecha !== ultimaAptitudFecha;
+      
+      if (hayCambioAptitud) {
+        console.log('Cambio en aptitud de necesidades detectado');
+        ultimaAptitudFecha = nuevaAptitudFecha;
+        aptitudActual = nuevosDatos.aptitudNecesidades;
+        renderizarAptitudNecesidades();
+      }
+      
+      // Actualizar reportes no vistos (para tags "Nueva")
+      if (nuevosDatos.reportesNoVistos) {
+        const reportesNoVistosJSON = JSON.stringify(reportesNoVistos);
+        const nuevosReportesNoVistosJSON = JSON.stringify(nuevosDatos.reportesNoVistos);
+        
+        if (reportesNoVistosJSON !== nuevosReportesNoVistosJSON) {
+          console.log('Cambio en reportes no vistos detectado');
+          console.log('Reportes no vistos anteriores:', reportesNoVistos);
+          console.log('Reportes no vistos nuevos:', nuevosDatos.reportesNoVistos);
+          
+          reportesNoVistos = nuevosDatos.reportesNoVistos;
+          
+          // Si estamos en la vista de encuestas, actualizarla
+          const contenido = document.getElementById('vista-contenido');
+          if (contenido && contenido.innerHTML.includes('Encuestas Realizadas')) {
+            console.log('Re-renderizando encuestas con nuevos tags...');
+            renderizarEncuestas();
+          }
+        }
       }
     }
   })
@@ -1477,6 +1835,30 @@ function actualizarSeccionReportes() {
   
   console.log('Actualizando sección de reportes');
   renderizarReportes();
+}
+
+// Función para actualizar la sección de cursos si está visible
+function actualizarSeccionCursos(recomendaciones) {
+  const contenido = document.getElementById('vista-contenido');
+  if (!contenido) return;
+  if (!contenido.innerHTML.includes('Cursos del Voluntario')) return;
+  
+  console.log('Actualizando recomendaciones de cursos en tiempo real');
+  
+  // Actualizar variable global
+  recomendacionesActuales = recomendaciones || [];
+  
+  // Renderizar nuevas recomendaciones
+  renderizarRecomendaciones();
+  
+  // Mostrar notificación de cambio
+  const mensaje = recomendaciones && recomendaciones.length > 0 
+    ? '🤖 Nueva recomendación de IA disponible' 
+    : '✓ Recomendación actualizada';
+  
+  document.getElementById('toast-info-msg').textContent = mensaje;
+  showToast('toast-info');
+  setTimeout(() => hideToast('toast-info'), 3000);
 }
 
 function actualizarPanelEvaluacionFisica(reporte) {
@@ -1696,6 +2078,9 @@ setInterval(actualizarDatosVoluntario, INTERVALO_POLLING);
 // También verificar al cargar la página
 document.addEventListener('DOMContentLoaded', function() {
   console.log('Polling de datos activado (cada ' + (INTERVALO_POLLING/1000) + ' segundos)');
+  
+  // Renderizar aptitud inicial si existe
+  renderizarAptitudNecesidades();
 });
 
 

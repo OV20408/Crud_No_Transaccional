@@ -220,8 +220,22 @@
   }
 
   .icheck-inline input[type="radio"] {
-    transform: scale(1.1);
+    transform: scale(1.8);
     cursor: pointer;
+    margin-right: 8px;
+  }
+  
+  .icheck-inline label {
+    cursor: pointer;
+    padding: 8px 12px;
+    margin-left: 4px;
+    margin-right: 12px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+  }
+  
+  .icheck-inline label:hover {
+    background-color: #f0f0f0;
   }
 
   /* Botones navegación */
