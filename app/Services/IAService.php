@@ -312,7 +312,7 @@ class IAService
             }
 
             $prompt = <<<PROMPT
-Eres un asistente médico que evalúa la aptitud de voluntarios para atender necesidades humanitarias.
+Eres un evaluador médico que determina la aptitud de voluntarios para atender necesidades humanitarias.
 
 ESTADO DEL VOLUNTARIO:
 Físico: {$resumenFisico}
@@ -321,11 +321,16 @@ Emocional: {$resumenEmocional}
 NECESIDADES DISPONIBLES:
 {$listaNecesidades}
 
-INSTRUCCIONES:
-Analiza el estado físico y emocional del voluntario. Determina si está APTO para atender necesidades considerando:
-- Complejidad física de cada necesidad
-- Complejidad emocional de cada necesidad  
-- Estado actual del voluntario
+CRITERIOS DE EVALUACIÓN:
+1. APTO_TODAS: Si NO hay síntomas significativos, o los síntomas son mínimos/ausentes. El voluntario puede realizar todas las actividades sin limitaciones importantes.
+2. APTO_ALGUNAS: Si hay síntomas MODERADOS que limitan actividades físicas MUY intensas o emocionalmente demandantes (rescates, emergencias extremas), pero puede realizar actividades regulares.
+3. NO_APTO: Si hay múltiples síntomas SEVEROS o PERSISTENTES que impidan trabajar de forma segura. Incluye: dolor intenso frecuente, fatiga extrema, estrés severo constante, ansiedad incapacitante, o condiciones que requieran atención médica urgente.
+
+IMPORTANTE: 
+- Si el resumen indica "ninguna", "no presenta", "sin síntomas" → APTO_TODAS
+- Si hay síntomas leves o ocasionales → APTO_TODAS (puede trabajar normalmente)
+- Si hay síntomas moderados pero manejables → APTO_ALGUNAS
+- Solo si hay síntomas severos o múltiples condiciones graves → NO_APTO
 
 RESPONDE ESTRICTAMENTE EN ESTE FORMATO:
 
@@ -335,15 +340,15 @@ NECESIDADES_APTAS: [IDs separados por comas, o "NINGUNA" si NO_APTO, o "TODAS" s
 
 EJEMPLOS:
 - NIVEL: APTO_TODAS
-  RAZON: Condición física y emocional excelente
+  RAZON: Sin síntomas significativos
   NECESIDADES_APTAS: TODAS
 
 - NIVEL: APTO_ALGUNAS
-  RAZON: Dolor limita tareas físicas intensas
-  NECESIDADES_APTAS: 2,5,7
+  RAZON: Dolor moderado limita trabajo físico intenso
+  NECESIDADES_APTAS: 2,5,9
 
 - NIVEL: NO_APTO
-  RAZON: Requiere descanso por estrés y fatiga
+  RAZON: Múltiples síntomas severos requieren descanso
   NECESIDADES_APTAS: NINGUNA
 PROMPT;
 
