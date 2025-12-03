@@ -1197,15 +1197,16 @@ function mostrarInfoCurso(cursoId) {
 
       case 'necesidades':
         contenido.innerHTML = `
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:20px;">
-            <h2 class="titulo-seccion" style="margin-bottom:0;">Análisis de Necesidades</h2>
+          <h2 class="titulo-seccion" style="margin-bottom:20px;">Análisis de Necesidades</h2>
+
+          <!-- Aptitud del voluntario evaluada por IA -->
+          <div id="aptitud-necesidades-container" style="margin-bottom: 20px;"></div>
+
+          <div style="display:flex;justify-content:flex-end;margin-bottom:20px;">
             <button class="btn-formulario-enviar" data-toggle="modal" data-target="#modalAsignarNecesidad">
               <i class="fas fa-plus-circle"></i> Asignar Necesidad
             </button>
           </div>
-
-          <!-- Aptitud del voluntario evaluada por IA -->
-          <div id="aptitud-necesidades-container" style="margin-bottom: 20px;"></div>
 
           @if(count($necesidadesAsignadas) > 0)
             @foreach($necesidadesAsignadas as $nec)
@@ -1629,7 +1630,24 @@ function renderizarAptitudNecesidades() {
     
     container.innerHTML = html;
   } else {
-    container.innerHTML = '';
+    // Mostrar mensaje de "Sin evaluación" cuando no hay datos
+    container.innerHTML = `
+      <div style="
+        background: #f5f5f5; 
+        border-left: 4px solid #9e9e9e;
+        padding: 12px 20px; 
+        border-radius: 8px; 
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      ">
+        <div style="display: flex; align-items: center; gap: 8px; color: #616161;">
+          <i class="fas fa-info-circle" style="font-size: 14px;"></i>
+          <strong style="font-size: 13px;">Sin Evaluación de Aptitud</strong>
+        </div>
+        <p style="margin: 8px 0 0 0; font-size: 12px; color: #757575; line-height: 1.4;">
+          El voluntario aún no ha completado una evaluación. La IA evaluará su aptitud para asignar necesidades después de la primera evaluación física y emocional.
+        </p>
+      </div>
+    `;
   }
 }
 
