@@ -330,20 +330,20 @@ Analiza el estado físico y emocional del voluntario. Determina si está APTO pa
 RESPONDE ESTRICTAMENTE EN ESTE FORMATO:
 
 NIVEL: [APTO_TODAS | APTO_ALGUNAS | NO_APTO]
-RAZON: [Máximo 200 caracteres explicando por qué]
+RAZON: [Máximo 80 caracteres, conciso y directo]
 NECESIDADES_APTAS: [IDs separados por comas, o "NINGUNA" si NO_APTO, o "TODAS" si APTO_TODAS]
 
 EJEMPLOS:
 - NIVEL: APTO_TODAS
-  RAZON: Voluntario en excelente condición física y emocional, sin limitaciones
+  RAZON: Condición física y emocional excelente
   NECESIDADES_APTAS: TODAS
 
 - NIVEL: APTO_ALGUNAS
-  RAZON: Dolor crónico limita actividades físicas intensas, apto para apoyo emocional
+  RAZON: Dolor limita tareas físicas intensas
   NECESIDADES_APTAS: 2,5,7
 
 - NIVEL: NO_APTO
-  RAZON: Estrés severo y fatiga física requieren descanso antes de asignar tareas
+  RAZON: Requiere descanso por estrés y fatiga
   NECESIDADES_APTAS: NINGUNA
 PROMPT;
 

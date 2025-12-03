@@ -1552,28 +1552,28 @@ function renderizarAptitudNecesidades() {
         colorFondo = '#e8f5e9';
         colorTexto = '#2e7d32';
         icono = 'fa-check-circle';
-        titulo = '✅ Apto para Todas';
+        titulo = 'Apto para Todas';
         break;
       case 'APTO_ALGUNAS':
         colorBorde = '#ff9800';
         colorFondo = '#fff3e0';
         colorTexto = '#e65100';
         icono = 'fa-exclamation-triangle';
-        titulo = '⚠️ Apto para Algunas';
+        titulo = 'Apto para Algunas';
         break;
       case 'NO_APTO':
         colorBorde = '#f44336';
         colorFondo = '#ffebee';
         colorTexto = '#c62828';
         icono = 'fa-times-circle';
-        titulo = '❌ No Apto';
+        titulo = 'No Apto';
         break;
       default:
         colorBorde = '#9e9e9e';
         colorFondo = '#f5f5f5';
         colorTexto = '#616161';
         icono = 'fa-question-circle';
-        titulo = '⚪ Sin Evaluar';
+        titulo = 'Sin Evaluar';
     }
     
     const html = `
