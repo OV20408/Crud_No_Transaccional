@@ -308,6 +308,13 @@ class VoluntarioController extends Controller
             ->limit(2) // Hasta 2 recomendaciones
             ->get();
 
+        // 13. APTITUD PARA ASIGNAR NECESIDADES (evaluada por IA)
+        $aptitudNecesidades = DB::table('aptitud_necesidades')
+            ->where('id_voluntario', $id)
+            ->where('estado', 'activo')
+            ->orderBy('updated_at', 'desc')
+            ->first();
+
         return view('voluntarios.show', compact(
             'voluntario',
             'historial',
@@ -321,7 +328,8 @@ class VoluntarioController extends Controller
             'necesidadesAll',
             'necesidadesAsignadas',
             'reportesNoVistos',
-            'recomendacionesCursos'
+            'recomendacionesCursos',
+            'aptitudNecesidades'
         ));
     }
 
@@ -675,6 +683,13 @@ class VoluntarioController extends Controller
                 ->limit(2)
                 ->get();
 
+            // 9. Aptitud para asignar necesidades (evaluada por IA)
+            $aptitudNecesidades = DB::table('aptitud_necesidades')
+                ->where('id_voluntario', $id)
+                ->where('estado', 'activo')
+                ->orderBy('updated_at', 'desc')
+                ->first();
+
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -684,7 +699,8 @@ class VoluntarioController extends Controller
                     'necesidadesAsignadas' => $necesidadesAsignadas,
                     'capacitaciones' => $capacitaciones,
                     'totalReportes' => $totalReportes,
-                    'recomendacionesCursos' => $recomendacionesCursos
+                    'recomendacionesCursos' => $recomendacionesCursos,
+                    'aptitudNecesidades' => $aptitudNecesidades
                 ]
             ]);
 

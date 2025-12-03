@@ -1204,6 +1204,9 @@ function mostrarInfoCurso(cursoId) {
             </button>
           </div>
 
+          <!-- Aptitud del voluntario evaluada por IA -->
+          <div id="aptitud-necesidades-container" style="margin-bottom: 20px;"></div>
+
           @if(count($necesidadesAsignadas) > 0)
             @foreach($necesidadesAsignadas as $nec)
               <div class="vista-card">
@@ -1530,6 +1533,107 @@ function renderizarRecomendaciones() {
 }
 
 // ========================================
+// RENDERIZAR APTITUD PARA NECESIDADES (IA)
+// ========================================
+function renderizarAptitudNecesidades() {
+  const container = document.getElementById('aptitud-necesidades-container');
+  if (!container) return;
+  
+  if (aptitudActual) {
+    let colorBorde, colorFondo, colorTexto, icono, titulo;
+    
+    // Determinar estilo según nivel de aptitud
+    switch(aptitudActual.nivel_aptitud) {
+      case 'APTO_TODAS':
+        colorBorde = '#4caf50';
+        colorFondo = '#e8f5e9';
+        colorTexto = '#2e7d32';
+        icono = 'fa-check-circle';
+        titulo = '✅ Apto para Todas las Necesidades';
+        break;
+      case 'APTO_ALGUNAS':
+        colorBorde = '#ff9800';
+        colorFondo = '#fff3e0';
+        colorTexto = '#e65100';
+        icono = 'fa-exclamation-triangle';
+        titulo = '⚠️ Apto para Algunas Necesidades';
+        break;
+      case 'NO_APTO':
+        colorBorde = '#f44336';
+        colorFondo = '#ffebee';
+        colorTexto = '#c62828';
+        icono = 'fa-times-circle';
+        titulo = '❌ No Apto para Asignar Necesidades';
+        break;
+      default:
+        colorBorde = '#9e9e9e';
+        colorFondo = '#f5f5f5';
+        colorTexto = '#616161';
+        icono = 'fa-question-circle';
+        titulo = '⚪ Aptitud No Evaluada';
+    }
+    
+    const fechaEvaluacion = new Date(aptitudActual.updated_at).toLocaleString('es-ES');
+    
+    let necesidadesRecomendadasHtml = '';
+    if (aptitudActual.necesidades_recomendadas) {
+      try {
+        const necesidadesIds = typeof aptitudActual.necesidades_recomendadas === 'string' 
+          ? JSON.parse(aptitudActual.necesidades_recomendadas) 
+          : aptitudActual.necesidades_recomendadas;
+        
+        if (Array.isArray(necesidadesIds) && necesidadesIds.length > 0) {
+          necesidadesRecomendadasHtml = `
+            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid ${colorBorde}40;">
+              <strong style="font-size: 12px; color: ${colorTexto};">
+                <i class="fas fa-list-ul"></i> Necesidades Aptas (IDs):
+              </strong>
+              <span style="font-size: 12px; color: ${colorTexto};">${necesidadesIds.join(', ')}</span>
+            </div>
+          `;
+        }
+      } catch (e) {
+        console.error('Error parsing necesidades:', e);
+      }
+    }
+    
+    const html = `
+      <div style="
+        background: ${colorFondo}; 
+        border-left: 4px solid ${colorBorde};
+        padding: 12px 20px; 
+        border-radius: 8px; 
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        animation: fadeIn 0.3s ease;
+      ">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px; color: ${colorTexto};">
+            <i class="fas ${icono}" style="font-size: 14px;"></i>
+            <strong style="font-size: 13px;">${titulo}</strong>
+          </div>
+          <div style="font-size: 11px; color: #999;">
+            <i class="fas fa-clock"></i> ${fechaEvaluacion}
+          </div>
+        </div>
+        
+        <div style="display: flex; align-items: start; gap: 10px;">
+          <i class="fas fa-robot" style="color: ${colorTexto}; font-size: 13px; flex-shrink: 0; margin-top: 2px;"></i>
+          <p style="margin: 0; font-size: 12px; color: ${colorTexto}; line-height: 1.4;">
+            ${aptitudActual.razon_ia || 'Sin evaluación disponible'}
+          </p>
+        </div>
+        
+        ${necesidadesRecomendadasHtml}
+      </div>
+    `;
+    
+    container.innerHTML = html;
+  } else {
+    container.innerHTML = '';
+  }
+}
+
+// ========================================
 // ACTUALIZACIÓN AUTOMÁTICA DE DATOS
 // ========================================
 let ultimoTotalReportes = {{ count($reportes ?? []) }};
@@ -1543,6 +1647,10 @@ let ultimaFechaEvaluacion = evaluacionesActuales.length > 0 ? (evaluacionesActua
 let ultimoTotalRecomendaciones = {{ count($recomendacionesCursos ?? []) }};
 let ultimaRecomendacionFecha = '{{ count($recomendacionesCursos ?? []) > 0 ? $recomendacionesCursos[0]->updated_at : "" }}';
 let recomendacionesActuales = @json($recomendacionesCursos ?? []);
+
+// Variable para aptitud de necesidades
+let aptitudActual = @json($aptitudNecesidades ?? null);
+let ultimaAptitudFecha = '{{ $aptitudNecesidades->updated_at ?? "" }}';
 
 function actualizarDatosVoluntario() {
   fetch(`/voluntarios/${voluntarioId}/datos-actualizados`, {
@@ -1606,6 +1714,17 @@ function actualizarDatosVoluntario() {
         ultimaRecomendacionFecha = nuevaRecomendacionFecha;
         recomendacionesActuales = nuevosDatos.recomendacionesCursos || [];
         actualizarSeccionCursos(nuevosDatos.recomendacionesCursos);
+      }
+      
+      // Verificar cambios en aptitud de necesidades
+      const nuevaAptitudFecha = nuevosDatos.aptitudNecesidades ? nuevosDatos.aptitudNecesidades.updated_at : '';
+      const hayCambioAptitud = nuevaAptitudFecha !== ultimaAptitudFecha;
+      
+      if (hayCambioAptitud) {
+        console.log('Cambio en aptitud de necesidades detectado');
+        ultimaAptitudFecha = nuevaAptitudFecha;
+        aptitudActual = nuevosDatos.aptitudNecesidades;
+        renderizarAptitudNecesidades();
       }
     }
   })
@@ -1835,6 +1954,9 @@ setInterval(actualizarDatosVoluntario, INTERVALO_POLLING);
 // También verificar al cargar la página
 document.addEventListener('DOMContentLoaded', function() {
   console.log('Polling de datos activado (cada ' + (INTERVALO_POLLING/1000) + ' segundos)');
+  
+  // Renderizar aptitud inicial si existe
+  renderizarAptitudNecesidades();
 });
 
 

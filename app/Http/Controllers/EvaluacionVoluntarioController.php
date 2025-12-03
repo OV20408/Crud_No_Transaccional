@@ -278,6 +278,52 @@ class EvaluacionVoluntarioController extends Controller
                     'error' => $e->getMessage()
                 ]);
             }
+
+            // ===============================================
+            // EVALUAR APTITUD PARA ASIGNAR NECESIDADES
+            // ===============================================
+            try {
+                // Obtener necesidades disponibles
+                $necesidades = \App\Models\Necesidad::select('id', 'tipo', 'descripcion')
+                    ->get()
+                    ->toArray();
+
+                if (!empty($necesidades)) {
+                    // Llamar a la IA para evaluar aptitud
+                    $evaluacionAptitud = $iaService->evaluarAptitudNecesidades(
+                        $resumenFisico,
+                        $resumenEmocional,
+                        $necesidades
+                    );
+
+                    if ($evaluacionAptitud['success']) {
+                        // Eliminar evaluación anterior
+                        \App\Models\AptitudNecesidad::where('id_voluntario', $voluntario->id_usuario)->delete();
+
+                        // Crear nueva evaluación de aptitud
+                        \App\Models\AptitudNecesidad::create([
+                            'id_voluntario' => $voluntario->id_usuario,
+                            'id_necesidad' => null, // Evaluación general
+                            'id_reporte' => $reporte->id,
+                            'nivel_aptitud' => $evaluacionAptitud['nivel_aptitud'],
+                            'razon_ia' => $evaluacionAptitud['razon'],
+                            'necesidades_recomendadas' => json_encode($evaluacionAptitud['necesidades_aptas']),
+                            'estado' => 'activo'
+                        ]);
+
+                        Log::info('Aptitud de necesidades evaluada', [
+                            'voluntario_id' => $voluntario->id_usuario,
+                            'nivel' => $evaluacionAptitud['nivel_aptitud'],
+                            'necesidades_aptas' => count($evaluacionAptitud['necesidades_aptas'])
+                        ]);
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('Error al evaluar aptitud de necesidades', [
+                    'voluntario_id' => $voluntario->id_usuario,
+                    'error' => $e->getMessage()
+                ]);
+            }
             
             // Marcar token como usado (al final, solo si todo fue exitoso)
             DB::table('evaluacion_tokens')

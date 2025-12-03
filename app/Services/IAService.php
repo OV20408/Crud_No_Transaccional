@@ -131,7 +131,8 @@ class IAService
     public function recomendarCursos(string $resumenFisico, string $resumenEmocional, array $cursos, string $nombreVoluntario): array
     {
         try {
-            $apiKey = env('GOOGLE_GEMINI_API_KEY', 'AIzaSyB4dCvl25EaQTLgg9kPBNxih5s_uPqEmj8');
+            // Usar API Key específica para cursos
+            $apiKey = env('GOOGLE_GEMINI_API_KEY_CURSOS', 'AIzaSyB4dCvl25EaQTLgg9kPBNxih5s_uPqEmj8');
             
             // Preparar información de los cursos
             $cursosInfo = [];
@@ -277,6 +278,146 @@ class IAService
             return [
                 'success' => false,
                 'message' => 'Error al procesar recomendación: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Evaluar aptitud del voluntario para asignarle necesidades
+     * según su estado físico y emocional actual
+     */
+    public function evaluarAptitudNecesidades(
+        string $resumenFisico,
+        string $resumenEmocional,
+        array $necesidadesDisponibles
+    ): array {
+        try {
+            // Usar API Key específica para necesidades
+            $apiKey = env('GOOGLE_GEMINI_API_KEY_NECESIDADES', 'AIzaSyA0MPmhWeTuO-sphHGogZaaRocHf2FduNg');
+            
+            if (empty($apiKey)) {
+                return [
+                    'success' => false,
+                    'message' => 'API Key de Google Gemini para necesidades no configurada'
+                ];
+            }
+
+            // Construir lista de necesidades
+            $listaNecesidades = '';
+            foreach ($necesidadesDisponibles as $nec) {
+                $listaNecesidades .= "- ID: {$nec['id']}, TIPO: {$nec['tipo']}, DESCRIPCIÓN: " . 
+                    (strlen($nec['descripcion'] ?? '') > 100 
+                        ? substr($nec['descripcion'], 0, 100) . '...' 
+                        : ($nec['descripcion'] ?? 'Sin descripción')) . "\n";
+            }
+
+            $prompt = <<<PROMPT
+Eres un asistente médico que evalúa la aptitud de voluntarios para atender necesidades humanitarias.
+
+ESTADO DEL VOLUNTARIO:
+Físico: {$resumenFisico}
+Emocional: {$resumenEmocional}
+
+NECESIDADES DISPONIBLES:
+{$listaNecesidades}
+
+INSTRUCCIONES:
+Analiza el estado físico y emocional del voluntario. Determina si está APTO para atender necesidades considerando:
+- Complejidad física de cada necesidad
+- Complejidad emocional de cada necesidad  
+- Estado actual del voluntario
+
+RESPONDE ESTRICTAMENTE EN ESTE FORMATO:
+
+NIVEL: [APTO_TODAS | APTO_ALGUNAS | NO_APTO]
+RAZON: [Máximo 200 caracteres explicando por qué]
+NECESIDADES_APTAS: [IDs separados por comas, o "NINGUNA" si NO_APTO, o "TODAS" si APTO_TODAS]
+
+EJEMPLOS:
+- NIVEL: APTO_TODAS
+  RAZON: Voluntario en excelente condición física y emocional, sin limitaciones
+  NECESIDADES_APTAS: TODAS
+
+- NIVEL: APTO_ALGUNAS
+  RAZON: Dolor crónico limita actividades físicas intensas, apto para apoyo emocional
+  NECESIDADES_APTAS: 2,5,7
+
+- NIVEL: NO_APTO
+  RAZON: Estrés severo y fatiga física requieren descanso antes de asignar tareas
+  NECESIDADES_APTAS: NINGUNA
+PROMPT;
+
+            $response = Http::timeout(30)
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                ])
+                ->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}", [
+                    'contents' => [
+                        [
+                            'parts' => [
+                                ['text' => $prompt]
+                            ]
+                        ]
+                    ],
+                    'generationConfig' => [
+                        'temperature' => 0.3,
+                        'topK' => 40,
+                        'topP' => 0.95,
+                        'maxOutputTokens' => 4096,
+                    ]
+                ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $textoRespuesta = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
+
+                // Parsear respuesta
+                preg_match('/NIVEL:\s*(APTO_TODAS|APTO_ALGUNAS|NO_APTO)/i', $textoRespuesta, $matchesNivel);
+                preg_match('/RAZON:\s*(.+?)(?=NECESIDADES_APTAS:|$)/is', $textoRespuesta, $matchesRazon);
+                preg_match('/NECESIDADES_APTAS:\s*(.+?)$/is', $textoRespuesta, $matchesNecesidades);
+
+                $nivel = strtoupper($matchesNivel[1] ?? 'NO_APTO');
+                $razon = trim($matchesRazon[1] ?? 'Sin evaluación');
+                $necesidadesAptasTexto = trim($matchesNecesidades[1] ?? 'NINGUNA');
+
+                // Procesar necesidades aptas
+                $necesidadesAptas = [];
+                if ($necesidadesAptasTexto === 'TODAS') {
+                    $necesidadesAptas = array_column($necesidadesDisponibles, 'id');
+                } elseif ($necesidadesAptasTexto !== 'NINGUNA') {
+                    $idsTexto = preg_replace('/[^0-9,]/', '', $necesidadesAptasTexto);
+                    if (!empty($idsTexto)) {
+                        $necesidadesAptas = array_map('intval', explode(',', $idsTexto));
+                    }
+                }
+
+                return [
+                    'success' => true,
+                    'nivel_aptitud' => $nivel,
+                    'razon' => substr($razon, 0, 500), // Limitar longitud
+                    'necesidades_aptas' => $necesidadesAptas,
+                    'respuesta_raw' => $textoRespuesta
+                ];
+            }
+
+            Log::error('Gemini Aptitud - Error en respuesta', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Error al conectar con Google Gemini para evaluación de aptitud'
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Gemini Aptitud - Excepción', [
+                'message' => $e->getMessage()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Error al evaluar aptitud: ' . $e->getMessage()
             ];
         }
     }

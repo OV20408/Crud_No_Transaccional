@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Model;
 class Necesidad extends Model
 {
     protected $table = 'necesidad';
-    public $timestamps = false;
+    public $timestamps = true;
 
     protected $perPage = 20;
 
@@ -27,7 +27,7 @@ class Necesidad extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = ['descripcion', 'tipo'];
+    protected $fillable = ['descripcion', 'tipo', 'created_at', 'updated_at'];
 
 
     /**
