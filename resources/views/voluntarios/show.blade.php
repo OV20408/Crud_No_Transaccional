@@ -849,14 +849,12 @@ function mostrarInfoCurso(cursoId) {
 <script>
   let evaluacionesActuales = @json($evaluaciones ?? []);
   let reportesActuales = @json($reportes ?? []);
+  let reportesNoVistos = @json($reportesNoVistos ?? []);
   
 
   function renderizarEncuestas() {
     const contenido = document.getElementById('vista-contenido');
     if (!contenido) return;
-    
-    // ✅ Obtener reportes no vistos desde PHP
-    const reportesNoVistos = @json($reportesNoVistos ?? []);
     
     let html = '<h2 class="titulo-seccion">Encuestas Realizadas</h2>';
     
@@ -1748,6 +1746,27 @@ function actualizarDatosVoluntario() {
         ultimaAptitudFecha = nuevaAptitudFecha;
         aptitudActual = nuevosDatos.aptitudNecesidades;
         renderizarAptitudNecesidades();
+      }
+      
+      // Actualizar reportes no vistos (para tags "Nueva")
+      if (nuevosDatos.reportesNoVistos) {
+        const reportesNoVistosJSON = JSON.stringify(reportesNoVistos);
+        const nuevosReportesNoVistosJSON = JSON.stringify(nuevosDatos.reportesNoVistos);
+        
+        if (reportesNoVistosJSON !== nuevosReportesNoVistosJSON) {
+          console.log('Cambio en reportes no vistos detectado');
+          console.log('Reportes no vistos anteriores:', reportesNoVistos);
+          console.log('Reportes no vistos nuevos:', nuevosDatos.reportesNoVistos);
+          
+          reportesNoVistos = nuevosDatos.reportesNoVistos;
+          
+          // Si estamos en la vista de encuestas, actualizarla
+          const contenido = document.getElementById('vista-contenido');
+          if (contenido && contenido.innerHTML.includes('Encuestas Realizadas')) {
+            console.log('Re-renderizando encuestas con nuevos tags...');
+            renderizarEncuestas();
+          }
+        }
       }
     }
   })

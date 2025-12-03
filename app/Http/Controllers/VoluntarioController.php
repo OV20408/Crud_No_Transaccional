@@ -688,6 +688,17 @@ class VoluntarioController extends Controller
                 ->orderBy('updated_at', 'desc')
                 ->first();
 
+            // 10. Reportes no vistos (para tag "Nueva")
+            $reportesVistos = session()->get('reportes_vistos', []);
+            $reportesNoVistos = [];
+            foreach ($reportes as $reporte) {
+                $reportesNoVistos[] = [
+                    'reporte_id' => $reporte->id,
+                    'fisico_no_visto' => !in_array($reporte->id . '_fisico', $reportesVistos) && $reporte->resumen_fisico ? 'fisico' : null,
+                    'emocional_no_visto' => !in_array($reporte->id . '_emocional', $reportesVistos) && $reporte->resumen_emocional ? 'emocional' : null,
+                ];
+            }
+
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -698,7 +709,8 @@ class VoluntarioController extends Controller
                     'capacitaciones' => $capacitaciones,
                     'totalReportes' => $totalReportes,
                     'recomendacionesCursos' => $recomendacionesCursos,
-                    'aptitudNecesidades' => $aptitudNecesidades
+                    'aptitudNecesidades' => $aptitudNecesidades,
+                    'reportesNoVistos' => $reportesNoVistos
                 ]
             ]);
 
