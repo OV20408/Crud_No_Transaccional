@@ -1582,8 +1582,6 @@ function renderizarAptitudNecesidades() {
   const container = document.getElementById('aptitud-necesidades-container');
   if (!container) return;
   
-  console.log('renderizarAptitudNecesidades - aptitudActual:', aptitudActual);
-  
   if (aptitudActual) {
     let colorBorde, colorFondo, colorTexto, icono, titulo;
     
