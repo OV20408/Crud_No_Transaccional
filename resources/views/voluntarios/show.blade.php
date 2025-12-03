@@ -1197,16 +1197,15 @@ function mostrarInfoCurso(cursoId) {
 
       case 'necesidades':
         contenido.innerHTML = `
-          <h2 class="titulo-seccion" style="margin-bottom:16px;">Análisis de Necesidades</h2>
-
-          <!-- Aptitud del voluntario evaluada por IA -->
-          <div id="aptitud-necesidades-container" style="margin-bottom: 12px;"></div>
-
-          <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px;">
+            <h2 class="titulo-seccion" style="margin-bottom:0;">Análisis de Necesidades</h2>
             <button class="btn-formulario-enviar" data-toggle="modal" data-target="#modalAsignarNecesidad">
               <i class="fas fa-plus-circle"></i> Asignar Necesidad
             </button>
           </div>
+
+          <!-- Aptitud del voluntario evaluada por IA -->
+          <div id="aptitud-necesidades-container" style="margin-bottom: 16px;"></div>
 
           @if(count($necesidadesAsignadas) > 0)
             @foreach($necesidadesAsignadas as $nec)
@@ -1580,15 +1579,16 @@ function renderizarAptitudNecesidades() {
       <div style="
         background: ${colorFondo}; 
         border-left: 4px solid ${colorBorde};
-        padding: 8px 16px; 
+        padding: 8px 12px; 
         border-radius: 6px; 
         box-shadow: 0 1px 4px rgba(0,0,0,0.08);
         animation: fadeIn 0.3s ease;
+        max-width: 800px;
       ">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fas ${icono}" style="font-size: 13px; color: ${colorTexto};"></i>
-          <strong style="font-size: 12px; color: ${colorTexto};">${titulo}:</strong>
-          <span style="font-size: 11px; color: ${colorTexto}; flex: 1;">${aptitudActual.razon_ia || 'Sin evaluación'}</span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <i class="fas ${icono}" style="font-size: 12px; color: ${colorTexto}; flex-shrink: 0;"></i>
+          <strong style="font-size: 11px; color: ${colorTexto}; flex-shrink: 0;">${titulo}:</strong>
+          <span style="font-size: 11px; color: ${colorTexto};">${aptitudActual.razon_ia || 'Sin evaluación'}</span>
         </div>
       </div>
     `;
@@ -1600,13 +1600,14 @@ function renderizarAptitudNecesidades() {
       <div style="
         background: #f5f5f5; 
         border-left: 4px solid #9e9e9e;
-        padding: 8px 16px; 
+        padding: 8px 12px; 
         border-radius: 6px; 
         box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        max-width: 800px;
       ">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fas fa-info-circle" style="font-size: 13px; color: #616161;"></i>
-          <span style="font-size: 11px; color: #757575;">Sin evaluación de aptitud. Se generará tras completar la primera evaluación.</span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <i class="fas fa-info-circle" style="font-size: 12px; color: #616161; flex-shrink: 0;"></i>
+          <span style="font-size: 11px; color: #757575;">Sin evaluación. Se generará tras la primera evaluación.</span>
         </div>
       </div>
     `;
