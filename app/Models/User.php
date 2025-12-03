@@ -75,6 +75,25 @@ class User extends Authenticatable
         });
     }
 
+    public function adminlte_desc()
+    {
+        return $this->nombres . ' ' . $this->apellidos;
+    }
+
+    public function adminlte_image()
+    {
+        // Opción 1: Usar Gravatar
+        return 'https://www.gravatar.com/avatar/' . md5(strtolower(trim($this->email))) . '?s=200&d=mp';
+        
+        // Opción 2: Si tienes campo 'foto_perfil' en la BD:
+        // return $this->foto_perfil ?? asset('img/default-avatar.png');
+    }
+
+    public function adminlte_profile_url()
+    {
+        return route('home'); // O la ruta de tu perfil
+    }
+
     /**
      *  Laravel siempre llama a $user->password, por lo que
      *  este método es el que debe mapear a "contrasena".

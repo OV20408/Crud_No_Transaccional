@@ -562,6 +562,48 @@
   </div>
 
 
+  <div class="modal fade" id="modalConfirmarCertificado" tabindex="-1" role="dialog" aria-labelledby="modalConfirmarCertificadoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 8px 30px rgba(0,0,0,0.15);">
+        <div class="modal-header" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); color: white; border-radius: 12px 12px 0 0;">
+          <h5 class="modal-title" id="modalConfirmarCertificadoLabel" style="font-weight: bold;">
+            <i class="fas fa-certificate"></i> Generar Certificado
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white; opacity: 0.8;">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+
+        <div class="modal-body" style="padding: 30px;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <i class="fas fa-award" style="font-size: 4rem; color: #007bff;"></i>
+          </div>
+          <p style="text-align: center; font-size: 1.1rem; color: #333; margin-bottom: 10px;">
+            ¿Estás seguro de generar el certificado para:
+          </p>
+          <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff; margin-bottom: 20px;">
+            <strong style="color: #007bff; font-size: 1.1rem;" id="modal-capacitacion-nombre"></strong>
+          </div>
+          <p style="font-size: 0.9rem; color: #666; text-align: center;">
+            <i class="fas fa-info-circle"></i> El certificado se generará en PDF y se enviará automáticamente al email del voluntario.
+          </p>
+        </div>
+
+        <div class="modal-footer" style="border-top: 1px solid #dee2e6; padding: 15px 30px;">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal" style="border-radius: 8px; padding: 10px 20px;">
+            <i class="fas fa-times"></i> Cancelar
+          </button>
+          <button type="button" class="btn btn-primary" onclick="confirmarGenerarCertificado()" style="background: #007bff; border: none; border-radius: 8px; padding: 10px 20px; font-weight: 600;">
+            <i class="fas fa-check"></i> Generar Certificado
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+
 
 
 
@@ -1538,17 +1580,55 @@ function actualizarSeccionEncuestas(evaluaciones) {
 }
 
 
-// ========================================
 // FUNCIONES PARA CERTIFICADOS
-// ========================================
+  let certificadoPendiente = {
+    idUsuario: null,
+    idCapacitacion: null,
+    nombreCapacitacion: null,
+    botonOriginal: null
+  };
 
 function generarCertificado(idUsuario, idCapacitacion) {
-  if (!confirm('¿Generar certificado para esta capacitación?')) return;
+  // Prevenir propagación del evento
+  event.stopPropagation();
+  
+  // Guardar datos para cuando se confirme
+  certificadoPendiente.idUsuario = idUsuario;
+  certificadoPendiente.idCapacitacion = idCapacitacion;
+  certificadoPendiente.botonOriginal = event.target;
+  
+  // Obtener nombre de la capacitación desde el DOM
+  const cardCapacitacion = event.target.closest('.vista-card');
+  const nombreCapacitacion = cardCapacitacion ? cardCapacitacion.querySelector('strong').textContent : 'esta capacitación';
+  certificadoPendiente.nombreCapacitacion = nombreCapacitacion;
+  
+  // Actualizar el texto del modal
+  document.getElementById('modal-capacitacion-nombre').textContent = nombreCapacitacion;
+  
+  // Mostrar el modal
+  $('#modalConfirmarCertificado').modal('show');
+}
 
-  const btn = event.target;
+/**
+ * ✅ Ejecutar generación de certificado después de confirmación
+ */
+function confirmarGenerarCertificado() {
+  // Cerrar el modal
+  $('#modalConfirmarCertificado').modal('hide');
+  
+  const idUsuario = certificadoPendiente.idUsuario;
+  const idCapacitacion = certificadoPendiente.idCapacitacion;
+  const btn = certificadoPendiente.botonOriginal;
+  
+  if (!btn) return;
+  
   const textoOriginal = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+  
+  // Mostrar toast de loading
+  hideAllToasts();
+  showToast('toast-loading');
 
   fetch(`/certificados/generar/${idUsuario}/${idCapacitacion}`, {
     method: 'POST',
@@ -1560,8 +1640,9 @@ function generarCertificado(idUsuario, idCapacitacion) {
   })
   .then(response => response.json())
   .then(data => {
+    hideAllToasts();
+    
     if (data.success) {
-      hideAllToasts();
       document.getElementById('toast-success-msg').textContent = '¡Certificado generado y enviado por email!';
       showToast('toast-success');
       
@@ -1570,7 +1651,6 @@ function generarCertificado(idUsuario, idCapacitacion) {
         location.reload(); // Recargar para mostrar botón "Ver Certificado"
       }, 2000);
     } else {
-      hideAllToasts();
       document.getElementById('toast-error-msg').textContent = 'Error: ' + data.message;
       showToast('toast-error');
       btn.disabled = false;
@@ -1586,6 +1666,8 @@ function generarCertificado(idUsuario, idCapacitacion) {
     btn.innerHTML = textoOriginal;
   });
 }
+
+
 
 function verCertificado(idUsuario, idCapacitacion) {
   // Obtener el ID del certificado

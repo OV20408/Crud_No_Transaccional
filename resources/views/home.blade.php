@@ -24,9 +24,23 @@
   .card-chart {
     min-height: 450px;
   }
+
+  /* Estilos para el debug de Spatie */
+  .debug-spatie {
+    border-left: 4px solid #17a2b8;
+  }
+
+  .debug-spatie .table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+  }
+
+  .debug-spatie .badge {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.6rem;
+  }
 </style>
 @endsection
-
 
 @section('content')
 
@@ -34,7 +48,7 @@
   <div class="container-fluid">
     <div class="row mb-2">
       <div class="col-sm-12 text-center">
-        <h1 class="m-0 text-primary font-weight-bold">Estadísticas</h1>
+        <h1 class="m-0 text-primary font-weight-bold">Dashboard</h1>
       </div>
     </div>
   </div>
@@ -43,15 +57,24 @@
 <section class="content">
   <div class="container-fluid">
 
+    
+
     {{-- TARJETAS RESUMEN --}}
     <div class="row">
       <div class="col-lg-3 col-md-6 col-sm-12">
         <div class="small-box bg-info shadow-sm">
           <div class="inner">
             <h3>{{ $voluntariosActivos }}</h3>
-            <p>Activos</p>
+            <p>Voluntarios Activos</p>
           </div>
           <div class="icon"><i class="fas fa-users"></i></div>
+          @can('gestionar_usuarios')
+            <a href="{{ route('voluntarios.index') }}" class="small-box-footer">
+              Ver más <i class="fas fa-arrow-circle-right"></i>
+            </a>
+          @else
+            <span class="small-box-footer">Activos</span>
+          @endcan
         </div>
       </div>
 
@@ -59,9 +82,10 @@
         <div class="small-box bg-secondary shadow-sm">
           <div class="inner">
             <h3>{{ $voluntariosInactivos }}</h3>
-            <p>Inactivos</p>
+            <p>Voluntarios Inactivos</p>
           </div>
           <div class="icon"><i class="fas fa-user-slash"></i></div>
+          <span class="small-box-footer">Inactivos</span>
         </div>
       </div>
 
@@ -69,9 +93,16 @@
         <div class="small-box bg-danger shadow-sm">
           <div class="inner">
             <h3>{{ $alertasRecientes }}</h3>
-            <p>Alertas recientes</p>
+            <p>Alertas Recientes</p>
           </div>
           <div class="icon"><i class="fas fa-heartbeat"></i></div>
+          @can('ver_reportes')
+            <a href="{{ route('reportes.index') }}" class="small-box-footer">
+              Ver reportes <i class="fas fa-arrow-circle-right"></i>
+            </a>
+          @else
+            <span class="small-box-footer">Alertas</span>
+          @endcan
         </div>
       </div>
 
@@ -79,9 +110,10 @@
         <div class="small-box bg-success shadow-sm">
           <div class="inner">
             <h3>{{ $evaluacionesCompletadas }}</h3>
-            <p>Evaluaciones completadas</p>
+            <p>Evaluaciones Completadas</p>
           </div>
           <div class="icon"><i class="fas fa-chart-bar"></i></div>
+          <span class="small-box-footer">Completadas</span>
         </div>
       </div>
     </div>
@@ -112,17 +144,21 @@
                   <div>
                     <strong>{{ $vol->nombres }} {{ $vol->apellidos }}</strong><br>
                     @if($estado === 'activo')
-                      <small class="text-success font-weight-bold">Activo</small>
+                      <small class="text-success font-weight-bold">
+                        <i class="fas fa-check-circle"></i> Activo
+                      </small>
                     @elseif($estado === 'inactivo')
-                      <small class="text-danger font-weight-bold">Inactivo</small>
+                      <small class="text-danger font-weight-bold">
+                        <i class="fas fa-times-circle"></i> Inactivo
+                      </small>
                     @else
                       <small class="text-muted">Sin estado</small>
                     @endif
                   </div>
                 </li>
               @empty
-                <li class="list-group-item text-muted">
-                  No hay voluntarios registrados todavía.
+                <li class="list-group-item text-muted text-center">
+                  <i class="fas fa-inbox"></i> No hay voluntarios registrados todavía.
                 </li>
               @endforelse
             </ul>
@@ -140,7 +176,6 @@
           </div>
           <div class="card-body">
             <ul class="list-group list-group-flush">
-
               @forelse($ultimosReportes as $rep)
                 @php
                   $inicial = 'R';
@@ -150,6 +185,10 @@
                   $estadoClass = $estadoLower === 'crítico' || $estadoLower === 'critico'
                       ? 'text-danger'
                       : ($estadoLower === 'pendiente' ? 'text-warning' : 'text-success');
+                  
+                  $estadoIcon = $estadoLower === 'crítico' || $estadoLower === 'critico'
+                      ? 'fas fa-exclamation-triangle'
+                      : ($estadoLower === 'pendiente' ? 'fas fa-clock' : 'fas fa-check-circle');
                 @endphp
 
                 <li class="list-group-item d-flex align-items-center">
@@ -160,21 +199,21 @@
                   <div>
                     <strong>Reporte #{{ $rep->id }}</strong><br>
                     <small class="font-weight-bold {{ $estadoClass }}">
-                      {{ $estado }}
+                      <i class="{{ $estadoIcon }}"></i> {{ $estado }}
                     </small><br>
                     @if($rep->fecha_generado)
                       <small class="text-muted">
+                        <i class="far fa-calendar-alt"></i>
                         {{ $rep->fecha_generado->format('d/m/Y H:i') }}
                       </small>
                     @endif
                   </div>
                 </li>
               @empty
-                <li class="list-group-item text-muted">
-                  No hay reportes generados todavía.
+                <li class="list-group-item text-muted text-center">
+                  <i class="fas fa-inbox"></i> No hay reportes generados todavía.
                 </li>
               @endforelse
-
             </ul>
           </div>
         </div>
@@ -310,7 +349,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   } else {
     document.getElementById('chartUniversidades').parentElement.innerHTML = 
-      '<p class="text-center text-muted mt-5">Sin datos disponibles</p>';
+      '<p class="text-center text-muted mt-5"><i class="fas fa-chart-pie fa-3x mb-3"></i><br>Sin datos disponibles</p>';
   }
 
   // Gráfico Necesidades
@@ -331,7 +370,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   } else {
     document.getElementById('chartNecesidades').parentElement.innerHTML = 
-      '<p class="text-center text-muted mt-5">Sin datos disponibles</p>';
+      '<p class="text-center text-muted mt-5"><i class="fas fa-chart-pie fa-3x mb-3"></i><br>Sin datos disponibles</p>';
   }
 
   // Gráfico Capacitaciones
@@ -352,7 +391,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   } else {
     document.getElementById('chartCapacitaciones').parentElement.innerHTML = 
-      '<p class="text-center text-muted mt-5">Sin datos disponibles</p>';
+      '<p class="text-center text-muted mt-5"><i class="fas fa-chart-pie fa-3x mb-3"></i><br>Sin datos disponibles</p>';
   }
 
 });

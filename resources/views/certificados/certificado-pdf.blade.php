@@ -84,23 +84,23 @@
             font-style: italic;
         }
 
-        /* Contenido principal */
         .contenido {
             text-align: center;
             padding: 0 30mm;
+            margin-top: -15mm;  /* ← CAMBIAR de -10mm a -15mm (sube TODO más) */
         }
 
         .texto-otorga {
             font-size: 14pt;
             color: #495057;
-            margin-bottom: 8mm;
+            margin-bottom: 3mm;  /* ← CAMBIAR de 4mm a 3mm */
         }
 
         .nombre-voluntario {
             font-size: 32pt;
             font-weight: bold;
             color: #212529;
-            margin: 10mm 0;
+            margin: 4mm 0;  /* ← CAMBIAR de 6mm a 4mm */
             text-transform: uppercase;
             letter-spacing: 2px;
             border-bottom: 3px solid #0072C6;
@@ -111,7 +111,7 @@
         .texto-completado {
             font-size: 14pt;
             color: #495057;
-            margin: 10mm 0;
+            margin: 4mm 0;  /* ← CAMBIAR de 6mm a 4mm */
             line-height: 1.6;
         }
 
@@ -119,25 +119,17 @@
             font-size: 24pt;
             font-weight: bold;
             color: #0072C6;
-            margin: 8mm 0;
+            margin: 3mm 0;  /* ← CAMBIAR: agregar margin completo */
         }
 
         .detalles-curso {
             font-size: 12pt;
             color: #6c757d;
-            margin-top: 5mm;
+            margin-top: 2mm;  /* ← Ya está bien */
+            margin-bottom: 15mm;  /* ← NUEVO: espacio antes del footer */
         }
 
-        /* Footer con firmas */
-        .footer {
-            position: absolute;
-            bottom: 30mm;
-            left: 20mm;
-            right: 20mm;
-            display: flex;
-            justify-content: space-around;
-            margin-top: 20mm;
-        }
+        
 
         .firma-seccion {
             text-align: center;
@@ -180,26 +172,7 @@
             color: #0072C6;
         }
 
-        /* Sello decorativo */
-        .sello {
-            position: absolute;
-            top: 40mm;
-            right: 30mm;
-            width: 80px;
-            height: 80px;
-            border: 3px solid #0072C6;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10pt;
-            font-weight: bold;
-            color: #0072C6;
-            text-align: center;
-            transform: rotate(15deg);
-            background: white;
-            box-shadow: 0 4px 12px rgba(0, 114, 198, 0.3);
-        }
+        
     </style>
 </head>
 <body>
@@ -212,15 +185,13 @@
             </div>
             <div class="logo-section" style="text-align: right;">
                 <div style="font-size: 11pt; color: #6c757d;">
-                    Sistema de Gestión de<br>Voluntarios de Protección Integral
+                    Sistema de Seguimiento <br> Post-Incendios de Voluntarios
                 </div>
             </div>
         </div>
 
-        <!-- Sello decorativo -->
-        <div class="sello">
-            CERTIFICADO<br>OFICIAL
-        </div>
+
+    
 
         <!-- Título -->
         <div class="titulo-certificado">CERTIFICADO</div>
@@ -249,15 +220,7 @@
             </p>
         </div>
 
-        <!-- Footer con firmas -->
-        <div class="footer">
-            <div class="firma-seccion">
-                <div class="linea-firma"></div>
-                <p class="nombre-firma">Director General</p>
-                <p class="cargo-firma">GEVOPI</p>
-            </div>
-            
-        </div>
+        
 
         <!-- Metadata -->
         <div class="metadata">

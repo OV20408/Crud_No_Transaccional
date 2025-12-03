@@ -240,7 +240,7 @@ class CertificadoController extends Controller
         if (!$voluntario->email) return;
 
         try {
-            Mail::send('emails.certificado_emitido', [
+            Mail::send('certificados.certificado_emitido', [
                 'nombreVoluntario' => $voluntario->nombres . ' ' . $voluntario->apellidos,
                 'nombreCapacitacion' => $capacitacion->nombre,
                 'codigo' => $codigo
