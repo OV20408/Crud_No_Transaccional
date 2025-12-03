@@ -29,9 +29,9 @@ window.Echo = new Echo({
 
 // Debug conexión
 window.Echo.connector.pusher.connection.bind('connected', () => {
-    console.log('✅ Conectado a Reverb WebSocket');
+    console.log('Conectado a Reverb WebSocket');
 });
 
 window.Echo.connector.pusher.connection.bind('error', (err) => {
-    console.error('❌ Error de conexión Reverb:', err);
+    console.error('Error de conexión Reverb:', err);
 });

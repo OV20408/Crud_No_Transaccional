@@ -18,7 +18,7 @@ class MigrateRolesToSpatieSeeder extends Seeder
         echo "\n🚀 INICIANDO MIGRACIÓN DE ROLES A SPATIE\n";
         echo str_repeat("=", 50) . "\n\n";
 
-        // 1️⃣ Crear roles desde tu tabla 'rol'
+        // 1️⃣ Crear roles desde tu tabla 'rol' (usando 'nombre' en lugar de 'descripcion')
         echo "📋 Paso 1: Migrando roles desde tabla 'rol'...\n";
         $rolesAntiguos = DB::table('rol')->get();
         
@@ -26,8 +26,9 @@ class MigrateRolesToSpatieSeeder extends Seeder
             echo "⚠️  No se encontraron roles en la tabla 'rol'\n";
         } else {
             foreach ($rolesAntiguos as $rolAntiguo) {
+                // ✅ CAMBIO: Usar 'nombre' en lugar de 'descripcion'
                 $role = Role::firstOrCreate([
-                    'name' => $rolAntiguo->descripcion,
+                    'name' => $rolAntiguo->nombre, // ← CORREGIDO
                     'guard_name' => 'web'
                 ]);
                 echo "   ✅ Rol creado: {$role->name}\n";
@@ -54,6 +55,16 @@ class MigrateRolesToSpatieSeeder extends Seeder
             'solicitar_ayuda',
             'chat_emergencias',
             'descargar_certificados',
+            
+            // Permisos de Instructor
+            'crear_cursos',
+            'editar_cursos',
+            'ver_progreso_alumnos',
+            
+            // Permisos de Evaluador
+            'crear_evaluaciones',
+            'calificar_evaluaciones',
+            'ver_resultados',
         ];
 
         foreach ($permisos as $permiso) {
@@ -67,12 +78,10 @@ class MigrateRolesToSpatieSeeder extends Seeder
         // 3️⃣ Asignar permisos a roles
         echo "\n📋 Paso 3: Asignando permisos a roles...\n";
         
-        // Buscar roles (ajusta los nombres según tu tabla 'rol')
-        $adminRole = Role::where('name', 'LIKE', '%Administrador%')->first();
-        $voluntarioRole = Role::where('name', 'LIKE', '%Voluntario%')->first();
-
+        // Administrador
+        $adminRole = Role::findByName('Administrador');
         if ($adminRole) {
-            $adminRole->givePermissionTo([
+            $adminRole->syncPermissions([
                 'gestionar_usuarios',
                 'gestionar_roles',
                 'gestionar_capacitaciones',
@@ -82,12 +91,12 @@ class MigrateRolesToSpatieSeeder extends Seeder
                 'responder_consultas',
             ]);
             echo "   ✅ Permisos asignados a: {$adminRole->name}\n";
-        } else {
-            echo "   ⚠️  No se encontró rol de Administrador\n";
         }
 
+        // Voluntario
+        $voluntarioRole = Role::findByName('Voluntario');
         if ($voluntarioRole) {
-            $voluntarioRole->givePermissionTo([
+            $voluntarioRole->syncPermissions([
                 'ver_capacitaciones',
                 'completar_etapas',
                 'enviar_reportes',
@@ -96,16 +105,40 @@ class MigrateRolesToSpatieSeeder extends Seeder
                 'descargar_certificados',
             ]);
             echo "   ✅ Permisos asignados a: {$voluntarioRole->name}\n";
-        } else {
-            echo "   ⚠️  No se encontró rol de Voluntario\n";
         }
 
-        // 4️⃣ Asignar roles a usuarios existentes
-        echo "\n📋 Paso 4: Asignando roles de Spatie a usuarios...\n";
+        // Instructor
+        $instructorRole = Role::findByName('Instructor');
+        if ($instructorRole) {
+            $instructorRole->syncPermissions([
+                'crear_cursos',
+                'editar_cursos',
+                'ver_progreso_alumnos',
+                'ver_capacitaciones',
+            ]);
+            echo "   ✅ Permisos asignados a: {$instructorRole->name}\n";
+        }
+
+        // Evaluador
+        $evaluadorRole = Role::findByName('Evaluador');
+        if ($evaluadorRole) {
+            $evaluadorRole->syncPermissions([
+                'crear_evaluaciones',
+                'calificar_evaluaciones',
+                'ver_resultados',
+            ]);
+            echo "   ✅ Permisos asignados a: {$evaluadorRole->name}\n";
+        }
+
+        // 4️⃣ Reasignar roles a usuarios (limpiar asignaciones incorrectas)
+        echo "\n📋 Paso 4: Reasignando roles correctos a usuarios...\n";
+        
+        // Primero eliminar todas las asignaciones incorrectas
+        DB::table('model_has_roles')->delete();
+        echo "   🗑️  Asignaciones antiguas eliminadas\n";
         
         $usuarios = User::all();
         $contadorAsignados = 0;
-        $contadorFallidos = 0;
         
         foreach ($usuarios as $usuario) {
             if ($usuario->id_rol) {
@@ -113,19 +146,14 @@ class MigrateRolesToSpatieSeeder extends Seeder
                 
                 if ($rolAntiguo) {
                     try {
-                        // Asignar rol de Spatie
-                        $usuario->assignRole($rolAntiguo->descripcion);
+                        // ✅ CAMBIO: Usar 'nombre' en lugar de 'descripcion'
+                        $usuario->assignRole($rolAntiguo->nombre); // ← CORREGIDO
                         $contadorAsignados++;
-                        echo "   ✅ {$usuario->email} -> {$rolAntiguo->descripcion}\n";
+                        echo "   ✅ {$usuario->email} -> {$rolAntiguo->nombre}\n";
                     } catch (\Exception $e) {
-                        $contadorFallidos++;
                         echo "   ❌ Error con {$usuario->email}: {$e->getMessage()}\n";
                     }
-                } else {
-                    echo "   ⚠️  Usuario {$usuario->email} tiene id_rol inválido: {$usuario->id_rol}\n";
                 }
-            } else {
-                echo "   ⚠️  Usuario {$usuario->email} no tiene id_rol asignado\n";
             }
         }
 
@@ -136,9 +164,6 @@ class MigrateRolesToSpatieSeeder extends Seeder
         echo "   📊 Roles migrados: " . $rolesAntiguos->count() . "\n";
         echo "   🔑 Permisos creados: " . count($permisos) . "\n";
         echo "   👥 Usuarios actualizados: {$contadorAsignados}\n";
-        if ($contadorFallidos > 0) {
-            echo "   ⚠️  Usuarios con error: {$contadorFallidos}\n";
-        }
         echo str_repeat("=", 50) . "\n\n";
     }
 }

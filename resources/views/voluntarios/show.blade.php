@@ -526,6 +526,9 @@
 
 <div class="infovoluntarios-container">
   <!-- Toast Container -->
+
+
+  
   <div class="toast-container">
     <div class="toast-notification toast-loading" id="toast-loading">
       <div class="toast-content">
@@ -557,6 +560,10 @@
       </div>
     </div>
   </div>
+
+
+
+
 
   <a href="{{ route('voluntarios.index') }}" class="btn-volver">
     <i class="fas fa-arrow-left"></i> Volver a la lista

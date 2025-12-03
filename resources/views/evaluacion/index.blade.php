@@ -126,8 +126,8 @@
   .icheck-inline {
     display: flex;
     flex-wrap: wrap;
-    gap: .75rem;
-    margin-top: .4rem;
+    gap: 10px;
+    margin-top: 15px;
   }
 
   .icheck-inline .icheck-primary,
@@ -136,16 +136,162 @@
   .icheck-inline .icheck-danger,
   .icheck-inline .icheck-warning {
     margin-right: 0;
+    flex: 1;
+    min-width: 130px;
   }
 
   .icheck-inline label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 18px;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #fff;
     font-weight: 500;
+    font-size: 14px;
+    text-align: center;
+    width: 100%;
+    position: relative;
+    user-select: none;
   }
+
 
   .icheck-inline input[type="radio"] {
     transform: scale(1.1);
     cursor: pointer;
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
   }
+
+  .icheck-inline label:hover {
+    border-color: #28a745;
+    background-color: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.15);
+  }
+
+  /* Estado seleccionado - Success (verde) por defecto */
+  .icheck-success input[type="radio"]:checked + label {
+    border-color: #28a745;
+    background-color: #d4edda;
+    color: #155724;
+    font-weight: 600;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+  }
+
+  .icheck-success input[type="radio"]:checked + label::before {
+    content: '✓';
+    position: absolute;
+    top: 5px;
+    right: 8px;
+    width: 22px;
+    height: 22px;
+    background-color: #28a745;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 13px;
+  }
+
+  /* Variantes de colores */
+  .icheck-info input[type="radio"]:checked + label {
+    border-color: #17a2b8;
+    background-color: #d1ecf1;
+    color: #0c5460;
+  }
+
+  .icheck-info input[type="radio"]:checked + label::before {
+    background-color: #17a2b8;
+  }
+
+  .icheck-info label:hover {
+    border-color: #17a2b8;
+    box-shadow: 0 4px 8px rgba(23, 162, 184, 0.15);
+  }
+
+  .icheck-primary input[type="radio"]:checked + label {
+    border-color: var(--color-azul);
+    background-color: #e7f3ff;
+    color: #004085;
+  }
+
+  .icheck-primary input[type="radio"]:checked + label::before {
+    background-color: var(--color-azul);
+  }
+
+  .icheck-primary label:hover {
+    border-color: var(--color-azul);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.15);
+  }
+
+  .icheck-warning input[type="radio"]:checked + label {
+    border-color: #ffc107;
+    background-color: #fff3cd;
+    color: #856404;
+  }
+
+  .icheck-warning input[type="radio"]:checked + label::before {
+    background-color: #ffc107;
+  }
+
+  .icheck-warning label:hover {
+    border-color: #ffc107;
+    box-shadow: 0 4px 8px rgba(255, 193, 7, 0.15);
+  }
+
+  .icheck-danger input[type="radio"]:checked + label {
+    border-color: #dc3545;
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+
+  .icheck-danger input[type="radio"]:checked + label::before {
+    background-color: #dc3545;
+  }
+
+  .icheck-danger label:hover {
+    border-color: #dc3545;
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.15);
+  }
+
+  /* Responsive para móviles */
+  @media (max-width: 768px) {
+    .icheck-inline {
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .icheck-inline .icheck-success,
+    .icheck-inline .icheck-info,
+    .icheck-inline .icheck-primary,
+    .icheck-inline .icheck-warning,
+    .icheck-inline .icheck-danger {
+      min-width: 100%;
+    }
+
+    .icheck-inline label {
+      padding: 12px 15px;
+      font-size: 13px;
+    }
+
+    .icheck-inline input[type="radio"]:checked + label::before {
+      width: 20px;
+      height: 20px;
+      font-size: 12px;
+      top: 4px;
+      right: 6px;
+    }
+  }
+
+
 
   /* Botones de acciones en cada pregunta */
   .acciones {
