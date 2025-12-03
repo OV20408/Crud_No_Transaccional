@@ -1197,12 +1197,12 @@ function mostrarInfoCurso(cursoId) {
 
       case 'necesidades':
         contenido.innerHTML = `
-          <h2 class="titulo-seccion" style="margin-bottom:20px;">Análisis de Necesidades</h2>
+          <h2 class="titulo-seccion" style="margin-bottom:16px;">Análisis de Necesidades</h2>
 
           <!-- Aptitud del voluntario evaluada por IA -->
-          <div id="aptitud-necesidades-container" style="margin-bottom: 20px;"></div>
+          <div id="aptitud-necesidades-container" style="margin-bottom: 12px;"></div>
 
-          <div style="display:flex;justify-content:flex-end;margin-bottom:20px;">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
             <button class="btn-formulario-enviar" data-toggle="modal" data-target="#modalAsignarNecesidad">
               <i class="fas fa-plus-circle"></i> Asignar Necesidad
             </button>
@@ -1226,6 +1226,8 @@ function mostrarInfoCurso(cursoId) {
             <p class="mensaje-vacio">No hay necesidades asignadas.</p>
           @endif
         `;
+        // Renderizar aptitud después de crear el contenedor
+        renderizarAptitudNecesidades();
         break;
     }
 
@@ -1550,102 +1552,62 @@ function renderizarAptitudNecesidades() {
         colorFondo = '#e8f5e9';
         colorTexto = '#2e7d32';
         icono = 'fa-check-circle';
-        titulo = '✅ Apto para Todas las Necesidades';
+        titulo = '✅ Apto para Todas';
         break;
       case 'APTO_ALGUNAS':
         colorBorde = '#ff9800';
         colorFondo = '#fff3e0';
         colorTexto = '#e65100';
         icono = 'fa-exclamation-triangle';
-        titulo = '⚠️ Apto para Algunas Necesidades';
+        titulo = '⚠️ Apto para Algunas';
         break;
       case 'NO_APTO':
         colorBorde = '#f44336';
         colorFondo = '#ffebee';
         colorTexto = '#c62828';
         icono = 'fa-times-circle';
-        titulo = '❌ No Apto para Asignar Necesidades';
+        titulo = '❌ No Apto';
         break;
       default:
         colorBorde = '#9e9e9e';
         colorFondo = '#f5f5f5';
         colorTexto = '#616161';
         icono = 'fa-question-circle';
-        titulo = '⚪ Aptitud No Evaluada';
-    }
-    
-    const fechaEvaluacion = new Date(aptitudActual.updated_at).toLocaleString('es-ES');
-    
-    let necesidadesRecomendadasHtml = '';
-    if (aptitudActual.necesidades_recomendadas) {
-      try {
-        const necesidadesIds = typeof aptitudActual.necesidades_recomendadas === 'string' 
-          ? JSON.parse(aptitudActual.necesidades_recomendadas) 
-          : aptitudActual.necesidades_recomendadas;
-        
-        if (Array.isArray(necesidadesIds) && necesidadesIds.length > 0) {
-          necesidadesRecomendadasHtml = `
-            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid ${colorBorde}40;">
-              <strong style="font-size: 12px; color: ${colorTexto};">
-                <i class="fas fa-list-ul"></i> Necesidades Aptas (IDs):
-              </strong>
-              <span style="font-size: 12px; color: ${colorTexto};">${necesidadesIds.join(', ')}</span>
-            </div>
-          `;
-        }
-      } catch (e) {
-        console.error('Error parsing necesidades:', e);
-      }
+        titulo = '⚪ Sin Evaluar';
     }
     
     const html = `
       <div style="
         background: ${colorFondo}; 
         border-left: 4px solid ${colorBorde};
-        padding: 12px 20px; 
-        border-radius: 8px; 
-        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        padding: 8px 16px; 
+        border-radius: 6px; 
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
         animation: fadeIn 0.3s ease;
       ">
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 8px;">
-          <div style="display: flex; align-items: center; gap: 8px; color: ${colorTexto};">
-            <i class="fas ${icono}" style="font-size: 14px;"></i>
-            <strong style="font-size: 13px;">${titulo}</strong>
-          </div>
-          <div style="font-size: 11px; color: #999;">
-            <i class="fas fa-clock"></i> ${fechaEvaluacion}
-          </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fas ${icono}" style="font-size: 13px; color: ${colorTexto};"></i>
+          <strong style="font-size: 12px; color: ${colorTexto};">${titulo}:</strong>
+          <span style="font-size: 11px; color: ${colorTexto}; flex: 1;">${aptitudActual.razon_ia || 'Sin evaluación'}</span>
         </div>
-        
-        <div style="display: flex; align-items: start; gap: 10px;">
-          <i class="fas fa-robot" style="color: ${colorTexto}; font-size: 13px; flex-shrink: 0; margin-top: 2px;"></i>
-          <p style="margin: 0; font-size: 12px; color: ${colorTexto}; line-height: 1.4;">
-            ${aptitudActual.razon_ia || 'Sin evaluación disponible'}
-          </p>
-        </div>
-        
-        ${necesidadesRecomendadasHtml}
       </div>
     `;
     
     container.innerHTML = html;
   } else {
-    // Mostrar mensaje de "Sin evaluación" cuando no hay datos
+    // Mostrar mensaje compacto cuando no hay datos
     container.innerHTML = `
       <div style="
         background: #f5f5f5; 
         border-left: 4px solid #9e9e9e;
-        padding: 12px 20px; 
-        border-radius: 8px; 
-        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        padding: 8px 16px; 
+        border-radius: 6px; 
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
       ">
-        <div style="display: flex; align-items: center; gap: 8px; color: #616161;">
-          <i class="fas fa-info-circle" style="font-size: 14px;"></i>
-          <strong style="font-size: 13px;">Sin Evaluación de Aptitud</strong>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fas fa-info-circle" style="font-size: 13px; color: #616161;"></i>
+          <span style="font-size: 11px; color: #757575;">Sin evaluación de aptitud. Se generará tras completar la primera evaluación.</span>
         </div>
-        <p style="margin: 8px 0 0 0; font-size: 12px; color: #757575; line-height: 1.4;">
-          El voluntario aún no ha completado una evaluación. La IA evaluará su aptitud para asignar necesidades después de la primera evaluación física y emocional.
-        </p>
       </div>
     `;
   }
