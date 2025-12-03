@@ -309,8 +309,7 @@ class VoluntarioController extends Controller
             ->get();
 
         // 13. APTITUD PARA ASIGNAR NECESIDADES (evaluada por IA)
-        $aptitudNecesidades = DB::table('aptitud_necesidades')
-            ->where('id_voluntario', $id)
+        $aptitudNecesidades = \App\Models\AptitudNecesidad::where('id_voluntario', $id)
             ->where('estado', 'activo')
             ->orderBy('updated_at', 'desc')
             ->first();
@@ -684,8 +683,7 @@ class VoluntarioController extends Controller
                 ->get();
 
             // 9. Aptitud para asignar necesidades (evaluada por IA)
-            $aptitudNecesidades = DB::table('aptitud_necesidades')
-                ->where('id_voluntario', $id)
+            $aptitudNecesidades = \App\Models\AptitudNecesidad::where('id_voluntario', $id)
                 ->where('estado', 'activo')
                 ->orderBy('updated_at', 'desc')
                 ->first();

@@ -1542,6 +1542,8 @@ function renderizarAptitudNecesidades() {
   const container = document.getElementById('aptitud-necesidades-container');
   if (!container) return;
   
+  console.log('renderizarAptitudNecesidades - aptitudActual:', aptitudActual);
+  
   if (aptitudActual) {
     let colorBorde, colorFondo, colorTexto, icono, titulo;
     
@@ -1576,6 +1578,46 @@ function renderizarAptitudNecesidades() {
         titulo = 'Sin Evaluar';
     }
     
+    // Mapeo de IDs a nombres de necesidades
+    const necesidadesMap = {
+      2: 'Asistencia Médica Básica',
+      3: 'Apoyo Psicológico',
+      4: 'Distribución de Alimentos',
+      5: 'Logística y Coordinación',
+      6: 'Rescate en Zonas de Riesgo',
+      7: 'Atención a Niños',
+      8: 'Transporte de Heridos',
+      9: 'Comunicación y Registro'
+    };
+    
+    // Construir lista de necesidades recomendadas
+    let necesidadesHTML = '';
+    if (aptitudActual.nivel_aptitud === 'APTO_TODAS') {
+      necesidadesHTML = `<div style="margin-top: 6px; font-size: 10px; color: ${colorTexto};">✓ Puede realizar todas las necesidades disponibles</div>`;
+    } else if (aptitudActual.nivel_aptitud === 'APTO_ALGUNAS' && aptitudActual.necesidades_recomendadas) {
+      try {
+        let necesidades = [];
+        
+        // Intentar parsear de diferentes formas
+        if (Array.isArray(aptitudActual.necesidades_recomendadas)) {
+          necesidades = aptitudActual.necesidades_recomendadas;
+        } else if (typeof aptitudActual.necesidades_recomendadas === 'string') {
+          necesidades = JSON.parse(aptitudActual.necesidades_recomendadas);
+        }
+        
+        console.log('Necesidades parseadas:', necesidades);
+        
+        if (Array.isArray(necesidades) && necesidades.length > 0) {
+          const listaNecesidades = necesidades.map(id => necesidadesMap[id] || `ID ${id}`).join(', ');
+          necesidadesHTML = `<div style="margin-top: 6px; font-size: 10px; color: ${colorTexto};">✓ Puede realizar: ${listaNecesidades}</div>`;
+        }
+      } catch (e) {
+        console.error('Error parseando necesidades_recomendadas:', e, aptitudActual.necesidades_recomendadas);
+      }
+    } else if (aptitudActual.nivel_aptitud === 'NO_APTO') {
+      necesidadesHTML = `<div style="margin-top: 6px; font-size: 10px; color: ${colorTexto};">✗ No se recomienda asignar necesidades en este momento</div>`;
+    }
+    
     const html = `
       <div style="
         background: ${colorFondo}; 
@@ -1590,6 +1632,7 @@ function renderizarAptitudNecesidades() {
           <strong style="font-size: 11px; color: ${colorTexto}; flex-shrink: 0;">${titulo}:</strong>
           <span style="font-size: 11px; color: ${colorTexto};">${aptitudActual.razon_ia || 'Sin evaluación'}</span>
         </div>
+        ${necesidadesHTML}
       </div>
     `;
     
