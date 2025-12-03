@@ -7,6 +7,8 @@ use App\Models\Evaluacion;
 use App\Models\Reporte;
 use App\Models\Test;
 use App\Models\HistorialClinico;
+use App\Models\Curso;
+use App\Models\CursoRecomendacion;
 use App\Mail\EvaluacionInvitacionMail;
 use App\Services\IAService;
 use Illuminate\Http\Request;
@@ -185,7 +187,99 @@ class EvaluacionVoluntarioController extends Controller
                 ]);
             }
             
-            // Marcar token como usado
+            // ========================================
+            // GENERAR RECOMENDACIONES DE CURSOS CON GOOGLE GEMINI
+            // ========================================
+            try {
+                // Obtener todos los cursos disponibles
+                $cursosRaw = DB::table('curso')
+                    ->join('capacitacion', 'curso.id_capacitacion', '=', 'capacitacion.id')
+                    ->select(
+                        'curso.id',
+                        'curso.nombre',
+                        'curso.descripcion',
+                        'capacitacion.nombre as capacitacion_nombre'
+                    )
+                    ->get();
+
+                // Convertir objetos stdClass a arrays
+                $cursos = [];
+                foreach ($cursosRaw as $curso) {
+                    $cursos[] = [
+                        'id' => $curso->id,
+                        'nombre' => $curso->nombre,
+                        'descripcion' => $curso->descripcion,
+                        'capacitacion_nombre' => $curso->capacitacion_nombre
+                    ];
+                }
+
+                if (count($cursos) > 0) {
+                    Log::info('Generando recomendaciones de cursos', [
+                        'voluntario_id' => $voluntario->id_usuario,
+                        'total_cursos' => count($cursos)
+                    ]);
+
+                    // Llamar a la IA de Google Gemini
+                    $recomendacion = $iaService->recomendarCursos(
+                        $resumenFisico,
+                        $resumenEmocional,
+                        $cursos,
+                        $voluntario->nombres . ' ' . $voluntario->apellidos
+                    );
+
+                    if ($recomendacion['success'] && ($recomendacion['tiene_recomendacion'] ?? false)) {
+                        // HAY RECOMENDACIÓN(ES): Eliminar recomendaciones anteriores y crear nuevas
+                        CursoRecomendacion::where('id_voluntario', $voluntario->id_usuario)->delete();
+
+                        $cursosRecomendados = $recomendacion['cursos'] ?? [];
+                        
+                        foreach ($cursosRecomendados as $cursoRec) {
+                            CursoRecomendacion::create([
+                                'id_voluntario' => $voluntario->id_usuario,
+                                'id_curso' => $cursoRec['id'],
+                                'id_reporte' => $reporte->id,
+                                'mensaje_ia' => $cursoRec['nombre'],
+                                'razon' => $cursoRec['razon'] ?? '',
+                                'estado' => 'pendiente'
+                            ]);
+
+                            Log::info('Recomendación de curso CREADA', [
+                                'voluntario_id' => $voluntario->id_usuario,
+                                'curso_id' => $cursoRec['id'],
+                                'tipo' => $cursoRec['tipo'] ?? 'N/A',
+                                'nombre' => $cursoRec['nombre']
+                            ]);
+                        }
+
+                        Log::info('Recomendaciones procesadas', [
+                            'voluntario_id' => $voluntario->id_usuario,
+                            'total_recomendaciones' => count($cursosRecomendados)
+                        ]);
+                    } elseif ($recomendacion['success'] && !($recomendacion['tiene_recomendacion'] ?? true)) {
+                        // NO HAY RECOMENDACIÓN (voluntario está bien): Eliminar recomendaciones anteriores
+                        $eliminadas = CursoRecomendacion::where('id_voluntario', $voluntario->id_usuario)->delete();
+                        
+                        Log::info('Recomendaciones eliminadas - voluntario sin padecimientos', [
+                            'voluntario_id' => $voluntario->id_usuario,
+                            'recomendaciones_eliminadas' => $eliminadas,
+                            'razon' => $recomendacion['mensaje'] ?? 'Voluntario en rangos normales'
+                        ]);
+                    } else {
+                        Log::info('No se generó recomendación de curso', [
+                            'voluntario_id' => $voluntario->id_usuario,
+                            'razon' => $recomendacion['mensaje'] ?? 'Sin razón'
+                        ]);
+                    }
+                }
+            } catch (\Exception $e) {
+                // No fallar todo el proceso si falla la recomendación
+                Log::error('Error al generar recomendación de curso', [
+                    'voluntario_id' => $voluntario->id_usuario,
+                    'error' => $e->getMessage()
+                ]);
+            }
+            
+            // Marcar token como usado (al final, solo si todo fue exitoso)
             DB::table('evaluacion_tokens')
                 ->where('token', $token)
                 ->update([

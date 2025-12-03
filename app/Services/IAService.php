@@ -118,4 +118,166 @@ class IAService
             'success' => $resultadoFisico['success'] && $resultadoEmocion['success']
         ];
     }
+
+    /**
+     * Recomendar cursos usando Google Gemini AI
+     * 
+     * @param string $resumenFisico Resumen de la evaluación física del voluntario
+     * @param string $resumenEmocional Resumen de la evaluación emocional
+     * @param array $cursos Array de cursos disponibles con su información
+     * @param string $nombreVoluntario Nombre del voluntario
+     * @return array
+     */
+    public function recomendarCursos(string $resumenFisico, string $resumenEmocional, array $cursos, string $nombreVoluntario): array
+    {
+        try {
+            $apiKey = env('GOOGLE_GEMINI_API_KEY', 'AIzaSyB4dCvl25EaQTLgg9kPBNxih5s_uPqEmj8');
+            
+            // Preparar información de los cursos
+            $cursosInfo = [];
+            foreach ($cursos as $curso) {
+                $cursosInfo[] = [
+                    'id' => $curso['id'],
+                    'nombre' => $curso['nombre'],
+                    'descripcion' => $curso['descripcion'] ?? 'Sin descripción',
+                    'capacitacion' => $curso['capacitacion_nombre'] ?? 'Sin capacitación'
+                ];
+            }
+
+            // Crear el prompt para Gemini (OPTIMIZADO - MÚLTIPLES CURSOS)
+            $prompt = "Analiza esta evaluación médica:\n\n";
+            $prompt .= "FÍSICO: " . substr($resumenFisico, 0, 300) . "...\n";
+            $prompt .= "EMOCIONAL: " . substr($resumenEmocional, 0, 300) . "...\n\n";
+            $prompt .= "CURSOS:\n";
+            
+            foreach ($cursosInfo as $curso) {
+                $prompt .= "ID:{$curso['id']} - {$curso['nombre']} ({$curso['capacitacion']})\n";
+            }
+
+            $prompt .= "\nRESPUESTA REQUERIDA:\n";
+            $prompt .= "- Si hay problemas FÍSICOS y EMOCIONALES significativos Y existen cursos específicos para cada uno, recomienda 2 cursos (máximo):\n";
+            $prompt .= "  CURSO_1:\n  NOMBRE: [nombre]\n  ID: [id]\n  TIPO: FÍSICO\n  RAZÓN: [breve]\n\n";
+            $prompt .= "  CURSO_2:\n  NOMBRE: [nombre]\n  ID: [id]\n  TIPO: EMOCIONAL\n  RAZÓN: [breve]\n\n";
+            $prompt .= "- Si solo hay un tipo de problema O un curso cubre ambos, recomienda solo 1:\n";
+            $prompt .= "  CURSO_1:\n  NOMBRE: [nombre]\n  ID: [id]\n  TIPO: [FÍSICO/EMOCIONAL/AMBOS]\n  RAZÓN: [breve]\n\n";
+            $prompt .= "- Si no hay cursos adecuados:\n  NO_RECOMENDACION";
+
+            // Llamar a la API de Google Gemini
+            $response = Http::timeout(30)
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                ])
+                ->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}", [
+                    'contents' => [
+                        [
+                            'parts' => [
+                                ['text' => $prompt]
+                            ]
+                        ]
+                    ],
+                    'generationConfig' => [
+                        'temperature' => 0.7,
+                        'topK' => 40,
+                        'topP' => 0.95,
+                        'maxOutputTokens' => 4096,
+                    ]
+                ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                
+                // Verificar si hay contenido en la respuesta
+                if (!isset($data['candidates'][0]['content']['parts'])) {
+                    Log::warning('Gemini - Respuesta sin parts', [
+                        'finish_reason' => $data['candidates'][0]['finishReason'] ?? 'unknown',
+                        'voluntario' => $nombreVoluntario
+                    ]);
+                    
+                    return [
+                        'success' => false,
+                        'message' => 'La IA no pudo generar una respuesta completa. Razón: ' . ($data['candidates'][0]['finishReason'] ?? 'desconocida')
+                    ];
+                }
+                
+                $textoRespuesta = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
+
+                Log::info('Gemini - Recomendación generada', [
+                    'curso_mencionado' => substr($textoRespuesta, 0, 100),
+                    'voluntario' => $nombreVoluntario
+                ]);
+
+                // Parsear la respuesta (SOPORTE MÚLTIPLES CURSOS)
+                if (str_contains($textoRespuesta, 'NO_RECOMENDACION')) {
+                    return [
+                        'success' => true,
+                        'tiene_recomendacion' => false,
+                        'mensaje' => 'No hay cursos compatibles con los padecimientos actuales.'
+                    ];
+                }
+
+                // Extraer múltiples cursos
+                $cursos = [];
+                
+                // Buscar CURSO_1
+                if (preg_match('/CURSO_1:.*?NOMBRE:\s*(.+?)[\n\r].*?ID:\s*(\d+).*?TIPO:\s*(.+?)[\n\r].*?RAZÓN:\s*(.+?)(?=CURSO_2:|$)/s', $textoRespuesta, $matches)) {
+                    $cursos[] = [
+                        'nombre' => trim($matches[1]),
+                        'id' => (int)$matches[2],
+                        'tipo' => trim($matches[3]),
+                        'razon' => trim($matches[4])
+                    ];
+                }
+                
+                // Buscar CURSO_2 (opcional)
+                if (preg_match('/CURSO_2:.*?NOMBRE:\s*(.+?)[\n\r].*?ID:\s*(\d+).*?TIPO:\s*(.+?)[\n\r].*?RAZÓN:\s*(.+?)$/s', $textoRespuesta, $matches)) {
+                    $cursos[] = [
+                        'nombre' => trim($matches[1]),
+                        'id' => (int)$matches[2],
+                        'tipo' => trim($matches[3]),
+                        'razon' => trim($matches[4])
+                    ];
+                }
+
+                if (count($cursos) > 0) {
+                    return [
+                        'success' => true,
+                        'tiene_recomendacion' => true,
+                        'cursos' => $cursos,
+                        'total_cursos' => count($cursos),
+                        'respuesta_completa' => $textoRespuesta
+                    ];
+                }
+
+                // Si no se pudo parsear correctamente
+                return [
+                    'success' => true,
+                    'tiene_recomendacion' => false,
+                    'mensaje' => 'No se pudo procesar la recomendación de la IA.',
+                    'respuesta_raw' => $textoRespuesta
+                ];
+            }
+
+            Log::error('Gemini - Error en respuesta', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Error al conectar con Google Gemini',
+                'status' => $response->status()
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Gemini - Excepción', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Error al procesar recomendación: ' . $e->getMessage()
+            ];
+        }
+    }
 }

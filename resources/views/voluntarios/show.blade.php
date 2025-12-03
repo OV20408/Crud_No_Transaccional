@@ -53,6 +53,17 @@
     }
   }
 
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
   .toast-notification.toast-success {
     background-color: #f8f9fa;
     border-color: #6c757d;
@@ -761,7 +772,77 @@
   </div>
 </div>
 
+{{-- Modal para asignar curso --}}
+<div class="modal fade" id="modalAsignarCurso" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <form method="POST" action="{{ route('voluntarios.cursos.asignar', $voluntario->id_usuario) }}" class="modal-content">
+      @csrf
+      <div class="modal-header">
+        <h5 class="modal-title">Asignar Curso al Voluntario</h5>
+        <button type="button" class="close" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
+      </div>
 
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="curso_id">Selecciona un Curso</label>
+          <select name="curso_id" id="curso_id" class="form-control" required onchange="mostrarInfoCurso(this.value)">
+            <option value="">-- Selecciona un curso --</option>
+            @php
+              $cursosDisponibles = DB::table('curso')
+                ->join('capacitacion', 'curso.id_capacitacion', '=', 'capacitacion.id')
+                ->select('curso.id', 'curso.nombre', 'curso.descripcion', 'capacitacion.nombre as capacitacion_nombre')
+                ->orderBy('capacitacion.nombre')
+                ->orderBy('curso.nombre')
+                ->get();
+            @endphp
+            @foreach($cursosDisponibles as $curso)
+              <option value="{{ $curso->id }}" 
+                      data-descripcion="{{ $curso->descripcion }}"
+                      data-capacitacion="{{ $curso->capacitacion_nombre }}">
+                {{ $curso->nombre }} ({{ $curso->capacitacion_nombre }})
+              </option>
+            @endforeach
+          </select>
+        </div>
+
+        <div id="info-curso" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 15px;">
+          <p style="margin: 0 0 5px 0;"><strong>Descripción:</strong></p>
+          <p id="curso-descripcion" style="margin: 0; color: #666; font-size: 14px;"></p>
+        </div>
+
+        @if($errors->any())
+          <div class="alert alert-danger mt-2">
+            {{ $errors->first() }}
+          </div>
+        @endif
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Asignar Curso</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function mostrarInfoCurso(cursoId) {
+  const select = document.getElementById('curso_id');
+  const selectedOption = select.options[select.selectedIndex];
+  const infoCurso = document.getElementById('info-curso');
+  const descripcion = document.getElementById('curso-descripcion');
+  
+  if (cursoId && selectedOption) {
+    const desc = selectedOption.getAttribute('data-descripcion');
+    descripcion.textContent = desc || 'Sin descripción';
+    infoCurso.style.display = 'block';
+  } else {
+    infoCurso.style.display = 'none';
+  }
+}
+</script>
 
 </div>
 
@@ -1068,13 +1149,33 @@
 
       case 'cursos':
         contenido.innerHTML = `
-          <h2 class="titulo-seccion">Cursos del Voluntario</h2>
+          {{-- HEADER CON TÍTULO, RECOMENDACIÓN Y BOTÓN EN UNA FILA --}}
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 30px; flex-wrap: wrap;">
+            
+            {{-- TÍTULO A LA IZQUIERDA --}}
+            <div style="flex: 0 0 auto;">
+              <h2 class="titulo-seccion" style="margin: 0; white-space: nowrap;">Cursos del Voluntario</h2>
+            </div>
+            
+            {{-- RECOMENDACIÓN DE LA IA EN EL CENTRO (DINÁMICO) --}}
+            <div id="recomendacion-ia-container" style="flex: 1; display: flex; justify-content: center; margin: 0 20px;">
+            </div>
+
+            {{-- BOTÓN A LA DERECHA --}}
+            <div style="flex: 0 0 auto;">
+              <button class="btn-formulario-enviar" data-toggle="modal" data-target="#modalAsignarCurso" style="white-space: nowrap;">
+                <i class="fas fa-plus-circle"></i> Asignar Curso
+              </button>
+            </div>
+          </div>
+
+          {{-- CURSOS ASIGNADOS --}}
           @if(count($cursos) > 0)
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
               @foreach($cursos as $curso)
                 <div class="vista-card" 
                     style="cursor: pointer; transition: all 0.3s ease;" 
-                    onclick="verDetalleCurso({{ $curso->id }}, {{ $voluntario->id_usuario }}, '{{ $curso->nombre }}', '{{ $curso->capacitacion_nombre }}', '{{ $curso->descripcion }}')">
+                    onclick="verDetalleCurso({{ $curso->id }}, {{ $voluntario->id_usuario }}, '{{ addslashes($curso->nombre) }}', '{{ addslashes($curso->capacitacion_nombre) }}', '{{ addslashes($curso->descripcion ?? '') }}')">
                   
                   <strong>{{ $curso->nombre }}</strong>
                   <p>{{ $curso->descripcion }}</p>
@@ -1086,9 +1187,12 @@
               @endforeach
             </div>
           @else
-            <p class="mensaje-vacio">No hay cursos asignados.</p>
+            <p class="mensaje-vacio">No hay cursos asignados aún. Usa el botón de arriba para asignar cursos.</p>
           @endif
         `;
+        
+        // Renderizar recomendaciones dinámicamente
+        renderizarRecomendaciones();
         break;
 
       case 'necesidades':
@@ -1356,6 +1460,76 @@ function verDetalleCurso(cursoId, voluntarioId, nombreCurso, nombreCapacitacion,
 }
 
 // ========================================
+// RENDERIZAR RECOMENDACIONES DE CURSOS (MÚLTIPLES)
+// ========================================
+function renderizarRecomendaciones() {
+  const container = document.getElementById('recomendacion-ia-container');
+  if (!container) return;
+  
+  if (recomendacionesActuales && recomendacionesActuales.length > 0) {
+    // Crear un wrapper flex para las recomendaciones
+    let html = '<div style="display: flex; gap: 10px; width: 100%;">';
+    
+    recomendacionesActuales.forEach((recom, index) => {
+      const fechaCreacion = new Date(recom.created_at);
+      const fechaActualizacion = new Date(recom.updated_at);
+      const esActualizado = fechaActualizacion > fechaCreacion;
+      
+      const fechaMostrar = esActualizado 
+        ? '<i class="fas fa-sync-alt"></i> Actualizado' 
+        : '<i class="fas fa-clock"></i> ' + fechaCreacion.toLocaleDateString('es-ES');
+      
+      const badgeCapacitacion = recom.capacitacion_nombre 
+        ? `<span style="background: #e3f2fd; color: #1976d2; padding: 2px 8px; border-radius: 10px; font-size: 10px;">
+             ${recom.capacitacion_nombre}
+           </span>` 
+        : '';
+      
+      const razonTexto = recom.razon 
+        ? `<span style="color: #666; font-weight: normal;"> - ${recom.razon}</span>` 
+        : '';
+      
+      html += `
+        <div style="
+          background: var(--color-card); 
+          border-left: 4px solid var(--color-azul);
+          padding: 10px 20px; 
+          border-radius: 8px; 
+          box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+          flex: 1;
+          animation: fadeIn 0.3s ease;
+        ">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 8px; color: var(--color-azul);">
+              <i class="fas fa-robot" style="font-size: 14px;"></i>
+              <strong style="font-size: 13px;">Recomendación ${recomendacionesActuales.length > 1 ? (index + 1) : 'de IA'}</strong>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 15px; font-size: 11px; color: #999;">
+              <span>${fechaMostrar}</span>
+              ${badgeCapacitacion}
+            </div>
+          </div>
+          
+          <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
+            <i class="fas fa-lightbulb" style="color: #ffc107; font-size: 13px; flex-shrink: 0;"></i>
+            <p style="margin: 0; font-size: 13px; color: var(--color-texto-principal); line-height: 1.3;">
+              <strong>${recom.curso_nombre}</strong>
+              ${razonTexto}
+            </p>
+          </div>
+        </div>
+      `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+  } else {
+    container.innerHTML = '';
+  }
+}
+
+// ========================================
 // ACTUALIZACIÓN AUTOMÁTICA DE DATOS
 // ========================================
 let ultimoTotalReportes = {{ count($reportes ?? []) }};
@@ -1364,6 +1538,11 @@ const INTERVALO_POLLING = 3000; // 3 segundos
 
 // Variable para detectar cambios
 let ultimaFechaEvaluacion = evaluacionesActuales.length > 0 ? (evaluacionesActuales[0].fecha_generado || evaluacionesActuales[0].fecha || '') : '';
+
+// Variable para recomendaciones de cursos (múltiples)
+let ultimoTotalRecomendaciones = {{ count($recomendacionesCursos ?? []) }};
+let ultimaRecomendacionFecha = '{{ count($recomendacionesCursos ?? []) > 0 ? $recomendacionesCursos[0]->updated_at : "" }}';
+let recomendacionesActuales = @json($recomendacionesCursos ?? []);
 
 function actualizarDatosVoluntario() {
   fetch(`/voluntarios/${voluntarioId}/datos-actualizados`, {
@@ -1383,10 +1562,19 @@ function actualizarDatosVoluntario() {
         ? (nuevosDatos.evaluaciones[0].fecha_generado || nuevosDatos.evaluaciones[0].fecha || '') 
         : '';
       
+      // Verificar cambios en recomendaciones de cursos
+      const nuevoTotalRecomendaciones = nuevosDatos.recomendacionesCursos ? nuevosDatos.recomendacionesCursos.length : 0;
+      const nuevaRecomendacionFecha = nuevosDatos.recomendacionesCursos && nuevosDatos.recomendacionesCursos.length > 0 
+        ? nuevosDatos.recomendacionesCursos[0].updated_at 
+        : '';
+      
       const hayNuevosDatos = nuevosDatos.totalReportes > ultimoTotalReportes || 
                              nuevaFechaEvaluacion !== ultimaFechaEvaluacion ||
                              nuevosDatos.evaluaciones.length !== evaluacionesActuales.length ||
                              nuevosDatos.reportes.length !== reportesActuales.length;
+      
+      const hayCambioRecomendacion = nuevoTotalRecomendaciones !== ultimoTotalRecomendaciones || 
+                                     nuevaRecomendacionFecha !== ultimaRecomendacionFecha;
       
       if (hayNuevosDatos) {
         console.log('Nuevos datos detectados, actualizando vista...');
@@ -1409,6 +1597,15 @@ function actualizarDatosVoluntario() {
         
         // Mostrar notificación de actualización
         mostrarNotificacionActualizacion();
+      }
+      
+      // Actualizar recomendaciones de cursos si cambiaron
+      if (hayCambioRecomendacion) {
+        console.log('Cambio en recomendaciones detectado:', nuevoTotalRecomendaciones, 'recomendación(es)');
+        ultimoTotalRecomendaciones = nuevoTotalRecomendaciones;
+        ultimaRecomendacionFecha = nuevaRecomendacionFecha;
+        recomendacionesActuales = nuevosDatos.recomendacionesCursos || [];
+        actualizarSeccionCursos(nuevosDatos.recomendacionesCursos);
       }
     }
   })
@@ -1435,6 +1632,30 @@ function actualizarSeccionReportes() {
   
   console.log('Actualizando sección de reportes');
   renderizarReportes();
+}
+
+// Función para actualizar la sección de cursos si está visible
+function actualizarSeccionCursos(recomendaciones) {
+  const contenido = document.getElementById('vista-contenido');
+  if (!contenido) return;
+  if (!contenido.innerHTML.includes('Cursos del Voluntario')) return;
+  
+  console.log('Actualizando recomendaciones de cursos en tiempo real');
+  
+  // Actualizar variable global
+  recomendacionesActuales = recomendaciones || [];
+  
+  // Renderizar nuevas recomendaciones
+  renderizarRecomendaciones();
+  
+  // Mostrar notificación de cambio
+  const mensaje = recomendaciones && recomendaciones.length > 0 
+    ? '🤖 Nueva recomendación de IA disponible' 
+    : '✓ Recomendación actualizada';
+  
+  document.getElementById('toast-info-msg').textContent = mensaje;
+  showToast('toast-info');
+  setTimeout(() => hideToast('toast-info'), 3000);
 }
 
 function actualizarPanelEvaluacionFisica(reporte) {
