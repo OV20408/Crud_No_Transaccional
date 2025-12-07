@@ -60,10 +60,10 @@ Route::middleware(['auth'])->group(function () {
     // 👔 RUTAS SOLO PARA ADMINISTRADORES (Web)
     // ============================================
     // Middleware 'role' temporalmente deshabilitado
-    Route::group([], function () { // Route::middleware(['role:Administrador'])->group(function () {
+    Route::middleware(['role:Administrador'])->group(function () {
         
         // Gestión de administradores
-        Route::get('/administradores', [AdministradorController::class, 'index'])
+    Route::get('/administradores', [AdministradorController::class, 'index'])
             ->name('administradores.index');
         Route::get('/administradores/create', [AdministradorController::class, 'create'])
             ->name('administradores.create');

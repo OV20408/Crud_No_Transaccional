@@ -8,11 +8,11 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\HasApiTokens;
 use App\Notifications\ResetPasswordNotification;
-// use Spatie\Permission\Traits\HasRoles; // Comentado temporalmente
+use Spatie\Permission\Traits\HasRoles; 
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasApiTokens; // HasRoles comentado temporalmente
+    use HasFactory, Notifiable, HasApiTokens, HasRoles; 
 
     protected $table = 'usuario';
     protected $primaryKey = 'id_usuario';
