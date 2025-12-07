@@ -409,7 +409,7 @@
                         <div class="reporte-card psicologico">
                             <span class="reporte-tipo">Evaluación Psicológica</span>
                             <div class="reporte-fecha">
-                                Fecha: {{ \Carbon\Carbon::parse($reporte->fecha_generado)->format('d/m/Y H:i') }}
+                                Fecha: {{ \Carbon\Carbon::parse($reporte->fecha_generado)->timezone('America/La_Paz')->format('d/m/Y H:i') }}
                             </div>
                             <div class="reporte-contenido">
                                 {{ $reporte->resumen_emocional }}
@@ -495,11 +495,11 @@
 
     <!-- FOOTER -->
     <div class="footer">
-        <p>
-            <strong>GEVOPI - Sistema de Gestión de Voluntarios de Protección Integral</strong><br>
-            Documento generado el {{ \Carbon\Carbon::now()->format('d/m/Y H:i') }}
-        </p>
-        <div class="page-number"></div>
-    </div>
+    <p>
+        <strong>GEVOPI - Sistema de Gestión de Voluntarios de Protección Integral</strong><br>
+        Documento generado el {{ \Carbon\Carbon::now()->timezone('America/La_Paz')->format('d/m/Y H:i') }}
+    </p>
+    <div class="page-number"></div>
+</div>
 </body>
 </html>

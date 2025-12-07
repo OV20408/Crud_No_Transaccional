@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'title' => 'AdminLTE 3',
+    'title' => 'GEVOPI',
     'title_prefix' => '',
     'title_postfix' => '',
 
@@ -65,7 +65,7 @@ return [
     |
     */
 
-    'logo' => '<b>Admin</b>LTE',
+    'logo' => '<b>GEVOPI</b>',
     'logo_img' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
     'logo_img_class' => 'brand-image img-circle elevation-3',
     'logo_img_xl' => null,
@@ -402,30 +402,14 @@ return [
 //secciones de crud
 
 
-        ['header' => 'CRUD'],
+/*         ['header' => 'CRUD'],
+ */
 
-
-        [
+        /* [
             'text' => 'Apartados',
             'icon' => 'fas fa-fw fa-share',
             'submenu' => [
-               /*  [
-                    'text' => 'Curso',
-                    'url' => '/curso',
-                    'icon' => 'fa fa-book',
-                ],
-                
-                [
-                    'text' => 'Etapa',
-                    'url' => '/etapas',
-                    'icon' => 'fa fa-layer-group',
-                ],
-
-                [
-                    'text' => 'Necesidades',
-                    'url' => '/necesidades',
-                    'icon' => 'fa fa-plus-square',
-                ], */
+               
                 [
                     'text' => 'Roles',
                     'url' => '/roles',
@@ -474,17 +458,11 @@ return [
         
         
             ],
-        ],
+        ], */
         
         
-        ['header' => 'labels'],
         
-        [
-            'text' => 'Cerrar sesión',
-            'route' => 'logout',
-            'icon' => 'fas fa-sign-out-alt',
-            'method' => 'post',
-        ],
+        
     ],
 
     /*
