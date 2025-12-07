@@ -16,10 +16,12 @@
                             </span>
 
                             <div class="float-right">
+                                @can('gestionar_capacitaciones')
                                 <a href="{{ route('capacitaciones.create') }}"
                                    class="btn btn-primary btn-sm float-right" data-placement="left">
                                     {{ __('Crear Nuevo') }}
                                 </a>
+                                @endcan
                             </div>
                         </div>
                     </div>
@@ -55,24 +57,30 @@
                                             </td>
 
                                             <td class="text-center">
+                                                @can('gestionar_capacitaciones')
                                                 <a class="btn btn-sm btn-success"
                                                    href="{{ route('capacitaciones.edit', $capacitacion->id) }}">
                                                     <i class="fa fa-fw fa-edit"></i> Editar
                                                 </a>
+                                                @endcan
 
+                                                @can('ver_capacitaciones')
                                                 <button type="button"
                                                         class="btn btn-sm btn-info"
                                                         data-toggle="modal"
                                                         data-target="#modalCursos{{ $capacitacion->id }}">
                                                     <i class="fa fa-list"></i> Cursos
                                                 </button>
+                                                @endcan
 
+                                                @can('gestionar_capacitaciones')
                                                 <button type="button"
                                                         class="btn btn-danger btn-sm"
                                                         data-toggle="modal"
                                                         data-target="#modalEliminar{{ $capacitacion->id }}">
                                                     <i class="fa fa-fw fa-trash"></i> Eliminar
                                                 </button>
+                                                @endcan
                                             </td>
                                         </tr>
                                     @endforeach

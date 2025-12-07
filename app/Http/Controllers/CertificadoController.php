@@ -10,6 +10,11 @@ use Carbon\Carbon;
 
 class CertificadoController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:gestionar_certificados|descargar_certificados');
+    }
+
     /**
      * Generar certificado cuando el voluntario completa una capacitación
      */

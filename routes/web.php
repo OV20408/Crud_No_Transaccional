@@ -59,7 +59,6 @@ Route::middleware(['auth'])->group(function () {
     // ============================================
     // 👔 RUTAS SOLO PARA ADMINISTRADORES (Web)
     // ============================================
-    // Middleware 'role' temporalmente deshabilitado
     Route::middleware(['role:Administrador'])->group(function () {
         
         // Gestión de administradores

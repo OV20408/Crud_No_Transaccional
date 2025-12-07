@@ -107,28 +107,24 @@ class MigrateRolesToSpatieSeeder extends Seeder
             echo "   ✅ Permisos asignados a: {$voluntarioRole->name}\n";
         }
 
-        // Instructor
-        $instructorRole = Role::findByName('Instructor');
-        if ($instructorRole) {
-            $instructorRole->syncPermissions([
-                'crear_cursos',
-                'editar_cursos',
-                'ver_progreso_alumnos',
-                'ver_capacitaciones',
-            ]);
-            echo "   ✅ Permisos asignados a: {$instructorRole->name}\n";
-        }
+        // Instructor (opcional - crear si existe en la BD)
+        $instructorRole = Role::firstOrCreate(['name' => 'Instructor', 'guard_name' => 'web']);
+        $instructorRole->syncPermissions([
+            'crear_cursos',
+            'editar_cursos',
+            'ver_progreso_alumnos',
+            'ver_capacitaciones',
+        ]);
+        echo "   ✅ Permisos asignados a: {$instructorRole->name}\n";
 
-        // Evaluador
-        $evaluadorRole = Role::findByName('Evaluador');
-        if ($evaluadorRole) {
-            $evaluadorRole->syncPermissions([
-                'crear_evaluaciones',
-                'calificar_evaluaciones',
-                'ver_resultados',
-            ]);
-            echo "   ✅ Permisos asignados a: {$evaluadorRole->name}\n";
-        }
+        // Evaluador (opcional - crear si existe en la BD)
+        $evaluadorRole = Role::firstOrCreate(['name' => 'Evaluador', 'guard_name' => 'web']);
+        $evaluadorRole->syncPermissions([
+            'crear_evaluaciones',
+            'calificar_evaluaciones',
+            'ver_resultados',
+        ]);
+        echo "   ✅ Permisos asignados a: {$evaluadorRole->name}\n";
 
         // 4️⃣ Reasignar roles a usuarios (limpiar asignaciones incorrectas)
         echo "\n📋 Paso 4: Reasignando roles correctos a usuarios...\n";

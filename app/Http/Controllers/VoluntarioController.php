@@ -16,8 +16,14 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class VoluntarioController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:gestionar_usuarios')->except(['show']);
+    }
+
     public function index(Request $request)
     {
+        $this->authorize('gestionar_usuarios');
         $query = DB::table('usuario')
             ->join('rol', 'usuario.id_rol', '=', 'rol.id')
             ->where('rol.nombre', 'Voluntario')

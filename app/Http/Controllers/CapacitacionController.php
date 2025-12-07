@@ -10,6 +10,12 @@ use Illuminate\Support\Facades\DB;
 
 class CapacitacionController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:gestionar_capacitaciones')->except(['index', 'show']);
+        $this->middleware('permission:ver_capacitaciones')->only(['index', 'show']);
+    }
+
     public function index(Request $request)
     {
         // Para los modales del index necesitamos cursos + etapas
