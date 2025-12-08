@@ -11,10 +11,6 @@ use Illuminate\View\View;
 
 class EvaluacionController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('permission:crear_evaluaciones|calificar_evaluaciones');
-    }
 
     /**
      * Display a listing of the resource.
