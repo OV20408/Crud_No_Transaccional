@@ -96,7 +96,7 @@
             <p>Alertas Recientes</p>
           </div>
           <div class="icon"><i class="fas fa-heartbeat"></i></div>
-          @can('ver_reportes')
+          @can('gestionar_reportes')
             <a href="{{ route('reportes.index') }}" class="small-box-footer">
               Ver reportes <i class="fas fa-arrow-circle-right"></i>
             </a>

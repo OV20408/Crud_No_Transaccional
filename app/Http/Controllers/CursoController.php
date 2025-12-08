@@ -14,7 +14,7 @@ class CursoController extends Controller
     public function __construct()
     {
         $this->middleware('permission:crear_cursos|editar_cursos')->except(['index', 'show']);
-        $this->middleware('permission:ver_capacitaciones')->only(['index', 'show']);
+        $this->middleware('permission:gestionar_capacitaciones')->only(['index', 'show']);
     }
 
     /**

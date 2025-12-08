@@ -56,7 +56,7 @@
 
                                             <td>
                                                 <form action="{{ route('curso.destroy', $curso->id) }}" method="POST">
-                                                    @can('ver_capacitaciones')
+                                                    @can('gestionar_capacitaciones')
                                                     <a class="btn btn-sm btn-primary " href="{{ route('curso.show', $curso->id) }}"><i class="fa fa-fw fa-eye"></i> {{ __('Mostrar') }}</a>
                                                     @endcan
                                                     @can('editar_cursos')

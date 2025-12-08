@@ -64,7 +64,7 @@
                                                 </a>
                                                 @endcan
 
-                                                @can('ver_capacitaciones')
+                                                @can('gestionar_capacitaciones')
                                                 <button type="button"
                                                         class="btn btn-sm btn-info"
                                                         data-toggle="modal"
