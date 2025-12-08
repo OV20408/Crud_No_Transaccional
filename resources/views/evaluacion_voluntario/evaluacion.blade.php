@@ -211,31 +211,140 @@
   .icheck-inline {
     display: flex;
     flex-wrap: wrap;
-    gap: .75rem;
-    margin-top: .4rem;
+    gap: 12px;
+    margin-top: 15px;
+  }
+
+  .icheck-inline .icheck-primary,
+  .icheck-inline .icheck-success,
+  .icheck-inline .icheck-info,
+  .icheck-inline .icheck-danger,
+  .icheck-inline .icheck-warning {
+    margin-right: 0;
+    flex: 1;
+    min-width: 140px;
   }
 
   .icheck-inline label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px 20px;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #fff;
     font-weight: 500;
+    font-size: 14px;
+    text-align: center;
+    width: 100%;
+    position: relative;
   }
 
   .icheck-inline input[type="radio"] {
-    transform: scale(1.8);
+    transform: scale(1.1);
     cursor: pointer;
-    margin-right: 8px;
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
   }
-  
-  .icheck-inline label {
-    cursor: pointer;
-    padding: 8px 12px;
-    margin-left: 4px;
-    margin-right: 12px;
-    border-radius: 4px;
-    transition: background-color 0.2s;
-  }
-  
+
+  /* Hover effect */
   .icheck-inline label:hover {
-    background-color: #f0f0f0;
+    border-color: var(--color-azul);
+    background-color: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.15);
+  }
+
+  /* Estado seleccionado */
+  .icheck-inline input[type="radio"]:checked + label {
+    border-color: var(--color-azul);
+    background-color: #e7f3ff;
+    color: var(--color-azul);
+    font-weight: 600;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  }
+
+  /* Checkmark cuando está seleccionado */
+  .icheck-inline input[type="radio"]:checked + label::before {
+    content: '✓';
+    position: absolute;
+    top: 5px;
+    right: 8px;
+    width: 22px;
+    height: 22px;
+    background-color: var(--color-azul);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+  }
+
+  /* Colores específicos por tipo de icheck */
+  .icheck-success input[type="radio"]:checked + label {
+    border-color: #28a745;
+    background-color: #d4edda;
+    color: #28a745;
+  }
+
+  .icheck-success input[type="radio"]:checked + label::before {
+    background-color: #28a745;
+  }
+
+  .icheck-info input[type="radio"]:checked + label {
+    border-color: #17a2b8;
+    background-color: #d1ecf1;
+    color: #17a2b8;
+  }
+
+  .icheck-info input[type="radio"]:checked + label::before {
+    background-color: #17a2b8;
+  }
+
+  .icheck-danger input[type="radio"]:checked + label {
+    border-color: #dc3545;
+    background-color: #f8d7da;
+    color: #dc3545;
+  }
+
+  .icheck-danger input[type="radio"]:checked + label::before {
+    background-color: #dc3545;
+  }
+
+  .icheck-warning input[type="radio"]:checked + label {
+    border-color: #ffc107;
+    background-color: #fff3cd;
+    color: #856404;
+  }
+
+  .icheck-warning input[type="radio"]:checked + label::before {
+    background-color: #ffc107;
+  }
+
+  /* Responsive para móviles */
+  @media (max-width: 768px) {
+    .icheck-inline {
+      flex-direction: column;
+    }
+
+    .icheck-inline .icheck-primary,
+    .icheck-inline .icheck-success,
+    .icheck-inline .icheck-info,
+    .icheck-inline .icheck-danger,
+    .icheck-inline .icheck-warning {
+      min-width: 100%;
+    }
+
+    .icheck-inline label {
+      padding: 12px 15px;
+      font-size: 13px;
+    }
   }
 
   /* Botones navegación */
