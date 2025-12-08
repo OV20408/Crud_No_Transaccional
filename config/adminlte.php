@@ -346,63 +346,54 @@ return [
             'text' => 'Voluntarios',
             'url' => '/voluntarios',
             'icon' => 'fa fa-users',
-            'can' => 'gestionar_usuarios',
         ],
 
         [
             'text' => 'Evaluacion',
             'url' => '/evaluacion',
             'icon' => 'fa fa-check-circle',
-            'can' => 'crear_evaluaciones',
         ],
 
         [
             'text' => 'Evaluacion Voluntarios',
             'url' => '/evaluacion_pruebas',
             'icon' => 'fa fa-user-check',
-            'can' => 'calificar_evaluaciones',
         ],
 
         [
             'text' => 'Capacitaciones',
             'url' => '/capacitaciones',
             'icon' => 'fa fa-window-restore',
-            'can' => 'ver_capacitaciones',
         ],
 
         [
             'text' => 'Necesidades',
             'url' => '/necesidades',
             'icon' => 'fa fa-plus-square',
-            'can' => 'gestionar_capacitaciones',
         ],
 
         [
             'text' => 'Ayudas Solicitadas',
             'url' => '/ayudas_solicitadas',
             'icon' => 'fa fa-hand-holding-heart',
-            'can' => 'solicitar_ayuda',
         ],
 
         [
             'text' => 'Administradores',
             'url' => '/administradores',
             'icon' => 'fa fa-user-shield',
-            'can' => 'gestionar_usuarios',
         ],
 
         [
             'text' => 'Universidades',
             'url' => '/universidades',
             'icon' => 'fa fa-graduation-cap',
-            'can' => 'gestionar_usuarios',
         ],
 
         [
             'text' => 'Cuenta Voluntarios',
             'url' => 'voluntarios/create',
             'icon' => 'fa fa-user',
-            'can' => 'gestionar_usuarios',
         ],
 
 
