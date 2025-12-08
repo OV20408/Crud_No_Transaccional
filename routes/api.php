@@ -17,7 +17,7 @@ use App\Http\Controllers\Api\CursoApiController;
 
 // ✅ AGREGAR ESTA LÍNEA
 Route::get('/cursos/{cursoId}/progreso/{voluntarioId}', [CursoApiController::class, 'obtenerProgresoVoluntario']);
-
+Route::patch('/solicitudes-ayuda/{id}/resolver', [SolicitudAyudaApiController::class, 'marcarResuelta']);
 
 Route::patch('/etapas/{etapa}/estado', [EtapaApiController::class, 'toggleEstado'])
     ->middleware('auth:sanctum');

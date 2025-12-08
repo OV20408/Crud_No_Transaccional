@@ -38,8 +38,8 @@
                                 <thead class="thead">
                                     <tr>
                                         <th>No</th>
-                                        <th>Descripción</th>
                                         <th>Nombre</th>
+                                        <th>Descripción</th>
                                         <th class="text-center">Acciones</th>
                                     </tr>
                                 </thead>
@@ -47,7 +47,6 @@
                                     @foreach ($capacitaciones as $capacitacion)
                                         <tr>
                                             <td>{{ ++$i }}</td>
-                                            <td>{{ $capacitacion->descripcion }}</td>
                                             <td>
                                                 <a href="#"
                                                    data-toggle="modal"
@@ -55,6 +54,9 @@
                                                     {{ $capacitacion->nombre }}
                                                 </a>
                                             </td>
+
+                                            <td>{{ $capacitacion->descripcion }}</td>
+                                            
 
                                             <td class="text-center">
                                                 @can('gestionar_capacitaciones')

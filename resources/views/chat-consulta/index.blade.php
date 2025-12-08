@@ -1,3 +1,4 @@
+{{-- Reemplazo completo de c:\Users\otera\crud\resources\views\chat-consulta\index.blade.php --}}
 @extends('adminlte::page')
 
 @section('title', 'Chat de voluntarios')
@@ -9,8 +10,33 @@
 @section('content')
 @php
     // $mensajes viene de la ruta /chat-consulta
+    $esEmergencia = request()->query('emergencia') == '1';
+    $voluntarioIdParam = request()->query('voluntario_id');
+    $ayudaIdParam = request()->query('ayuda_id');
+    
     // Agrupamos por voluntario
     $conversaciones = $mensajes->groupBy('voluntario_id');
+
+    // Separar pendientes y respondidos
+    $pendientes = collect();
+    $respondidos = collect();
+
+    foreach ($conversaciones as $voluntarioId => $items) {
+    // Una conversación está "pendiente" si la última solicitud_ayuda está en "sin responder" o "en progreso"
+    $ultimaSolicitud = DB::table('solicitudes_ayuda')
+        ->where('voluntario_id', $voluntarioId)
+        ->orderBy('created_at', 'desc')
+        ->first();
+    
+    $hayPendientes = $ultimaSolicitud && 
+                     in_array(strtolower($ultimaSolicitud->estado), ['sin responder', 'en progreso']);
+    
+    if ($hayPendientes) {
+        $pendientes->put($voluntarioId, $items);
+    } else {
+        $respondidos->put($voluntarioId, $items);
+    }
+}
 
     // Lo transformamos a un JSON amigable para JS
     $conversacionesJson = $conversaciones->mapWithKeys(function ($items, $voluntarioId) {
@@ -55,59 +81,112 @@
                 </div>
             </div>
 
+            {{-- PESTAÑAS --}}
             <div class="card-body p-0">
-                <ul class="nav nav-pills flex-column" id="lista-voluntarios"
-                    style="max-height: 500px; overflow-y: auto;">
-
-                    @forelse($conversaciones as $voluntarioId => $items)
-                        @php
-                            $ultimo  = $items->last();
-                            $nombre  = trim(($ultimo->nombres ?? '') . ' ' . ($ultimo->apellidos ?? ''));
-                            $ci      = $ultimo->ci ?? '';
-
-                            // Estado "pendiente" si hay algún mensaje del voluntario sin leer (leido_en NULL)
-                            $hayPendientes = $items->contains(function ($m) {
-                                return $m->de === 'voluntario' && is_null($m->leido_en ?? null);
-                            });
-                            $estado  = $hayPendientes ? 'pendiente' : 'respondido';
-
-                            $fecha   = $ultimo->created_at
-                                ? \Carbon\Carbon::parse($ultimo->created_at)->format('d/m H:i')
-                                : '';
-                            $preview = \Illuminate\Support\Str::limit($ultimo->texto ?? '', 45);
-                        @endphp
-
-                        <li class="nav-item volunteer-item"
-                            data-voluntario-id="{{ $voluntarioId }}"
-                            data-nombre="{{ $nombre }}"
-                            data-ci="{{ $ci }}">
-                            <a href="#" class="nav-link">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <strong class="nombre">{{ $nombre }}</strong><br>
-                                        <small class="text-muted">CI {{ $ci }}</small>
-                                    </div>
-                                    <div class="text-right">
-                                        <small class="text-muted d-block">{{ $fecha }}</small>
-                                        <span class="badge badge-{{ $estado === 'pendiente' ? 'danger' : 'success' }}">
-                                            {{ ucfirst($estado) }}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div>
-                                    <small class="text-muted d-block text-truncate">
-                                        {{ $preview }}
-                                    </small>
-                                </div>
-                            </a>
-                        </li>
-                    @empty
-                        <li class="nav-item p-3">
-                            <span class="text-muted">No hay conversaciones registradas.</span>
-                        </li>
-                    @endforelse
-
+                <ul class="nav nav-tabs" id="tabsChats" role="tablist">
+                    <li class="nav-item flex-fill">
+                        <a class="nav-link active text-center" id="tab-pendientes" data-toggle="tab" href="#content-pendientes" role="tab">
+                            Pendientes <span class="badge badge-danger" id="count-pendientes">{{ $pendientes->count() }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item flex-fill">
+                        <a class="nav-link text-center" id="tab-respondidos" data-toggle="tab" href="#content-respondidos" role="tab">
+                            Respondidos <span class="badge badge-success" id="count-respondidos">{{ $respondidos->count() }}</span>
+                        </a>
+                    </li>
                 </ul>
+
+                <div class="tab-content">
+                    {{-- TAB PENDIENTES --}}
+                    <div class="tab-pane fade show active" id="content-pendientes" role="tabpanel">
+                        <ul class="nav nav-pills flex-column lista-conversaciones" data-tipo="pendientes"
+                            style="max-height: 500px; overflow-y: auto;">
+                            @forelse($pendientes as $voluntarioId => $items)
+                                @php
+                                    $ultimo  = $items->last();
+                                    $nombre  = trim(($ultimo->nombres ?? '') . ' ' . ($ultimo->apellidos ?? ''));
+                                    $ci      = $ultimo->ci ?? '';
+                                    $fecha   = $ultimo->created_at
+                                        ? \Carbon\Carbon::parse($ultimo->created_at)->format('d/m H:i')
+                                        : '';
+                                    $preview = \Illuminate\Support\Str::limit($ultimo->texto ?? '', 45);
+                                @endphp
+
+                                <li class="nav-item volunteer-item"
+                                    data-voluntario-id="{{ $voluntarioId }}"
+                                    data-nombre="{{ $nombre }}"
+                                    data-ci="{{ $ci }}">
+                                    <a href="#" class="nav-link">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <strong class="nombre">{{ $nombre }}</strong><br>
+                                                <small class="text-muted">CI {{ $ci }}</small>
+                                            </div>
+                                            <div class="text-right">
+                                                <small class="text-muted d-block fecha-preview">{{ $fecha }}</small>
+                                                <span class="badge badge-danger">Pendiente</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <small class="text-muted d-block text-truncate preview-texto">
+                                                {{ $preview }}
+                                            </small>
+                                        </div>
+                                    </a>
+                                </li>
+                            @empty
+                                <li class="nav-item p-3">
+                                    <span class="text-muted">No hay conversaciones pendientes.</span>
+                                </li>
+                            @endforelse
+                        </ul>
+                    </div>
+
+                    {{-- TAB RESPONDIDOS --}}
+                    <div class="tab-pane fade" id="content-respondidos" role="tabpanel">
+                        <ul class="nav nav-pills flex-column lista-conversaciones" data-tipo="respondidos"
+                            style="max-height: 500px; overflow-y: auto;">
+                            @forelse($respondidos as $voluntarioId => $items)
+                                @php
+                                    $ultimo  = $items->last();
+                                    $nombre  = trim(($ultimo->nombres ?? '') . ' ' . ($ultimo->apellidos ?? ''));
+                                    $ci      = $ultimo->ci ?? '';
+                                    $fecha   = $ultimo->created_at
+                                        ? \Carbon\Carbon::parse($ultimo->created_at)->format('d/m H:i')
+                                        : '';
+                                    $preview = \Illuminate\Support\Str::limit($ultimo->texto ?? '', 45);
+                                @endphp
+
+                                <li class="nav-item volunteer-item"
+                                    data-voluntario-id="{{ $voluntarioId }}"
+                                    data-nombre="{{ $nombre }}"
+                                    data-ci="{{ $ci }}">
+                                    <a href="#" class="nav-link">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <strong class="nombre">{{ $nombre }}</strong><br>
+                                                <small class="text-muted">CI {{ $ci }}</small>
+                                            </div>
+                                            <div class="text-right">
+                                                <small class="text-muted d-block fecha-preview">{{ $fecha }}</small>
+                                                <span class="badge badge-success">Respondido</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <small class="text-muted d-block text-truncate preview-texto">
+                                                {{ $preview }}
+                                            </small>
+                                        </div>
+                                    </a>
+                                </li>
+                            @empty
+                                <li class="nav-item p-3">
+                                    <span class="text-muted">No hay conversaciones respondidas.</span>
+                                </li>
+                            @endforelse
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -119,6 +198,14 @@
                 <h3 class="card-title" id="chat-titulo">
                     Selecciona un voluntario
                 </h3>
+                @if($esEmergencia && $ayudaIdParam)
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-success btn-sm" id="btn-marcar-resuelta" 
+                                data-ayuda-id="{{ $ayudaIdParam }}" style="display: none;">
+                            <i class="fas fa-check-circle"></i> Marcar como resuelta
+                        </button>
+                    </div>
+                @endif
             </div>
 
             <div class="card-body">
@@ -164,6 +251,9 @@
     {{-- Pasamos las conversaciones a JS ya estructuradas --}}
     <script>
         window.CONVERSACIONES = @json($conversacionesJson);
+        window.ES_EMERGENCIA = {{ $esEmergencia ? 'true' : 'false' }};
+        window.VOLUNTARIO_ID_PARAM = {{ $voluntarioIdParam ?? 'null' }};
+        window.AYUDA_ID_PARAM = {{ $ayudaIdParam ?? 'null' }};
     </script>
 
     <script type="module">
@@ -175,6 +265,7 @@
         const formRespuesta      = document.getElementById('form-respuesta');
         const btnEnviar          = document.getElementById('btn-enviar');
         const inputRespuesta     = document.getElementById('respuesta_admin');
+        const btnMarcarResuelta  = document.getElementById('btn-marcar-resuelta');
         const CHAT_API_URL       = '/api/chat-mensajes';
 
         function renderConversacion(voluntarioId) {
@@ -186,11 +277,19 @@
             if (!conv) {
                 tituloChat.innerText = 'Sin conversación';
                 btnEnviar.disabled   = true;
+                if (btnMarcarResuelta) btnMarcarResuelta.style.display = 'none';
                 return;
             }
 
             tituloChat.innerText = `${conv.nombre} (CI ${conv.ci})`;
             btnEnviar.disabled   = false;
+
+            // Mostrar botón "Marcar como resuelta" si es emergencia
+            if (btnMarcarResuelta && window.ES_EMERGENCIA && window.VOLUNTARIO_ID_PARAM == voluntarioId) {
+                btnMarcarResuelta.style.display = 'inline-block';
+            } else if (btnMarcarResuelta) {
+                btnMarcarResuelta.style.display = 'none';
+            }
 
             conv.mensajes.forEach(m => {
                 const wrapper = document.createElement('div');
@@ -219,7 +318,7 @@
             contenedorMensajes.scrollTop = contenedorMensajes.scrollHeight;
         }
 
-        // Click en voluntarios (lista izquierda)
+        // Click en voluntarios (lista izquierda) - ambas pestañas
         document.querySelectorAll('.volunteer-item').forEach(item => {
             item.addEventListener('click', e => {
                 e.preventDefault();
@@ -247,6 +346,36 @@
             });
         }
 
+        // Botón "Marcar como resuelta"
+        // Botón "Marcar como resuelta"
+if (btnMarcarResuelta) {
+    btnMarcarResuelta.addEventListener('click', async () => {
+        const ayudaId = btnMarcarResuelta.dataset.ayudaId;
+        
+        btnMarcarResuelta.disabled = true;
+        btnMarcarResuelta.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Marcando...';
+        
+        try {
+            const resp = await fetch(`/api/solicitudes-ayuda/${ayudaId}/resolver`, {
+                method: 'PATCH',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                },
+            });
+
+            if (!resp.ok) throw new Error('Error HTTP ' + resp.status);
+
+            window.location.href = '/ayudas_solicitadas';
+        } catch (err) {
+            console.error('❌ Error:', err);
+            btnMarcarResuelta.disabled = false;
+            btnMarcarResuelta.innerHTML = '<i class="fas fa-check-circle"></i> Marcar como resuelta';
+        }
+    });
+}
+
         // ============ WEBSOCKETS CON REVERB ============
         if (window.Echo) {
             console.log('✅ Echo está disponible, suscribiéndose al canal...');
@@ -270,13 +399,11 @@
                         mensajes: [],
                     };
 
-                    // Opcional: agregar dinámicamente el voluntario a la lista izquierda
                     agregarVoluntarioALista(volId, nombre, mensaje.voluntario?.ci || '');
                 }
 
                 const conv = conversaciones[volId];
 
-                // evitar duplicados
                 if (conv.mensajes.some(m => m.id === mensaje.id)) {
                     console.log('⚠️ Mensaje duplicado, ignorando');
                     return;
@@ -295,17 +422,14 @@
 
                 console.log('✅ Mensaje agregado a conversación');
 
-                // Si es la conversación activa, re-renderizar
                 if (voluntarioActual == volId) {
                     console.log('🔄 Re-renderizando conversación activa');
                     renderConversacion(volId);
                 }
 
-                // Actualizar preview en lista izquierda
                 actualizarPreviewVoluntario(volId, mensaje.texto, fechaFormateada);
             });
 
-            // Debug de suscripción
             channel.subscribed(() => {
                 console.log('✅ Suscrito exitosamente al canal "consultas"');
             });
@@ -319,9 +443,8 @@
             console.error('❌ Echo no está definido. Verifica bootstrap.js y que Vite esté corriendo.');
         }
 
-        // Función auxiliar para agregar voluntario a la lista izquierda dinámicamente
         function agregarVoluntarioALista(volId, nombre, ci) {
-            const listaVoluntarios = document.getElementById('lista-voluntarios');
+            const listaPendientes = document.querySelector('[data-tipo="pendientes"]');
             const yaExiste = document.querySelector(`[data-voluntario-id="${volId}"]`);
             
             if (yaExiste) return;
@@ -360,10 +483,18 @@
                 renderConversacion(volId);
             });
 
-            listaVoluntarios.insertBefore(li, listaVoluntarios.firstChild);
+            if (listaPendientes) {
+                listaPendientes.insertBefore(li, listaPendientes.firstChild);
+                
+                // Actualizar contador
+                const countPendientes = document.getElementById('count-pendientes');
+                if (countPendientes) {
+                    const actual = parseInt(countPendientes.textContent) || 0;
+                    countPendientes.textContent = actual + 1;
+                }
+            }
         }
 
-        // Función auxiliar para actualizar el preview del último mensaje
         function actualizarPreviewVoluntario(volId, texto, fecha) {
             const item = document.querySelector(`[data-voluntario-id="${volId}"]`);
             if (!item) return;
@@ -379,19 +510,34 @@
                 fechaPreview.textContent = fecha;
             }
 
-            // Mover el voluntario al principio de la lista
-            const lista = document.getElementById('lista-voluntarios');
-            lista.insertBefore(item, lista.firstChild);
+            const lista = item.closest('.lista-conversaciones');
+            if (lista) {
+                lista.insertBefore(item, lista.firstChild);
+            }
         }
 
-        // Seleccionar la primera conversación por defecto
-        const primer = document.querySelector('.volunteer-item');
-        if (primer) {
-            primer.querySelector('.nav-link').classList.add('active');
-            renderConversacion(primer.dataset.voluntarioId);
+        // Seleccionar la primera conversación por defecto o la indicada por parámetro
+        if (window.VOLUNTARIO_ID_PARAM) {
+            const itemParam = document.querySelector(`[data-voluntario-id="${window.VOLUNTARIO_ID_PARAM}"]`);
+            if (itemParam) {
+                itemParam.querySelector('.nav-link').classList.add('active');
+                renderConversacion(window.VOLUNTARIO_ID_PARAM);
+                
+                // Activar la pestaña correspondiente
+                const badge = itemParam.querySelector('.badge');
+                if (badge && badge.textContent.includes('Respondido')) {
+                    document.getElementById('tab-respondidos').click();
+                }
+            }
+        } else {
+            const primer = document.querySelector('.volunteer-item');
+            if (primer) {
+                primer.querySelector('.nav-link').classList.add('active');
+                renderConversacion(primer.dataset.voluntarioId);
+            }
         }
 
-        // Interceptar submit del formulario para evitar refresh
+        // Interceptar submit del formulario
         formRespuesta.addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -419,12 +565,8 @@
                     throw new Error('Error HTTP ' + resp.status);
                 }
 
-                
                 const json = await resp.json();
                 console.log('✅ Mensaje enviado:', json);
-
-                // No agregamos manualmente, confiamos en el evento WebSocket
-                // que se disparará desde el backend
 
                 inputRespuesta.value = '';
             } catch (err) {

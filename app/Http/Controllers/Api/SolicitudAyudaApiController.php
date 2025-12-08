@@ -131,4 +131,21 @@ class SolicitudAyudaApiController extends Controller
 
         return response()->json($solicitud);
     }
+
+
+    public function marcarResuelta($id)
+    {
+        $solicitud = \App\Models\SolicitudAyuda::findOrFail($id);
+        
+        $solicitud->update([
+            'estado' => 'resuelto',
+            'fecha_respondida' => now(),
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Solicitud marcada como resuelta',
+            'data' => $solicitud,
+        ]);
+    }
 }

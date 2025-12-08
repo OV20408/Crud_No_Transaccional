@@ -3,9 +3,9 @@
 return [
 
     'full_name' => 'Full name',
-    'email' => 'Email',
-    'password' => 'Password',
-    'retype_password' => 'Retype password',
+    'email' => 'Correo',
+    'password' => 'Contraseña',
+    'retype_password' => 'Escribe de nuevo la contraseña',
     'remember_me' => 'Remember Me',
     'register' => 'Register',
     'register_a_new_membership' => 'Register a new membership',
@@ -16,8 +16,8 @@ return [
     'toggle_navigation' => 'Toggle navigation',
     'login_message' => 'Sign in to start your session',
     'register_message' => 'Register a new membership',
-    'password_reset_message' => 'Reset Password',
-    'reset_password' => 'Reset Password',
+    'password_reset_message' => 'Reiniciar contraseña',
+    'reset_password' => 'Reiniciar contraseña',
     'send_password_reset_link' => 'Send Password Reset Link',
     'verify_message' => 'Your account needs a verification',
     'verify_email_sent' => 'A fresh verification link has been sent to your email address.',

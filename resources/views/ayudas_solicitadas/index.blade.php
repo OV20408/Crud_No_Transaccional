@@ -87,7 +87,9 @@
             <select class="form-control" id="estadoFiltro">
               <option value="">Todos</option>
               <option value="sin responder">Sin responder</option>
+              <option value="en progreso">En progreso</option>
               <option value="respondido">Respondido</option>
+              <option value="resuelto">Resuelto</option>
             </select>
           </div>
 
@@ -141,8 +143,8 @@
             </div>
           </div>
         </div>
-      </div> {{-- /col mapa --}}
-    </div> {{-- /row --}}
+      </div>
+    </div>
   </div>
 </div>
 @endsection
@@ -154,14 +156,35 @@
 @section('js')
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const datos = {!! $solicitudesJson !!}; // viene ya formateado desde el controlador
+  document.addEventListener('DOMContentLoaded', async function () {
+    let datos = [];
 
     const buscarNombre   = document.getElementById('buscarNombre');
     const prioridadFiltro= document.getElementById('prioridadFiltro');
     const estadoFiltro   = document.getElementById('estadoFiltro');
     const btnLimpiar     = document.getElementById('btnLimpiar');
     const listadoDiv     = document.getElementById('listado');
+
+    // Función para cargar datos frescos desde la base de datos
+    async function cargarDatosFrescos() {
+      try {
+        const response = await fetch('/ayudas_solicitadas');
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const scriptContent = doc.querySelector('script:not([src])').textContent;
+        const match = scriptContent.match(/const datos = (.+?);/);
+        if (match) {
+          datos = JSON.parse(match[1]);
+          aplicarFiltros();
+        }
+      } catch (error) {
+        console.error('Error recargando datos:', error);
+      }
+    }
+
+    // Cargar inicial
+    datos = {!! $solicitudesJson !!};
 
     // --- Mapa Leaflet ---
     const map = L.map('map').setView([-17.806776, -63.15749], 12);
@@ -238,105 +261,92 @@
     }
 
     function renderListado(lista) {
-  listadoDiv.innerHTML = '';
+      listadoDiv.innerHTML = '';
 
-  if (lista.length === 0) {
-    listadoDiv.innerHTML = '<p class="mensaje-vacio">No se encontraron resultados.</p>';
-    return;
-  }
+      if (lista.length === 0) {
+        listadoDiv.innerHTML = '<p class="mensaje-vacio">No se encontraron resultados.</p>';
+        return;
+      }
 
-  lista.forEach(item => {
-    const card = document.createElement('div');
-    card.className = 'ayuda-card mb-3';
-    
-    // Determinar botón según estado
-    let botonAccion = '';
-    
-    switch(item.estado ? item.estado.toLowerCase() : 'sin responder') {
-      case 'sin responder':
-        botonAccion = `
-          <a href="/chat-consulta?emergencia=1&voluntario_id=${item.voluntario_id}&ayuda_id=${item.id}" 
-             class="btn btn-sm btn-danger w-100">
-             <i class="fas fa-exclamation-triangle"></i> Atender emergencia
-          </a>`;
-        break;
+      lista.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'ayuda-card mb-3';
         
-      case 'en progreso':
-        botonAccion = `
-          <a href="/chat-consulta?emergencia=1&voluntario_id=${item.voluntario_id}&ayuda_id=${item.id}" 
-             class="btn btn-sm btn-warning w-100">
-             <i class="fas fa-comments"></i> Continuar chat
-          </a>`;
-        break;
+        let botonAccion = '';
         
-      case 'respondido':
-      case 'resuelto':
-        botonAccion = `
-          <a href="/chat-consulta?emergencia=1&voluntario_id=${item.voluntario_id}&ayuda_id=${item.id}" 
-             class="btn btn-sm btn-success w-100">
-             <i class="fas fa-check-circle"></i> Ver resolución
-          </a>`;
-        break;
+        switch(item.estado ? item.estado.toLowerCase() : 'sin responder') {
+          case 'sin responder':
+            botonAccion = `
+              <a href="/chat-consulta?emergencia=1&voluntario_id=${item.voluntario_id}&ayuda_id=${item.id}" 
+                 class="btn btn-sm btn-danger w-100">
+                 <i class="fas fa-exclamation-triangle"></i> Atender emergencia
+              </a>`;
+            break;
+            
+          case 'en progreso':
+            botonAccion = `
+              <a href="/chat-consulta?emergencia=1&voluntario_id=${item.voluntario_id}&ayuda_id=${item.id}" 
+                 class="btn btn-sm btn-warning w-100">
+                 <i class="fas fa-comments"></i> Continuar chat
+              </a>`;
+            break;
+            
+          case 'respondido':
+          case 'resuelto':
+            botonAccion = `
+              <a href="/chat-consulta?emergencia=1&voluntario_id=${item.voluntario_id}&ayuda_id=${item.id}" 
+                 class="btn btn-sm btn-success w-100">
+                 <i class="fas fa-check-circle"></i> Ver resolución
+              </a>`;
+            break;
+        }
+
+        card.innerHTML = `
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0">${item.voluntario || 'Sin nombre'}</h6>
+            <span class="${claseBadge(item.prioridad)}">${(item.prioridad || 'media').toUpperCase()}</span>
+          </div>
+          <p class="small mb-1 text-muted">
+            <i class="fas fa-map-marker-alt"></i> ${item.direccion || 'Ubicación reportada'}
+          </p>
+          <p class="small mb-2">${item.detalle || 'Sin descripción'}</p>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="badge badge-${getBadgeColor(item.estado)}">
+              ${(item.estado || 'sin responder').toUpperCase()}
+            </span>
+            <small class="text-muted">
+              <i class="far fa-clock"></i> ${item.fecha || ''}
+            </small>
+          </div>
+          
+          <div class="mt-2">
+            ${botonAccion}
+          </div>
+        `;
+
+        card.addEventListener('click', (e) => {
+          if (!e.target.closest('a.btn')) {
+            const marker = marcadoresPorId[item.id];
+            if (marker) {
+              map.flyTo(marker.getLatLng(), 15, { duration: 0.5 });
+              marker.openPopup();
+            }
+          }
+        });
+
+        listadoDiv.appendChild(card);
+      });
     }
 
-    card.innerHTML = `
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <h6 class="mb-0">${item.voluntario || 'Sin nombre'}</h6>
-        <span class="${claseBadge(item.prioridad)}">${(item.prioridad || 'media').toUpperCase()}</span>
-      </div>
-      <p class="small mb-1 text-muted">
-        <i class="fas fa-map-marker-alt"></i> ${item.direccion || 'Ubicación reportada'}
-      </p>
-      <p class="small mb-2">${item.detalle || 'Sin descripción'}</p>
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <span class="badge badge-${getBadgeColor(item.estado)}">
-          ${(item.estado || 'sin responder').toUpperCase()}
-        </span>
-        <small class="text-muted">
-          <i class="far fa-clock"></i> ${item.fecha || ''}
-        </small>
-      </div>
-      
-      <div class="mt-2">
-        ${botonAccion}
-      </div>
-    `;
-
-    // Click en el card (excepto en el botón) para centrar en el mapa
-    card.addEventListener('click', (e) => {
-      // Solo si NO se clickeó el botón
-      if (!e.target.closest('a.btn')) {
-        const marker = marcadoresPorId[item.id];
-        if (marker) {
-          map.flyTo(marker.getLatLng(), 15, { duration: 0.5 });
-          marker.openPopup();
-        }
-      }
-    });
-
-    listadoDiv.appendChild(card);
-  });
-}
-
-function getBadgeColor(estado) {
-  const colores = {
-    'sin responder': 'danger',
-    'en progreso': 'warning',
-    'respondido': 'success',
-    'resuelto': 'primary'
-  };
-  return colores[(estado || '').toLowerCase()] || 'secondary';
-}
-
-function claseBadge(prioridad) {
-  const clases = {
-    'alta': 'badge badge-danger',
-    'media': 'badge badge-warning',
-    'baja': 'badge badge-info'
-  };
-  return clases[(prioridad || 'media').toLowerCase()] || 'badge badge-secondary';
-}
-    
+    function getBadgeColor(estado) {
+      const colores = {
+        'sin responder': 'danger',
+        'en progreso': 'warning',
+        'respondido': 'success',
+        'resuelto': 'primary'
+      };
+      return colores[(estado || '').toLowerCase()] || 'secondary';
+    }
 
     function aplicarFiltros() {
       const texto = buscarNombre.value.trim().toLowerCase();
@@ -374,7 +384,10 @@ function claseBadge(prioridad) {
       aplicarFiltros();
     });
 
-    // render inicial
+    // Recargar datos cuando la ventana recupera el foco (vienes del chat)
+    window.addEventListener('focus', cargarDatosFrescos);
+
+    // Render inicial
     aplicarFiltros();
   });
 </script>
