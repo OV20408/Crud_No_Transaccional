@@ -11,12 +11,6 @@ use Illuminate\View\View;
 
 class CursoController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('permission:crear_cursos|editar_cursos')->except(['index', 'show']);
-        $this->middleware('permission:ver_capacitaciones')->only(['index', 'show']);
-    }
-
     /**
      * Display a listing of the resource.
      */
