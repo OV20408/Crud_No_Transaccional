@@ -12,8 +12,11 @@ class CapacitacionController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:gestionar_capacitaciones')->except(['index', 'show']);
-        $this->middleware('permission:ver_capacitaciones')->only(['index', 'show']);
+        // ✅ CORREGIDO: Usar 'gestionar_capacitaciones' para todo
+        $this->middleware('permission:gestionar_capacitaciones');
+        
+        // O si prefieres sin middleware (ya está protegido en routes/web.php):
+        // Sin código aquí - las rutas ya tienen middleware(['role:Administrador'])
     }
 
     public function index(Request $request)
