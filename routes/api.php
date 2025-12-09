@@ -13,6 +13,19 @@ use App\Http\Controllers\Api\SolicitudAyudaApiController;
 use App\Http\Controllers\Api\EtapaApiController;
 use App\Http\Controllers\Api\ReporteApiController;
 use App\Http\Controllers\Api\CursoApiController;
+use App\Http\Controllers\Api\Sync\CursoSyncController;
+use App\Http\Controllers\Api\Sync\UsuarioSyncController;
+
+Route::prefix('sync')->group(function () {
+
+    // Cursos
+    Route::get('/cursos/search', [CursoSyncController::class, 'search']);
+
+    // Usuarios
+    Route::get('/usuarios/ci/{ci}', [UsuarioSyncController::class, 'buscarPorCi']);
+    Route::put('/usuarios/{id}/estado', [UsuarioSyncController::class, 'actualizarEstado']);
+});
+
 
 
 // ✅ AGREGAR ESTA LÍNEA

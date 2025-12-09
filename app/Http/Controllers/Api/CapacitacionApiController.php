@@ -8,6 +8,7 @@ use App\Models\Curso;
 use App\Models\Etapa;
 use App\Models\ProgresoVoluntario;
 use Illuminate\Http\Request;
+use App\Events\CursoCreadoOActualizado;
 
 class CapacitacionApiController extends Controller
 {
@@ -188,7 +189,22 @@ class CapacitacionApiController extends Controller
                 'id_capacitacion' => 'required|integer|exists:capacitacion,id',
             ]);
 
+            // 🚀 CROSS-CHECK CON INCENDIOS
+            $remote = app(\App\Services\RemoteIncendiosCursosService::class)
+                ->cursoExiste($request->nombre);
+
+            if ($remote['exists']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El curso ya existe en INCENDIOS ALAS'
+                ], 409);
+            }
+
+            // Crear local
             $curso = Curso::create($request->only(['nombre', 'descripcion', 'id_capacitacion']));
+
+            // 🚀 Disparar evento de sincronización automática
+            CursoCreadoOActualizado::dispatch($curso);
 
             return response()->json([
                 'success' => true,
@@ -202,6 +218,7 @@ class CapacitacionApiController extends Controller
             ], 500);
         }
     }
+
 
     /**
      * Crear una etapa dentro de un curso
