@@ -13,8 +13,14 @@ use App\Http\Controllers\Api\SolicitudAyudaApiController;
 use App\Http\Controllers\Api\EtapaApiController;
 use App\Http\Controllers\Api\ReporteApiController;
 use App\Http\Controllers\Api\CursoApiController;
-use App\Http\Controllers\Api\Sync\CursoSyncController;
-use App\Http\Controllers\Api\Sync\UsuarioSyncController;
+use App\Http\Controllers\Api\CursoSyncController;
+use App\Http\Controllers\Api\UsuarioSyncController;
+
+
+Route::put('/usuarios/{id}/estado', [UsuarioApiController::class, 'updateEstado']);
+Route::post('/sync/cursos', [CursoSyncController::class, 'syncStore']);
+
+
 
 Route::prefix('sync')->group(function () {
 

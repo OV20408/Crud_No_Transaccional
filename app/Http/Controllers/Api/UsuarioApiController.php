@@ -44,4 +44,34 @@ class UsuarioApiController extends Controller
             'fotoPerfil' => $u->foto_ci,
         ];
     }
+
+    public function updateEstado(Request $request, $id)
+{
+    $request->validate([
+        'estado' => 'required|string'
+    ]);
+
+    $user = User::find($id);
+
+    if (!$user) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Usuario no encontrado'
+        ], 404);
+    }
+
+    // Actualizar estado
+    $user->estado = $request->estado;
+    $user->save();
+
+    // 🔥 Disparar evento de sincronización automática
+    \App\Events\UsuarioEstadoActualizado::dispatch($user);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Estado actualizado correctamente',
+        'data' => $user
+    ]);
+}
+
 }
