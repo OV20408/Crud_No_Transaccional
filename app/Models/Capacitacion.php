@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Class Capacitacion
@@ -18,6 +19,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Capacitacion extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'capacitacion';
     public $timestamps = false;
     

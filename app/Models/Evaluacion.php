@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Class Evaluacion
@@ -22,6 +23,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Evaluacion extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'evaluacion';
     public $timestamps = false;
     protected $perPage = 20;

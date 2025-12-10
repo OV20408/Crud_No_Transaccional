@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Class Preguntum
@@ -19,6 +20,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Pregunta extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'pregunta';
     public $timestamps = false;
     
