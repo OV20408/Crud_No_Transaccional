@@ -139,7 +139,19 @@
         /* SECCIONES CLÍNICAS */
         .section {
             margin: 40px 20px 25px 20px;
+        }
+
+        .section.historial-clinico {
+            margin-top: 20px;
             page-break-inside: avoid;
+        }
+
+        .section.historial-clinico .section-header {
+            page-break-after: avoid;
+        }
+
+        .section.historial-clinico .section-body {
+            page-break-before: avoid;
         }
 
         .section-header {
@@ -398,12 +410,9 @@
         </div>
     </div>
 
-    <!-- HISTORIAL CLÍNICO -->
-    <div class="section">
-        <div class="section-header">HISTORIAL CLINICO</div>
-        <div class="section-body">
-            @if(count($reportes) > 0)
-                @foreach($reportes as $reporte)
+    <!-- EVALUACIONES -->
+    @if(count($reportes) > 0)
+        @foreach($reportes as $reporte)
                     <div class="evaluacion-container">
                         {{-- Reporte Físico --}}
                         @if($reporte->resumen_fisico)
@@ -452,17 +461,15 @@
                                 <div class="no-data">No hay evaluación emocional registrada</div>
                             </div>
                         @endif
-                    </div>
-                @endforeach
-            @else
-                <div class="no-data">No hay reportes clínicos registrados</div>
-            @endif
-        </div>
-    </div>
+                </div>
+            @endforeach
+        @else
+            <div class="no-data">No hay reportes clínicos registrados</div>
+        @endif
 
     <!-- CAPACITACIONES Y PROGRESO -->
     <div class="section">
-        <div class="section-header">CAPACITACIONES Y PROGRESO</div>
+        <div class="section-header">CAPACITACIONES</div>
         <div class="section-body">
             @if(count($capacitaciones) > 0)
                 <table class="clinical-table">
@@ -503,7 +510,7 @@
 
     <!-- NECESIDADES IDENTIFICADAS -->
     <div class="section">
-        <div class="section-header">NECESIDADES IDENTIFICADAS</div>
+        <div class="section-header">NECESIDADES</div>
         <div class="section-body">
             @if(count($necesidades) > 0)
                 <table class="clinical-table">
