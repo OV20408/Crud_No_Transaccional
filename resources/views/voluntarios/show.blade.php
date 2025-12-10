@@ -533,6 +533,108 @@
     opacity: 0.6;
   }
 }
+
+/* Estilos de Paginación */
+  .pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 30px;
+    padding: 20px 0;
+  }
+
+  .pagination-btn {
+    padding: 10px 16px;
+    background: var(--color-card);
+    border: 2px solid var(--color-azul);
+    color: var(--color-azul);
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    min-width: 45px;
+    text-align: center;
+  }
+
+  .pagination-btn:hover:not(:disabled) {
+    background: var(--color-azul);
+    color: white;
+    transform: translateY(-2px);
+  }
+
+  .pagination-btn.active {
+    background: var(--color-azul);
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+  }
+
+  .pagination-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    border-color: #ccc;
+    color: #ccc;
+  }
+
+  .pagination-arrow {
+    padding: 10px 14px;
+    background: var(--color-card);
+    border: 2px solid var(--color-azul);
+    color: var(--color-azul);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 16px;
+  }
+
+  .pagination-arrow:hover:not(:disabled) {
+    background: var(--color-azul);
+    color: white;
+    transform: scale(1.1);
+  }
+
+  .pagination-arrow:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    border-color: #ccc;
+    color: #ccc;
+  }
+
+  .pagination-info {
+    font-size: 14px;
+    color: #666;
+    font-weight: 500;
+    padding: 0 15px;
+  }
+
+  .pagination-numbers {
+    display: flex;
+    gap: 8px;
+  }
+
+  @media (max-width: 768px) {
+    .pagination-container {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    .pagination-btn {
+      min-width: 40px;
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+    
+    .pagination-arrow {
+      padding: 8px 12px;
+    }
+    
+    .pagination-info {
+      width: 100%;
+      text-align: center;
+      padding: 10px 0;
+    }
+  }
 </style>
 
 <div class="infovoluntarios-container">
@@ -889,6 +991,104 @@ function mostrarInfoCurso(cursoId) {
 </div>
 
 <script>
+  // ========== INICIO: CÓDIGO DE PAGINACIÓN ==========
+  // Variables de paginación
+  let paginaActualEncuestas = 1;
+  let paginaActualReportes = 1;
+  const itemsPorPagina = 10; // Puedes ajustar este número
+
+  // Función para crear controles de paginación
+  function crearPaginacion(totalItems, paginaActual, onPageChange) {
+    const totalPaginas = Math.ceil(totalItems / itemsPorPagina);
+    
+    if (totalPaginas <= 1) return '';
+    
+    let html = '<div class="pagination-container">';
+    
+    // Botón anterior
+    html += `
+      <button class="pagination-arrow" 
+              onclick="${onPageChange}(${paginaActual - 1})" 
+              ${paginaActual === 1 ? 'disabled' : ''}>
+        <i class="fas fa-chevron-left"></i>
+      </button>
+    `;
+    
+    // Números de página
+    html += '<div class="pagination-numbers">';
+    
+    // Lógica para mostrar números de página
+    const maxBotones = 5;
+    let inicio = Math.max(1, paginaActual - Math.floor(maxBotones / 2));
+    let fin = Math.min(totalPaginas, inicio + maxBotones - 1);
+    
+    if (fin - inicio < maxBotones - 1) {
+      inicio = Math.max(1, fin - maxBotones + 1);
+    }
+    
+    // Primera página si no está en el rango
+    if (inicio > 1) {
+      html += `<button class="pagination-btn" onclick="${onPageChange}(1)">1</button>`;
+      if (inicio > 2) {
+        html += '<span class="pagination-info">...</span>';
+      }
+    }
+    
+    // Páginas numeradas
+    for (let i = inicio; i <= fin; i++) {
+      html += `
+        <button class="pagination-btn ${i === paginaActual ? 'active' : ''}" 
+                onclick="${onPageChange}(${i})">
+          ${i}
+        </button>
+      `;
+    }
+    
+    // Última página si no está en el rango
+    if (fin < totalPaginas) {
+      if (fin < totalPaginas - 1) {
+        html += '<span class="pagination-info">...</span>';
+      }
+      html += `<button class="pagination-btn" onclick="${onPageChange}(${totalPaginas})">${totalPaginas}</button>`;
+    }
+    
+    html += '</div>';
+    
+    // Botón siguiente
+    html += `
+      <button class="pagination-arrow" 
+              onclick="${onPageChange}(${paginaActual + 1})" 
+              ${paginaActual === totalPaginas ? 'disabled' : ''}>
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    `;
+    
+    // Información de página actual
+    html += `
+      <div class="pagination-info">
+        Página ${paginaActual} de ${totalPaginas} (${totalItems} items)
+      </div>
+    `;
+    
+    html += '</div>';
+    
+    return html;
+  }
+
+  // Función para cambiar página de encuestas
+  function cambiarPaginaEncuestas(nuevaPagina) {
+    paginaActualEncuestas = nuevaPagina;
+    renderizarEncuestas();
+    document.getElementById('vista-contenido').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Función para cambiar página de reportes
+  function cambiarPaginaReportes(nuevaPagina) {
+    paginaActualReportes = nuevaPagina;
+    renderizarReportes();
+    document.getElementById('vista-contenido').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   let evaluacionesActuales = @json($evaluaciones ?? []);
   let reportesActuales = @json($reportes ?? []);
   let reportesNoVistos = @json($reportesNoVistos ?? []);
@@ -901,16 +1101,20 @@ function mostrarInfoCurso(cursoId) {
     let html = '<h2 class="titulo-seccion">Encuestas Realizadas</h2>';
     
     if (evaluacionesActuales && evaluacionesActuales.length > 0) {
+      // Calcular índices para la paginación
+      const inicio = (paginaActualEncuestas - 1) * itemsPorPagina;
+      const fin = inicio + itemsPorPagina;
+      const evaluacionesPaginadas = evaluacionesActuales.slice(inicio, fin);
+      
       html += '<div class="row">';
       
       // Columna Evaluación Física
       html += '<div class="col-md-6">';
-      evaluacionesActuales.forEach(function(eval) {
+      evaluacionesPaginadas.forEach(function(eval) {
         const reporteId = eval.reporte_id || eval.id_reporte || eval.id || 'N/A';
         const fechaRaw = eval.fecha_generado || eval.fecha;
         const fecha = fechaRaw ? new Date(fechaRaw).toLocaleDateString('es-ES') : 'N/A';
         
-        // ✅ Verificar si este reporte físico NO ha sido visto
         const reporteNoVisto = reportesNoVistos.find(r => r.reporte_id == reporteId);
         const esNuevoFisico = reporteNoVisto && reporteNoVisto.fisico_no_visto === 'fisico';
         
@@ -940,12 +1144,11 @@ function mostrarInfoCurso(cursoId) {
       
       // Columna Evaluación Emocional
       html += '<div class="col-md-6">';
-      evaluacionesActuales.forEach(function(eval) {
+      evaluacionesPaginadas.forEach(function(eval) {
         const reporteId = eval.reporte_id || eval.id_reporte || eval.id || 'N/A';
         const fechaRaw = eval.fecha_generado || eval.fecha;
         const fecha = fechaRaw ? new Date(fechaRaw).toLocaleDateString('es-ES') : 'N/A';
         
-        // ✅ Verificar si este reporte emocional NO ha sido visto
         const reporteNoVisto = reportesNoVistos.find(r => r.reporte_id == reporteId);
         const esNuevoEmocional = reporteNoVisto && reporteNoVisto.emocional_no_visto === 'emocional';
         
@@ -974,6 +1177,10 @@ function mostrarInfoCurso(cursoId) {
       html += '</div>';
       
       html += '</div>';
+      
+      // Agregar controles de paginación
+      html += crearPaginacion(evaluacionesActuales.length, paginaActualEncuestas, 'cambiarPaginaEncuestas');
+      
     } else {
       html += '<p class="mensaje-vacio">No hay encuestas realizadas.</p>';
     }
@@ -985,6 +1192,7 @@ function mostrarInfoCurso(cursoId) {
 
 
   // Función para renderizar historial con datos dinámicos
+   // Función para renderizar historial con datos dinámicos
   function renderizarHistorial() {
     const contenido = document.getElementById('vista-contenido');
     if (!contenido) return;
@@ -1034,7 +1242,10 @@ function mostrarInfoCurso(cursoId) {
     contenido.innerHTML = html;
   }
 
+
+
   // Función para renderizar reportes con datos dinámicos
+  // Función mejorada para renderizar reportes CON PAGINACIÓN
   function renderizarReportes() {
     const contenido = document.getElementById('vista-contenido');
     if (!contenido) return;
@@ -1042,19 +1253,28 @@ function mostrarInfoCurso(cursoId) {
     let html = '<h2 class="titulo-seccion">Reportes</h2>';
     
     if (reportesActuales && reportesActuales.length > 0) {
-      reportesActuales.forEach(function(reporte) {
+      // Calcular índices para la paginación
+      const inicio = (paginaActualReportes - 1) * itemsPorPagina;
+      const fin = inicio + itemsPorPagina;
+      const reportesPaginados = reportesActuales.slice(inicio, fin);
+      
+      reportesPaginados.forEach(function(reporte) {
         const fecha = new Date(reporte.fecha_generado).toLocaleString('es-ES');
         html += `
           <div class="vista-card">
             <strong>Reporte #${reporte.id}</strong>
             <p><strong>Estado:</strong></p>
-            <p>${reporte.estado_general || 'N/D'}</p>
+            <p>${reporte.estado_general || 'Procesado por IA'}</p>
             <p><strong>Fecha:</strong></p>
             <p>${fecha}</p>
             ${reporte.observaciones ? `<p><strong>Observaciones:</strong></p><p>${reporte.observaciones}</p>` : ''}
           </div>
         `;
       });
+      
+      // Agregar controles de paginación
+      html += crearPaginacion(reportesActuales.length, paginaActualReportes, 'cambiarPaginaReportes');
+      
     } else {
       html += '<p class="mensaje-vacio">No hay reportes disponibles.</p>';
     }
@@ -1063,6 +1283,12 @@ function mostrarInfoCurso(cursoId) {
   }
 
   function mostrarVista(vista) {
+    // Resetear paginación cuando se cambia de vista
+    if (vista === 'encuestas') {
+      paginaActualEncuestas = 1;
+    } else if (vista === 'reportes') {
+      paginaActualReportes = 1;
+    }
     const contenido = document.getElementById('vista-contenido');
     
     switch(vista) {
@@ -2083,4 +2309,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 </script>
+
+
 @endsection
