@@ -160,13 +160,25 @@
             padding: 20px;
         }
 
+        /* CONTENEDOR DE EVALUACIÓN (2 reportes por página) */
+        .evaluacion-container {
+            page-break-after: always;
+            page-break-inside: avoid;
+            min-height: 700px;
+        }
+
+        .evaluacion-container:last-child {
+            page-break-after: auto;
+        }
+
         /* REPORTES CLÍNICOS */
         .reporte-card {
             background: #f8fafc;
             border: 2px solid #cbd5e1;
             padding: 18px;
-            margin-bottom: 15px;
+            margin-bottom: 25px;
             page-break-inside: avoid;
+            min-height: 320px;
         }
 
         .reporte-card.fisico {
@@ -385,37 +397,55 @@
         <div class="section-body">
             @if(count($reportes) > 0)
                 @foreach($reportes as $reporte)
-                    {{-- Reporte Físico --}}
-                    @if($reporte->resumen_fisico)
-                        <div class="reporte-card fisico">
-                            <span class="reporte-tipo">Evaluación Física</span>
-                            <div class="reporte-fecha">
-                                Fecha: {{ \Carbon\Carbon::parse($reporte->fecha_generado)->format('d/m/Y H:i') }}
-                            </div>
-                            <div class="reporte-contenido">
-                                {{ $reporte->resumen_fisico }}
-                            </div>
-                            @if($reporte->observaciones)
-                                <div class="reporte-observaciones">
-                                    <strong>Observaciones:</strong>
-                                    {{ $reporte->observaciones }}
+                    <div class="evaluacion-container">
+                        {{-- Reporte Físico --}}
+                        @if($reporte->resumen_fisico)
+                            <div class="reporte-card fisico">
+                                <span class="reporte-tipo">Evaluación Física</span>
+                                <div class="reporte-fecha">
+                                    Fecha: {{ \Carbon\Carbon::parse($reporte->fecha_generado)->format('d/m/Y H:i') }}
                                 </div>
-                            @endif
-                        </div>
-                    @endif
+                                <div class="reporte-contenido">
+                                    {{ $reporte->resumen_fisico }}
+                                </div>
+                                @if($reporte->observaciones)
+                                    <div class="reporte-observaciones">
+                                        <strong>Observaciones:</strong>
+                                        {{ $reporte->observaciones }}
+                                    </div>
+                                @endif
+                            </div>
+                        @else
+                            <div class="reporte-card fisico">
+                                <span class="reporte-tipo">Evaluación Física</span>
+                                <div class="reporte-fecha">
+                                    Fecha: {{ \Carbon\Carbon::parse($reporte->fecha_generado)->format('d/m/Y H:i') }}
+                                </div>
+                                <div class="no-data">No hay evaluación física registrada</div>
+                            </div>
+                        @endif
 
-                    {{-- Reporte Psicológico --}}
-                    @if($reporte->resumen_emocional)
-                        <div class="reporte-card psicologico">
-                            <span class="reporte-tipo">Evaluación Psicológica</span>
-                            <div class="reporte-fecha">
-                                Fecha: {{ \Carbon\Carbon::parse($reporte->fecha_generado)->timezone('America/La_Paz')->format('d/m/Y H:i') }}
+                        {{-- Reporte Emocional --}}
+                        @if($reporte->resumen_emocional)
+                            <div class="reporte-card psicologico">
+                                <span class="reporte-tipo">Evaluación Emocional</span>
+                                <div class="reporte-fecha">
+                                    Fecha: {{ \Carbon\Carbon::parse($reporte->fecha_generado)->timezone('America/La_Paz')->format('d/m/Y H:i') }}
+                                </div>
+                                <div class="reporte-contenido">
+                                    {{ $reporte->resumen_emocional }}
+                                </div>
                             </div>
-                            <div class="reporte-contenido">
-                                {{ $reporte->resumen_emocional }}
+                        @else
+                            <div class="reporte-card psicologico">
+                                <span class="reporte-tipo">Evaluación Emocional</span>
+                                <div class="reporte-fecha">
+                                    Fecha: {{ \Carbon\Carbon::parse($reporte->fecha_generado)->timezone('America/La_Paz')->format('d/m/Y H:i') }}
+                                </div>
+                                <div class="no-data">No hay evaluación emocional registrada</div>
                             </div>
-                        </div>
-                    @endif
+                        @endif
+                    </div>
                 @endforeach
             @else
                 <div class="no-data">No hay reportes clínicos registrados</div>
