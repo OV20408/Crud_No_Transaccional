@@ -164,7 +164,11 @@
         .evaluacion-container {
             page-break-after: always;
             page-break-inside: avoid;
-            min-height: 700px;
+            min-height: 850px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 40px 0;
         }
 
         .evaluacion-container:last-child {
