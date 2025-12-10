@@ -104,6 +104,7 @@
                                                                name="cursos[{{ $idx }}][etapas][{{ $j }}][orden]"
                                                                class="form-control"
                                                                value="{{ old('cursos.'.$idx.'.etapas.'.$j.'.orden', $etapa->orden ?? $j + 1) }}"
+                                                               min="1"
                                                                required>
                                                     </div>
 
@@ -268,6 +269,7 @@
                                name="cursos[${indexCurso}][etapas][${etapaIndex}][orden]"
                                class="form-control"
                                value="${etapaIndex + 1}"
+                               min="1"
                                required>
                     </div>
 
