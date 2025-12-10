@@ -7,9 +7,12 @@ use App\Services\IAService;
 use App\Models\Reporte;
 use App\Models\Evaluacion;
 use App\Models\HistorialClinico;
+use App\Models\CursoRecomendacion;
+use App\Models\AptitudNecesidad;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class EvaluacionIAController extends Controller
 {
@@ -142,7 +145,39 @@ class EvaluacionIAController extends Controller
         $reportes = Reporte::where('id_historial', $historial->id)
             ->orderBy('fecha_generado', 'desc')
             ->get()
-            ->map(function ($reporte) {
+            ->map(function ($reporte) use ($idUsuario) {
+                // Obtener recomendaciones de cursos para este reporte
+                $cursosRecomendados = DB::table('curso_recomendaciones')
+                    ->leftJoin('curso', 'curso_recomendaciones.id_curso', '=', 'curso.id')
+                    ->leftJoin('capacitacion', 'curso.id_capacitacion', '=', 'capacitacion.id')
+                    ->where('curso_recomendaciones.id_reporte', $reporte->id)
+                    ->select(
+                        'curso_recomendaciones.id',
+                        'curso_recomendaciones.mensaje_ia',
+                        'curso_recomendaciones.razon',
+                        'curso_recomendaciones.estado',
+                        'curso.nombre as curso_nombre',
+                        'curso.descripcion as curso_descripcion',
+                        'capacitacion.nombre as capacitacion_nombre'
+                    )
+                    ->get();
+
+                // Obtener evaluación de aptitud para necesidades de este reporte
+                $aptitudNecesidades = AptitudNecesidad::where('id_reporte', $reporte->id)
+                    ->where('id_voluntario', $idUsuario)
+                    ->first();
+
+                $necesidadesRecomendadas = [];
+                if ($aptitudNecesidades && $aptitudNecesidades->necesidades_recomendadas) {
+                    $necesidadesIds = json_decode($aptitudNecesidades->necesidades_recomendadas, true) ?? [];
+                    if (!empty($necesidadesIds)) {
+                        $necesidadesRecomendadas = DB::table('necesidad')
+                            ->whereIn('id', $necesidadesIds)
+                            ->select('id', 'tipo', 'descripcion')
+                            ->get();
+                    }
+                }
+
                 return [
                     'id' => $reporte->id,
                     'fecha' => $reporte->fecha_generado ? $reporte->fecha_generado->format('d/m/Y H:i') : null,
@@ -151,6 +186,22 @@ class EvaluacionIAController extends Controller
                     'resumen_emocional' => $reporte->resumen_emocional,
                     'observaciones' => $reporte->observaciones,
                     'recomendaciones' => $reporte->recomendaciones,
+                    // Nuevos campos para recomendaciones de IA
+                    'cursos_recomendados' => $cursosRecomendados->map(function ($curso) {
+                        return [
+                            'id' => $curso->id,
+                            'nombre' => $curso->curso_nombre ?? $curso->mensaje_ia,
+                            'descripcion' => $curso->curso_descripcion,
+                            'capacitacion' => $curso->capacitacion_nombre,
+                            'razon' => $curso->razon,
+                            'estado' => $curso->estado,
+                        ];
+                    }),
+                    'aptitud_necesidades' => $aptitudNecesidades ? [
+                        'nivel_aptitud' => $aptitudNecesidades->nivel_aptitud,
+                        'razon' => $aptitudNecesidades->razon_ia,
+                        'necesidades_recomendadas' => $necesidadesRecomendadas,
+                    ] : null,
                 ];
             });
 
