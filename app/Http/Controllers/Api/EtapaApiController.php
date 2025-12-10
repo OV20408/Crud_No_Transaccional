@@ -54,6 +54,9 @@ public function toggleEstado(Request $request, $idEtapa)
         // O usa el valor actual sin modificarlo
     }
 
+    // Trazabilidad API Gateway
+    $progreso->ci_voluntario_accion = \App\Models\User::where('id_usuario', $data['id_usuario'])->value('ci');
+
     $progreso->save();
 
     return response()->json([

@@ -22,6 +22,7 @@ class SolicitudAyuda extends Model
         'estado',
         'ci_voluntarios_acudir',
         'fecha_respondida',
+        'ci_voluntario_accion', // Trazabilidad API Gateway
     ];
 
     protected $casts = [

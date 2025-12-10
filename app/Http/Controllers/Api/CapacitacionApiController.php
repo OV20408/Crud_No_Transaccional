@@ -156,6 +156,7 @@ class CapacitacionApiController extends Controller
                         'id_etapa' => $etapa->id,
                         'estado' => $index === 0 ? 'en_progreso' : 'sin_empezar',
                         'fecha_inicio' => $index === 0 ? now() : null,
+                        'ci_voluntario_accion' => \App\Models\User::where('id_usuario', $request->id_usuario)->value('ci'), // Trazabilidad API Gateway
                     ]);
                     $asignados[] = $progreso;
                 }

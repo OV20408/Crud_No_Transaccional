@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\ReporteApiController;
 use App\Http\Controllers\Api\CursoApiController;
 use App\Http\Controllers\Api\CursoSyncController;
 use App\Http\Controllers\Api\UsuarioSyncController;
+use App\Http\Controllers\TrazabilidadController;
 
 
 Route::put('/usuarios/{id}/estado', [UsuarioApiController::class, 'updateEstado']);
@@ -111,3 +112,6 @@ Route::apiResource('universidades', UniversidadApiController::class)->names([
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+// ==================== TRAZABILIDAD - API GATEWAY ====================
+Route::get('/trazabilidad/{ci}', [TrazabilidadController::class, 'porVoluntario']);

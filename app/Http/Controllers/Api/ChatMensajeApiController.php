@@ -37,6 +37,9 @@ class ChatMensajeApiController extends Controller
         // 🔴 FORZAR A INTEGER para consistencia
         $validated['voluntario_id'] = (int) $validated['voluntario_id'];
 
+        // Trazabilidad API Gateway
+        $validated['ci_voluntario_accion'] = \App\Models\User::where('id_usuario', $validated['voluntario_id'])->value('ci');
+
         $mensaje = ChatMensaje::create($validated);
         $mensaje->load('voluntario');
 

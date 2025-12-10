@@ -18,7 +18,8 @@ class CursoRecomendacion extends Model
         'id_reporte',
         'mensaje_ia',
         'razon',
-        'estado'
+        'estado',
+        'ci_voluntario_accion', // Trazabilidad API Gateway
     ];
 
     protected $casts = [
