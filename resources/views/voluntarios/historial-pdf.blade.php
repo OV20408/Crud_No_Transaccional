@@ -173,12 +173,14 @@
 
         /* REPORTES CLÍNICOS */
         .reporte-card {
-            background: #f8fafc;
+            background: white;
             border: 2px solid #cbd5e1;
             padding: 18px;
             margin-bottom: 25px;
             page-break-inside: avoid;
-            min-height: 320px;
+            min-height: 340px;
+            display: flex;
+            flex-direction: column;
         }
 
         .reporte-card.fisico {
@@ -220,6 +222,7 @@
             background: white;
             border: 1px solid #e2e8f0;
             font-size: 9pt;
+            flex: 1;
         }
 
         .reporte-observaciones {
