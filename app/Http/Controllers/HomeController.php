@@ -21,7 +21,6 @@ class HomeController extends Controller
 
     public function index()
     {
-        // 1) ID del rol "Voluntario"
         $idRolVoluntario = Rol::where('nombre', 'Voluntario')->value('id');
 
         $voluntariosBase = User::query();
@@ -29,15 +28,13 @@ class HomeController extends Controller
             $voluntariosBase->where('id_rol', $idRolVoluntario);
         }
 
-        // 2) Tarjetas de arriba
+        //Tarjetas de arriba
         $voluntariosActivos   = (clone $voluntariosBase)->where('estado', 'activo')->count();
         $voluntariosInactivos = (clone $voluntariosBase)->where('estado', 'inactivo')->count();
 
-        // Ajusta estos según tus columnas reales
-        $alertasRecientes = Reporte::count();         // o where('created_at','>',now()->subDays(7))
+        $alertasRecientes = Reporte::count();        
         $evaluacionesCompletadas = Evaluacion::count();
 
-        // 3) Listas de “últimos …”
         $ultimosVoluntarios = (clone $voluntariosBase)
             ->orderByDesc('created_at')
             ->take(3)
@@ -50,18 +47,17 @@ class HomeController extends Controller
 
 
 
-        // 4) Datos tipo “chart” (simple: nombre + cantidad)
-        // 🔸 Voluntarios por universidad
+        // Datos chart
+        //Voluntarios por universidad
         $universidadesData = Universidad::select(
         'universidad.nombre as label',
             DB::raw('COUNT(usuario.id_usuario) as total')
         )
-        // unimos por el NOMBRE, no por id_universidad
         ->leftJoin('usuario', 'usuario.entidad_pertenencia', '=', 'universidad.nombre')
         ->groupBy('universidad.nombre')
         ->get();
 
-        // 🔸 Necesidades (aquí sólo contamos necesidades, ajusta si tienes tabla puente)
+        //Necesidades
         $necesidadesData = Necesidad::select(
                 DB::raw('COALESCE(necesidad.tipo, necesidad.descripcion) as label'),
                 DB::raw('COUNT(necesidad.id) as total')
@@ -69,7 +65,7 @@ class HomeController extends Controller
             ->groupBy('label')
             ->get();
 
-        // 🔸 Capacitaciones (ejemplo simple: cantidad de cursos por capacitación)
+        // Capacitaciones 
         $capacitacionesData = Capacitacion::select(
                 'capacitacion.nombre as label',
                 DB::raw('COUNT(curso.id) as total')
