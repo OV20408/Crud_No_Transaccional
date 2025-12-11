@@ -19,7 +19,6 @@ class AdminInicialSeeder extends Seeder
         
         if ($adminExiste) {
             echo "Ya existe un usuario administrador en el sistema.\n";
-            echo "No se creará un nuevo administrador.\n\n";
             return;
         }
 
@@ -30,14 +29,21 @@ class AdminInicialSeeder extends Seeder
             'ci' => '0000000',
             'id_rol' => 1,
             'email' => 'admin@gevopi.bo',
-            'password' => Hash::make('gevopi2024'),
+
+            // ⚠️ Importante: usar "password", NO contrasena
+            'password' => 'gevopi2024',
+
             'telefono' => '00000000',
-            'direccion' => 'La Paz, Bolivia',
+            'direccion_domicilio' => 'La Paz, Bolivia',
             'fecha_nacimiento' => '1990-01-01',
+
+            // ✔ tu migración usa "genero"
+            'genero' => 'M',
+
             'tipo_sangre' => 'O+',
-            'sexo' => 'M',
             'estado' => 'activo',
         ]);
+
 
         // Asignar rol de Spatie
         $admin->assignRole('Administrador');
