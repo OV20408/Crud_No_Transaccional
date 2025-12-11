@@ -74,7 +74,7 @@ class CapacitacionController extends Controller
                 'descripcion' => 'nullable|string|max:255',
 
                 // cursos es opcional, pero si viene debe ser array
-                'cursos' => 'nullable|array',
+                'cursos' => 'required|array|min:1',
                 'cursos.*.id' => 'nullable|integer',
                 'cursos.*.nombre' => 'required|string|max:255',
                 'cursos.*.descripcion' => 'nullable|string|max:255',

@@ -349,6 +349,15 @@ return [
             'can' => 'gestionar_usuarios',
         ],
 
+        /*aqui vista de voluntarios inactivos*/
+        [
+            'text' => 'Voluntarios Inactivos',
+            'url' => '/voluntarios/inactivos',
+            'icon' => 'fa fa-users',
+            'can' => 'gestionar_usuarios',
+        ],
+
+
         [
             'text' => 'Evaluacion',
             'url' => '/evaluacion',
