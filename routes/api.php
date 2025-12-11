@@ -108,7 +108,6 @@ Route::apiResource('universidades', UniversidadApiController::class)->names([
     'destroy'=>'api.universidades.destroy',
 ]);
 
-// ==================== SANCTUM ====================
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');

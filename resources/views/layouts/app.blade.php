@@ -1,4 +1,17 @@
 <!doctype html>
+<style>
+    .main-sidebar {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  height: 100vh !important;
+  z-index: 1030 !important;
+  overflow-y: auto !important;
+}
+.content-wrapper {
+  margin-left: 250px !important; /* Ajusta según el ancho de tu sidebar */
+}
+</style>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">

@@ -544,6 +544,15 @@
     padding: 20px 0;
   }
 
+
+/* Paginación del historial centrada debajo de ambas columnas */
+.historial-tabla + .pagination-container {
+  width: 100%;
+  margin-top: 30px;
+  padding: 20px 0;
+  border-top: 2px solid #e0e0e0;
+}
+
   .pagination-btn {
     padding: 10px 16px;
     background: var(--color-card);
@@ -992,10 +1001,10 @@ function mostrarInfoCurso(cursoId) {
 
 <script>
   // ========== INICIO: CÓDIGO DE PAGINACIÓN ==========
-  // Variables de paginación
   let paginaActualEncuestas = 1;
   let paginaActualReportes = 1;
-  const itemsPorPagina = 10; // Puedes ajustar este número
+  let paginaActualHistorial = 1;
+  const itemsPorPagina = 10;
 
   // Función para crear controles de paginación
   function crearPaginacion(totalItems, paginaActual, onPageChange) {
@@ -1088,6 +1097,14 @@ function mostrarInfoCurso(cursoId) {
     renderizarReportes();
     document.getElementById('vista-contenido').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
+
+  // Función para cambiar página de historial
+function cambiarPaginaHistorial(nuevaPagina) {
+  paginaActualHistorial = nuevaPagina;
+  renderizarHistorial();
+  document.getElementById('vista-contenido').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 
   let evaluacionesActuales = @json($evaluaciones ?? []);
   let reportesActuales = @json($reportes ?? []);
@@ -1193,55 +1210,84 @@ function mostrarInfoCurso(cursoId) {
 
   // Función para renderizar historial con datos dinámicos
    // Función para renderizar historial con datos dinámicos
-  function renderizarHistorial() {
-    const contenido = document.getElementById('vista-contenido');
-    if (!contenido) return;
+  // Función para renderizar historial con datos dinámicos Y PAGINACIÓN
+// Función para renderizar historial con datos dinámicos Y PAGINACIÓN UNIFICADA
+function renderizarHistorial() {
+  const contenido = document.getElementById('vista-contenido');
+  if (!contenido) return;
+  
+  let html = '<h2 class="titulo-seccion">Historial</h2>';
+  
+  if (reportesActuales && reportesActuales.length > 0) {
+    // Calcular paginación ANTES de separar por columnas
+    const totalReportes = reportesActuales.length;
+    const inicio = (paginaActualHistorial - 1) * itemsPorPagina;
+    const fin = inicio + itemsPorPagina;
+    const reportesPaginados = reportesActuales.slice(inicio, fin);
     
-    let html = '<h2 class="titulo-seccion">Historial</h2>';
+    html += '<div class="historial-tabla">';
     
-    if (reportesActuales && reportesActuales.length > 0) {
-      html += '<div class="historial-tabla">';
-      
-      // Columna Clínico
-      html += '<div class="historial-columna">';
-      html += '<div class="historial-columna-header"><i class="fas fa-heartbeat mr-2"></i> Clínico</div>';
-      reportesActuales.forEach(function(reporte) {
-        if (reporte.resumen_fisico) {
-          const fecha = new Date(reporte.fecha_generado).toLocaleDateString('es-ES');
-          html += `
-            <div class="historial-item">
-              <div class="historial-item-content">${reporte.resumen_fisico}</div>
-              <div class="historial-item-fecha">${fecha}</div>
-            </div>
-          `;
-        }
-      });
-      html += '</div>';
-      
-      // Columna Psicológico
-      html += '<div class="historial-columna">';
-      html += '<div class="historial-columna-header psicologico"><i class="fas fa-brain mr-2"></i> Psicológico</div>';
-      reportesActuales.forEach(function(reporte) {
-        if (reporte.resumen_emocional) {
-          const fecha = new Date(reporte.fecha_generado).toLocaleDateString('es-ES');
-          html += `
-            <div class="historial-item psicologico">
-              <div class="historial-item-content">${reporte.resumen_emocional}</div>
-              <div class="historial-item-fecha">${fecha}</div>
-            </div>
-          `;
-        }
-      });
-      html += '</div>';
-      
-      html += '</div>';
-    } else {
-      html += '<p class="mensaje-vacio">No hay historial disponible.</p>';
+    // ========== COLUMNA CLÍNICO ==========
+    html += '<div class="historial-columna">';
+    html += '<div class="historial-columna-header"><i class="fas fa-heartbeat mr-2"></i> Clínico</div>';
+    
+    // Renderizar solo los reportes de la página actual
+    let hayClinico = false;
+    reportesPaginados.forEach(function(reporte) {
+      if (reporte.resumen_fisico) {
+        hayClinico = true;
+        const fecha = new Date(reporte.fecha_generado).toLocaleDateString('es-ES');
+        html += `
+          <div class="historial-item">
+            <div class="historial-item-content">${reporte.resumen_fisico}</div>
+            <div class="historial-item-fecha">${fecha}</div>
+          </div>
+        `;
+      }
+    });
+    
+    if (!hayClinico) {
+      html += '<p class="mensaje-vacio" style="padding: 20px; text-align: center; color: #999;">No hay registros clínicos en esta página.</p>';
     }
     
-    contenido.innerHTML = html;
+    html += '</div>';
+    
+    // ========== COLUMNA PSICOLÓGICO ==========
+    html += '<div class="historial-columna">';
+    html += '<div class="historial-columna-header psicologico"><i class="fas fa-brain mr-2"></i> Psicológico</div>';
+    
+    // Renderizar solo los reportes de la página actual
+    let hayPsicologico = false;
+    reportesPaginados.forEach(function(reporte) {
+      if (reporte.resumen_emocional) {
+        hayPsicologico = true;
+        const fecha = new Date(reporte.fecha_generado).toLocaleDateString('es-ES');
+        html += `
+          <div class="historial-item psicologico">
+            <div class="historial-item-content">${reporte.resumen_emocional}</div>
+            <div class="historial-item-fecha">${fecha}</div>
+          </div>
+        `;
+      }
+    });
+    
+    if (!hayPsicologico) {
+      html += '<p class="mensaje-vacio" style="padding: 20px; text-align: center; color: #999;">No hay registros psicológicos en esta página.</p>';
+    }
+    
+    html += '</div>';
+    
+    html += '</div>';
+    
+    // ========== PAGINACIÓN UNIFICADA (fuera de las columnas) ==========
+    html += crearPaginacion(totalReportes, paginaActualHistorial, 'cambiarPaginaHistorial');
+    
+  } else {
+    html += '<p class="mensaje-vacio">No hay historial disponible.</p>';
   }
-
+  
+  contenido.innerHTML = html;
+}
 
 
   // Función para renderizar reportes con datos dinámicos
@@ -1316,7 +1362,6 @@ function mostrarInfoCurso(cursoId) {
       <div class="row">
         @foreach($capacitacionesProgreso as $cap)
           @php
-            // Verificar si todas las etapas están completadas
             $etapas = DB::table('progreso_voluntario')
                 ->join('etapa', 'etapa.id', '=', 'progreso_voluntario.id_etapa')
                 ->join('curso', 'curso.id', '=', 'etapa.id_curso')
@@ -1996,11 +2041,24 @@ function actualizarDatosVoluntario() {
       
       // Actualizar recomendaciones de cursos si cambiaron
       if (hayCambioRecomendacion) {
-        console.log('Cambio en recomendaciones detectado:', nuevoTotalRecomendaciones, 'recomendación(es)');
+        console.log('🤖 Cambio en recomendaciones detectado:', nuevoTotalRecomendaciones, 'recomendación(es)');
+        console.log('Fecha anterior:', ultimaRecomendacionFecha, '-> Nueva:', nuevaRecomendacionFecha);
+        
         ultimoTotalRecomendaciones = nuevoTotalRecomendaciones;
         ultimaRecomendacionFecha = nuevaRecomendacionFecha;
         recomendacionesActuales = nuevosDatos.recomendacionesCursos || [];
+        
+        // SIEMPRE actualizar la sección de cursos si está visible
         actualizarSeccionCursos(nuevosDatos.recomendacionesCursos);
+        
+        // Mostrar notificación global de cambio
+        const mensaje = nuevoTotalRecomendaciones > 0 
+          ? `🤖 ${nuevoTotalRecomendaciones} nueva(s) recomendación(es) de IA` 
+          : '✓ Recomendaciones actualizadas';
+        
+        document.getElementById('toast-info-msg').textContent = mensaje;
+        showToast('toast-info');
+        setTimeout(() => hideToast('toast-info'), 4000);
       }
       
       // Verificar cambios en aptitud de necesidades
@@ -2064,10 +2122,23 @@ function actualizarSeccionReportes() {
 // Función para actualizar la sección de cursos si está visible
 function actualizarSeccionCursos(recomendaciones) {
   const contenido = document.getElementById('vista-contenido');
-  if (!contenido) return;
-  if (!contenido.innerHTML.includes('Cursos del Voluntario')) return;
+  if (!contenido) {
+    console.log('⚠️ No se encontró vista-contenido');
+    return;
+  }
   
-  console.log('Actualizando recomendaciones de cursos en tiempo real');
+  // Verificar si estamos en la vista de cursos (más flexible)
+  const enVistaCursos = contenido.innerHTML.includes('Cursos del Voluntario') || 
+                        contenido.innerHTML.includes('recomendaciones-ia') ||
+                        contenido.innerHTML.includes('btn-ver-curso');
+  
+  if (!enVistaCursos) {
+    console.log('ℹ️ No estamos en la vista de cursos, no actualizando');
+    return;
+  }
+  
+  console.log('🔄 Actualizando recomendaciones de cursos en tiempo real');
+  console.log('📊 Nuevas recomendaciones:', recomendaciones);
   
   // Actualizar variable global
   recomendacionesActuales = recomendaciones || [];
@@ -2075,14 +2146,7 @@ function actualizarSeccionCursos(recomendaciones) {
   // Renderizar nuevas recomendaciones
   renderizarRecomendaciones();
   
-  // Mostrar notificación de cambio
-  const mensaje = recomendaciones && recomendaciones.length > 0 
-    ? '🤖 Nueva recomendación de IA disponible' 
-    : '✓ Recomendación actualizada';
-  
-  document.getElementById('toast-info-msg').textContent = mensaje;
-  showToast('toast-info');
-  setTimeout(() => hideToast('toast-info'), 3000);
+  console.log('✅ Recomendaciones renderizadas correctamente');
 }
 
 function actualizarPanelEvaluacionFisica(reporte) {

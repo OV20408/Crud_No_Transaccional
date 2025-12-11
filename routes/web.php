@@ -23,9 +23,6 @@ use App\Http\Controllers\AyudasSolicitadasController;
 use App\Http\Controllers\EvaluacionVoluntarioController;
 use App\Http\Controllers\CertificadoController;
 
-// ============================================
-// 🌐 RUTAS PÚBLICAS (sin autenticación)
-// ============================================
 
 Route::get('/', function () {
     return redirect('/login');
@@ -40,25 +37,19 @@ Route::get('/logout', function () {
     return redirect('/');
 })->name('logout.get');
 
-// Evaluación de voluntarios (acceso público con token)
+// Evaluación de voluntarios 
 Route::get('/evaluacion-voluntario/{token}', [EvaluacionVoluntarioController::class, 'mostrarEvaluacion'])
     ->name('evaluacion-voluntario.mostrar');
 
 Route::post('/evaluacion-voluntario/{token}/procesar', [EvaluacionVoluntarioController::class, 'procesarEvaluacion'])
     ->name('evaluacion-voluntario.procesar');
 
-// ============================================
-// 🔒 RUTAS PROTEGIDAS (requieren autenticación)
-// ============================================
-
 Route::middleware(['auth'])->group(function () {
     
     // Ruta Home (accesible para cualquier usuario autenticado)
     Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-    // ============================================
-    // 👔 RUTAS SOLO PARA ADMINISTRADORES (Web)
-    // ============================================
+    //RUTAS SOLO PARA ADMINISTRADORES (Web)
     Route::middleware(['role:Administrador'])->group(function () {
         
         // Gestión de administradores

@@ -487,7 +487,7 @@ class VoluntarioController extends Controller
 
     public function descargarHistorialPDF($id)
     {
-        // 1. Obtener voluntario
+        //obtener voluntario
         $voluntario = DB::table('usuario')
             ->join('rol', 'usuario.id_rol', '=', 'rol.id')
             ->where('usuario.id_usuario', $id)
@@ -499,12 +499,12 @@ class VoluntarioController extends Controller
             abort(404, 'Voluntario no encontrado');
         }
 
-        // 2. Obtener historial clínico
+        //obtener historial clínico
         $historial = DB::table('historial_clinico')
             ->where('id_usuario', $id)
             ->first();
 
-        // 3. Obtener reportes (ordenados por fecha)
+        //obtener reportes (ordenados por fecha)
         $reportes = DB::select("
             SELECT DISTINCT r.*
             FROM reporte r
@@ -515,7 +515,7 @@ class VoluntarioController extends Controller
             ORDER BY r.fecha_generado DESC
         ", [$id, $id]);
 
-        // 4. Obtener capacitaciones con progreso
+        //obtener capacitaciones con progreso
         $capacitaciones = DB::select("
             SELECT DISTINCT 
                 c.id AS capacitacion_id,
@@ -536,7 +536,7 @@ class VoluntarioController extends Controller
             ORDER BY c.nombre, cu.nombre, e.orden
         ", [$id]);
 
-        // 5. Obtener necesidades
+        //obtener necesidades
         $necesidades = DB::table('reporte_necesidad')
             ->join('reporte', 'reporte.id', '=', 'reporte_necesidad.id_reporte')
             ->join('historial_clinico', 'historial_clinico.id', '=', 'reporte.id_historial')
@@ -546,7 +546,6 @@ class VoluntarioController extends Controller
             ->orderBy('reporte.fecha_generado', 'desc')
             ->get();
 
-        // 6. Generar PDF
         $pdf = PDF::loadView('voluntarios.historial-pdf', compact(
             'voluntario',
             'historial',
@@ -555,10 +554,8 @@ class VoluntarioController extends Controller
             'necesidades'
         ));
 
-        // Configurar PDF
         $pdf->setPaper('letter', 'portrait');
 
-        // Descargar con nombre personalizado
         $nombreArchivo = 'Historial_' . str_replace(' ', '_', $voluntario->nombres . '_' . $voluntario->apellidos) . '.pdf';
 
         return $pdf->download($nombreArchivo);

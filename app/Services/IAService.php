@@ -145,23 +145,79 @@ class IAService
                 ];
             }
 
-            // Crear el prompt para Gemini (OPTIMIZADO - MÚLTIPLES CURSOS)
-            $prompt = "Analiza esta evaluación médica:\n\n";
-            $prompt .= "FÍSICO: " . substr($resumenFisico, 0, 300) . "...\n";
-            $prompt .= "EMOCIONAL: " . substr($resumenEmocional, 0, 300) . "...\n\n";
-            $prompt .= "CURSOS:\n";
-            
+            // Crear el prompt para Gemini (MEJORADO - CONTEXTO COMPLETO Y CRITERIOS CLAROS)
+            $prompt = <<<PROMPT
+Eres un asesor médico especializado en recomendar capacitaciones para voluntarios de emergencias.
+
+📋 EVALUACIÓN DEL VOLUNTARIO:
+
+ESTADO FÍSICO:
+{$resumenFisico}
+
+ESTADO EMOCIONAL:
+{$resumenEmocional}
+
+📚 CURSOS DISPONIBLES:
+
+PROMPT;
+
             foreach ($cursosInfo as $curso) {
-                $prompt .= "ID:{$curso['id']} - {$curso['nombre']} ({$curso['capacitacion']})\n";
+                $descripcionCorta = mb_strlen($curso['descripcion']) > 150 
+                    ? mb_substr($curso['descripcion'], 0, 150) . '...' 
+                    : $curso['descripcion'];
+                    
+                $prompt .= "ID: {$curso['id']}\n";
+                $prompt .= "NOMBRE: {$curso['nombre']}\n";
+                $prompt .= "CAPACITACIÓN: {$curso['capacitacion']}\n";
+                $prompt .= "DESCRIPCIÓN: {$descripcionCorta}\n";
+                $prompt .= "---\n";
             }
 
-            $prompt .= "\nRESPUESTA REQUERIDA:\n";
-            $prompt .= "- Si hay problemas FÍSICOS y EMOCIONALES significativos Y existen cursos específicos para cada uno, recomienda 2 cursos (máximo):\n";
-            $prompt .= "  CURSO_1:\n  NOMBRE: [nombre]\n  ID: [id]\n  TIPO: FÍSICO\n  RAZÓN: [breve]\n\n";
-            $prompt .= "  CURSO_2:\n  NOMBRE: [nombre]\n  ID: [id]\n  TIPO: EMOCIONAL\n  RAZÓN: [breve]\n\n";
-            $prompt .= "- Si solo hay un tipo de problema O un curso cubre ambos, recomienda solo 1:\n";
-            $prompt .= "  CURSO_1:\n  NOMBRE: [nombre]\n  ID: [id]\n  TIPO: [FÍSICO/EMOCIONAL/AMBOS]\n  RAZÓN: [breve]\n\n";
-            $prompt .= "- Si no hay cursos adecuados:\n  NO_RECOMENDACION";
+            $prompt .= <<<PROMPT
+
+🎯 CRITERIOS DE RECOMENDACIÓN:
+
+1. Analiza los SÍNTOMAS REALES Y ESPECÍFICOS mencionados en las evaluaciones
+2. Si la evaluación dice "sin hallazgos", "sin síntomas", "rangos normales", "adecuado" o similar, NO recomiendes cursos
+3. Solo recomienda cursos si hay síntomas CLAROS Y PREOCUPANTES como: dolor severo, trauma, ansiedad severa, etc.
+4. La RAZÓN debe mencionar los SÍNTOMAS EXACTOS de la evaluación que justifican el curso
+5. NO inventes síntomas que no estén en el texto de evaluación
+
+📝 FORMATO DE RESPUESTA ESTRICTO:
+
+**CASO 1:** Si hay síntomas FÍSICOS Y EMOCIONALES severos/preocupantes Y existen cursos para cada uno:
+
+CURSO_1:
+NOMBRE: [nombre exacto del curso]
+ID: [número]
+TIPO: FÍSICO
+RAZÓN: [cita los síntomas EXACTOS de la evaluación física - máx 80 caracteres]
+
+CURSO_2:
+NOMBRE: [nombre exacto del curso]
+ID: [número]
+TIPO: EMOCIONAL
+RAZÓN: [cita los síntomas EXACTOS de la evaluación emocional - máx 80 caracteres]
+
+**CASO 2:** Si solo hay UN tipo de problema severo:
+
+CURSO_1:
+NOMBRE: [nombre exacto del curso]
+ID: [número]
+TIPO: [FÍSICO o EMOCIONAL o AMBOS]
+RAZÓN: [cita los síntomas EXACTOS de la evaluación - máx 80 caracteres]
+
+**CASO 3:** Si la evaluación indica "sin hallazgos", "sin síntomas", "adecuado", "normal" o similar:
+
+NO_RECOMENDACION
+
+⚠️ MUY IMPORTANTE:
+- Lee CUIDADOSAMENTE toda la evaluación antes de decidir
+- Si dice "sin hallazgos preocupantes" o "sin síntomas significativos" → responde NO_RECOMENDACION
+- Solo recomienda si hay problemas CLAROS y ESPECÍFICOS
+- La RAZÓN debe copiar síntomas textuales de la evaluación, no inventar
+
+PROMPT;
 
             // Llamar a la API de Google Gemini
             $response = Http::timeout(30)

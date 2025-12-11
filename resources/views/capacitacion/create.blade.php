@@ -238,7 +238,7 @@
 
       <div class="card-footer">
         <a href="{{ route('capacitaciones.index') }}" class="btn btn-secondary">Cancelar</a>
-          <button type="button" class="btn btn-primary" id="btnSubmitCapacitacion">Guardar</button>
+        <button type="button" class="btn btn-primary" id="btnSubmitCapacitacion">Guardar</button>
 
         <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalGestionarCursos">
           <i class="bi bi-list-ul"></i> Gestionar Cursos
@@ -528,48 +528,56 @@
 
 
     function mostrarErrorCross(mensaje) {
-  const alert = document.getElementById("alertErrorCross");
-  if (!alert) return;
+      const alert = document.getElementById("alertErrorCross");
+      if (!alert) return;
 
-  alert.innerHTML = mensaje;
-  alert.classList.remove("d-none");
+      alert.innerHTML = mensaje;
+      alert.classList.remove("d-none");
 
-  // Opcional: hacer scroll al inicio del modal
-  alert.scrollIntoView({ behavior: "smooth", block: "start" });
-}
+      // Opcional: hacer scroll al inicio del modal
+      alert.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
 
 
 
     async function validarCursoCrossChecking(nombre) {
+      // Si no hay URL configurada, no hacemos nada y dejamos continuar
+      if (!INCENDIOS_URL) {
+        return false;
+      }
+
       try {
         const url = `${INCENDIOS_URL}/sync/cursos/search?nombre=` + encodeURIComponent(nombre);
 
-
         const resp = await fetch(url, {
-    headers: {
-        "Authorization": "Bearer {{ env('INCENDIOS_TOKEN') }}",
-        "Accept": "application/json"
-    }
-});
+          headers: {
+            "Authorization": "Bearer {{ env('INCENDIOS_TOKEN') }}",
+            "Accept": "application/json"
+          }
+        });
 
-
-        // Si el otro microservicio falla → forzamos error
+        // Si el otro microservicio responde mal → tratamos como error de red
         if (!resp.ok) {
           throw new Error("No se pudo conectar con el otro sistema.");
         }
 
         const data = await resp.json();
 
+        // true = existe en INCENDIOS, false = NO existe
         return data.exists === true;
 
-      }
-      catch (error) {
+      } catch (error) {
+        // ⚠️ Solo avisamos, pero NO bloqueamos la creación
         mostrarErrorCross(
           `No se pudo validar la existencia del curso en el otro sistema.<br><small>${error.message}</small>`
         );
-        throw error; // ⬅️ DETIENE EL submit
+
+        // Muy importante: NO lanzamos error, devolvemos false
+        return false;
       }
     }
+
+
 
 
 
@@ -693,22 +701,22 @@
         let html = '';
         etapasTemp.forEach((etapa, index) => {
           html += `
-              <div class="step-item">
-                <div class="step-number">${index + 1}</div>
-                <div class="step-content">
-                  <div class="step-title">Etapa ${index + 1}</div>
-                  <div class="step-description">${etapa.nombre}</div>
-                </div>
-                <div class="step-actions">
-                  <button type="button" class="btn btn-sm btn-outline-warning" onclick="editarEtapa(${index})">
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <button type="button" class="btn btn-sm btn-outline-danger ml-2" onclick="eliminarEtapa(${index})">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </div>
-              </div>
-            `;
+                  <div class="step-item">
+                    <div class="step-number">${index + 1}</div>
+                    <div class="step-content">
+                      <div class="step-title">Etapa ${index + 1}</div>
+                      <div class="step-description">${etapa.nombre}</div>
+                    </div>
+                    <div class="step-actions">
+                      <button type="button" class="btn btn-sm btn-outline-warning" onclick="editarEtapa(${index})">
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                      <button type="button" class="btn btn-sm btn-outline-danger ml-2" onclick="eliminarEtapa(${index})">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                `;
         });
 
         container.innerHTML = html;
@@ -785,14 +793,14 @@
         let html = '';
         curso.etapas.forEach((etapa, idx) => {
           html += `
-              <div class="step-item">
-                <div class="step-number">${idx + 1}</div>
-                <div class="step-content">
-                  <div class="step-title">Etapa ${idx + 1}</div>
-                  <div class="step-description">${etapa.nombre}</div>
-                </div>
-              </div>
-            `;
+                  <div class="step-item">
+                    <div class="step-number">${idx + 1}</div>
+                    <div class="step-content">
+                      <div class="step-title">Etapa ${idx + 1}</div>
+                      <div class="step-description">${etapa.nombre}</div>
+                    </div>
+                  </div>
+                `;
         });
 
         document.getElementById('etapasViewContainer').innerHTML = html;
@@ -822,30 +830,30 @@
         let html = '';
         cursos.forEach((curso, index) => {
           html += `
-              <div class="col-md-6">
-                <div class="curso-card">
-                  <div class="curso-card-header">
-                    <i class="bi bi-journal-text"></i> ${curso.nombre}
-                  </div>
-                  <div class="curso-card-body">
-                    <span class="etapas-count">
-                      <i class="bi bi-list-check"></i> ${curso.etapas.length} etapas
-                    </span>
-                    <div>
-                      <button type="button" class="btn btn-sm btn-outline-info" onclick="verEtapasCurso(${index})">
-                        <i class="bi bi-eye"></i>
-                      </button>
-                      <button type="button" class="btn btn-sm btn-outline-warning ml-1" onclick="editarCurso(${index})">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                      <button type="button" class="btn btn-sm btn-outline-danger ml-1" onclick="eliminarCurso(${index})">
-                        <i class="bi bi-trash"></i>
-                      </button>
+                  <div class="col-md-6">
+                    <div class="curso-card">
+                      <div class="curso-card-header">
+                        <i class="bi bi-journal-text"></i> ${curso.nombre}
+                      </div>
+                      <div class="curso-card-body">
+                        <span class="etapas-count">
+                          <i class="bi bi-list-check"></i> ${curso.etapas.length} etapas
+                        </span>
+                        <div>
+                          <button type="button" class="btn btn-sm btn-outline-info" onclick="verEtapasCurso(${index})">
+                            <i class="bi bi-eye"></i>
+                          </button>
+                          <button type="button" class="btn btn-sm btn-outline-warning ml-1" onclick="editarCurso(${index})">
+                            <i class="bi bi-pencil"></i>
+                          </button>
+                          <button type="button" class="btn btn-sm btn-outline-danger ml-1" onclick="eliminarCurso(${index})">
+                            <i class="bi bi-trash"></i>
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            `;
+                `;
         });
 
         cursosCards.innerHTML = html;
@@ -859,14 +867,14 @@
         let html = '';
         curso.etapas.forEach((etapa, idx) => {
           html += `
-              <div class="step-item">
-                <div class="step-number">${idx + 1}</div>
-                <div class="step-content">
-                  <div class="step-title">Etapa ${idx + 1}</div>
-                  <div class="step-description">${etapa.nombre}</div>
-                </div>
-              </div>
-            `;
+                  <div class="step-item">
+                    <div class="step-number">${idx + 1}</div>
+                    <div class="step-content">
+                      <div class="step-title">Etapa ${idx + 1}</div>
+                      <div class="step-description">${etapa.nombre}</div>
+                    </div>
+                  </div>
+                `;
         });
 
         document.getElementById('etapasViewContainer').innerHTML = html;
@@ -901,7 +909,6 @@
           return;
         }
 
-        // Si acabamos de guardar un curso nuevo, obtener el último índice
         if (cursos.length > 0) {
           const ultimoIndex = cursos.length - 1;
           editarCurso(ultimoIndex);
@@ -911,7 +918,6 @@
         }
       }
 
-      // Eliminar curso
       window.eliminarCurso = function (index) {
         if (confirm('¿Estás seguro de eliminar este curso y todas sus etapas?')) {
           cursos.splice(index, 1);
@@ -919,14 +925,12 @@
         }
       }
 
-      // Al abrir modal
       $('#modalGestionarCursos').on('show.bs.modal', function () {
         renderizarCursos();
         irAPaso(1);
         capNombreSpan.textContent = nombreCapInput.value.trim() || 'Nueva Capacitación';
       });
 
-      // Al cerrar modal → limpiar alerta de error
       $('#modalGestionarCursos').on('hidden.bs.modal', function () {
         const alert = document.getElementById("alertErrorCross");
         if (alert) {
@@ -937,29 +941,21 @@
 
 
 
-      // Antes de enviar formulario
       document.getElementById("formCapacitacion").addEventListener("submit", async function (e) {
-        e.preventDefault(); // ⛔ DETIENE ENVÍO AUTOMÁTICO
+        e.preventDefault(); // DETIENE ENVÍO AUTOMÁTICO
 
         const container = document.getElementById("cursosHiddenInputs");
         container.innerHTML = "";
 
-        // ❗ VALIDACIÓN CROSS-CHECKING PARA TODOS LOS CURSOS
+        //VALIDACIÓN CROSS-CHECKING PARA TODOS LOS CURSOS
         for (const curso of cursos) {
-          try {
-            const existe = await validarCursoCrossChecking(curso.nombre);
-
-            if (existe) {
-              mostrarErrorCross(`El curso <strong>${curso.nombre}</strong> ya existe en el otro sistema.`);
-              return; // ❌ DETIENE EL SUBMIT
-            }
-
-          } catch (error) {
-            return; // ❌ DETIENE EL SUBMIT
-          }
+          const existe = await validarCursoCrossChecking(curso.nombre);
+          if (existe) {
+            mostrarErrorCross(`El curso <strong>${curso.nombre}</strong> ya existe en el otro sistema.`);
+            return; 
+          }          
         }
 
-        // ✔ Si todo OK, agregar hidden inputs
         cursos.forEach((curso, i) => {
           addHiddenInput(container, `cursos[${i}][nombre]`, curso.nombre);
           if (curso.descripcion) {
@@ -971,7 +967,6 @@
           });
         });
 
-        // 🔥 ENVIAR AHORA SÍ
         this.submit();
       });
 
@@ -992,19 +987,19 @@
             .dispatchEvent(new Event("submit"));
         });
 
-      
+
 
     });
 
 
-</script>
+  </script>
 
 
 
-<script src="/vendor/adminlte/plugins/jquery/jquery.min.js"></script>
-<script src="/vendor/adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script>
+  <script src="/vendor/adminlte/plugins/jquery/jquery.min.js"></script>
+  <script src="/vendor/adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script>
     const INCENDIOS_URL = "{{ env('INCENDIOS_URL') }}";
-</script>
+  </script>
 
 @endsection
