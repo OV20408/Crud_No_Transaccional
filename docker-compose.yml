@@ -13,6 +13,28 @@ services:
       DB_DATABASE: gevopi_db
       DB_USERNAME: admin
       DB_PASSWORD: admin123
+      MAIL_MAILER: smtp
+      MAIL_HOST: smtp.gmail.com
+      MAIL_PORT: 587
+      MAIL_USERNAME: oteran4812@gmail.com
+      MAIL_PASSWORD: yfficdrfrqywxobz
+      MAIL_ENCRYPTION: tls
+      MAIL_FROM_ADDRESS: oteran4812@gmail.com
+      MAIL_FROM_NAME: "GEVOPI"
+      REVERB_APP_ID: 885889
+      REVERB_APP_KEY: ljtplxexpbq7atbjzrzp
+      REVERB_APP_SECRET: yy9plhe0c7ffjltaidfh
+      REVERB_HOST: 192.168.0.4 #booooooooo
+      REVERB_PORT: 8080
+      REVERB_SCHEME: http
+
+      VITE_REVERB_APP_KEY: "${REVERB_APP_KEY}"
+      VITE_REVERB_HOST: "${REVERB_HOST}"
+      VITE_REVERB_PORT: "${REVERB_PORT}"
+      VITE_REVERB_SCHEME: "${REVERB_SCHEME}"
+
+      GOOGLE_GEMINI_API_KEY_CURSOS: AIzaSyBjF1jdPbK1w4B4lQtjmzMSqHaQ6qICu1A
+      GOOGLE_GEMINI_API_KEY_NECESIDADES: AIzaSyAfToymW4Q_4WybjfbZIuE5wK2uLAoq33k
     depends_on:
       - db
     networks:
