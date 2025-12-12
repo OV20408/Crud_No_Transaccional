@@ -53,7 +53,7 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:Administrador'])->group(function () {
         
         // Gestión de administradores
-    Route::get('/administradores', [AdministradorController::class, 'index'])
+        Route::get('/administradores', [AdministradorController::class, 'index'])
             ->name('administradores.index');
         Route::get('/administradores/create', [AdministradorController::class, 'create'])
             ->name('administradores.create');
@@ -62,21 +62,43 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/administradores/{id}/toggle-estado', [AdministradorController::class, 'toggleEstado'])
             ->name('administradores.toggle-estado');
 
+            //inactivos coso
+            Route::get('/voluntarios/inactivos', [VoluntarioController::class, 'inactivos'])
+            ->name(name: 'voluntarios.inactivos');
+
         // Gestión de voluntarios
-        Route::resource('voluntarios', VoluntarioController::class);
-        Route::get('/voluntarios/{id}/historial-pdf', [VoluntarioController::class, 'descargarHistorialPDF'])
+            Route::resource('voluntarios', VoluntarioController::class);
+        
+            Route::get('/voluntarios/{id}/historial-pdf', [VoluntarioController::class, 'descargarHistorialPDF'])
             ->name('voluntarios.historial.pdf');
-        Route::post('voluntarios/{id}/necesidades/asignar', [VoluntarioController::class, 'asignarNecesidad'])
+
+            Route::get('/voluntarios/{id}/capacitaciones-pdf', [VoluntarioController::class, 'descargarCapacitacionesPDF'])
+            ->name('voluntarios.capacitaciones.pdf');
+
+            Route::get('/voluntarios/{id}/necesidades-pdf', [VoluntarioController::class, 'descargarNecesidadesPDF'])
+            ->name('voluntarios.necesidades.pdf');
+
+           
+
+        // Cambiar estado del voluntario
+            Route::post('/voluntarios/{id}/cambiar-estado', [VoluntarioController::class, 'cambiarEstado'])
+            ->name('voluntarios.cambiar-estado');
+
+            Route::post('voluntarios/{id}/necesidades/asignar', [VoluntarioController::class, 'asignarNecesidad'])
             ->name('voluntarios.necesidades.asignar');
-        Route::post('voluntarios/{id}/capacitaciones/asignar', [VoluntarioController::class, 'asignarCapacitacion'])
+        
+            Route::post('voluntarios/{id}/capacitaciones/asignar', [VoluntarioController::class, 'asignarCapacitacion'])
             ->name('voluntarios.capacitaciones.asignar');
-        Route::post('voluntarios/{id}/cursos/asignar', [VoluntarioController::class, 'asignarCurso'])
+        
+            Route::post('voluntarios/{id}/cursos/asignar', [VoluntarioController::class, 'asignarCurso'])
             ->name('voluntarios.cursos.asignar');
-        Route::get('/voluntarios/{voluntarioId}/reporte/{reporteId}/{tipo}/marcar-visto', 
+        
+            Route::get('/voluntarios/{voluntarioId}/reporte/{reporteId}/{tipo}/marcar-visto', 
             [VoluntarioController::class, 'marcarReporteVisto'])
             ->name('voluntarios.marcar-reporte-visto')
             ->where('tipo', 'fisico|emocional');
-        Route::get('/voluntarios/{id}/datos-actualizados', [VoluntarioController::class, 'getDatosActualizados'])
+        
+            Route::get('/voluntarios/{id}/datos-actualizados', [VoluntarioController::class, 'getDatosActualizados'])
             ->name('voluntarios.datos-actualizados');
 
         // Gestión de capacitaciones

@@ -26,7 +26,7 @@ class VoluntarioController extends Controller
         if ($request->filled('q')) {
             $query->where(function ($q) use ($request) {
                 $q->where('usuario.nombres', 'ILIKE', '%' . $request->q . '%')
-                  ->orWhere('usuario.apellidos', 'ILIKE', '%' . $request->q . '%');
+                    ->orWhere('usuario.apellidos', 'ILIKE', '%' . $request->q . '%');
             });
         }
 
@@ -54,29 +54,31 @@ class VoluntarioController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'nombres'             => 'required|string|max:255',
-            'apellidos'           => 'required|string|max:255',
-            'ci'                  => 'required|string|max:255|unique:usuario,ci',
-            'fecha_nacimiento'    => [
-                'nullable',
-                'date',
-                'before:today',
-                'before_or_equal:' . now()->subYears(18)->format('Y-m-d')
+        $validated = $request->validate(
+            [
+                'nombres' => 'required|string|max:255',
+                'apellidos' => 'required|string|max:255',
+                'ci' => 'required|string|max:255|unique:usuario,ci',
+                'fecha_nacimiento' => [
+                    'nullable',
+                    'date',
+                    'before:today',
+                    'before_or_equal:' . now()->subYears(18)->format('Y-m-d')
+                ],
+                'genero' => 'nullable|string|max:50',
+                'telefono' => 'nullable|string|max:255',
+                'email' => 'required|email|max:255|unique:usuario,email',
+                'direccion_domicilio' => 'nullable|string|max:255',
+                'estado' => 'nullable|string|max:50',
+                'nivel_entrenamiento' => 'nullable|string|max:255',
+                'entidad_pertenencia' => 'nullable|string|max:255',
+                'tipo_sangre' => 'nullable|string|max:10',
             ],
-            'genero'              => 'nullable|string|max:50',
-            'telefono'            => 'nullable|string|max:255',
-            'email'               => 'required|email|max:255|unique:usuario,email',
-            'direccion_domicilio' => 'nullable|string|max:255',
-            'estado'              => 'nullable|string|max:50',
-            'nivel_entrenamiento' => 'nullable|string|max:255',
-            'entidad_pertenencia' => 'nullable|string|max:255',
-            'tipo_sangre'         => 'nullable|string|max:10',
-        ],
-        [
-            'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser una fecha pasada.',
-            'fecha_nacimiento.before_or_equal' => 'El voluntario debe tener al menos 18 años de edad.',
-        ]);
+            [
+                'fecha_nacimiento.before' => 'La fecha de nacimiento debe ser una fecha pasada.',
+                'fecha_nacimiento.before_or_equal' => 'El voluntario debe tener al menos 18 años de edad.',
+            ]
+        );
 
         $rolVoluntarioId = Rol::where('nombre', 'Voluntario')->value('id');
 
@@ -87,26 +89,26 @@ class VoluntarioController extends Controller
         $passwordTemporal = Str::random(12);
 
         $user = User::create([
-            'nombres'             => $validated['nombres'],
-            'apellidos'           => $validated['apellidos'],
-            'ci'                  => $validated['ci'],
-            'fecha_nacimiento'    => $validated['fecha_nacimiento'] ?? null,
-            'genero'              => $validated['genero'] ?? null,
-            'telefono'            => $validated['telefono'] ?? null,
-            'email'               => $validated['email'],
+            'nombres' => $validated['nombres'],
+            'apellidos' => $validated['apellidos'],
+            'ci' => $validated['ci'],
+            'fecha_nacimiento' => $validated['fecha_nacimiento'] ?? null,
+            'genero' => $validated['genero'] ?? null,
+            'telefono' => $validated['telefono'] ?? null,
+            'email' => $validated['email'],
             'direccion_domicilio' => $validated['direccion_domicilio'] ?? null,
-            'estado'              => $validated['estado'] ?? 'activo',
-            'id_rol'              => $rolVoluntarioId,
+            'estado' => $validated['estado'] ?? 'activo',
+            'id_rol' => $rolVoluntarioId,
             'nivel_entrenamiento' => $validated['nivel_entrenamiento'] ?? null,
             'entidad_pertenencia' => $validated['entidad_pertenencia'] ?? null,
-            'tipo_sangre'         => $validated['tipo_sangre'] ?? null,
-            'password'            => $passwordTemporal,
+            'tipo_sangre' => $validated['tipo_sangre'] ?? null,
+            'password' => $passwordTemporal,
         ]);
 
         DB::table('historial_clinico')->insert([
-            'id_usuario'         => $user->id_usuario,
-            'fecha_inicio'       => now(),
-            'fecha_actualizacion'=> now(),
+            'id_usuario' => $user->id_usuario,
+            'fecha_inicio' => now(),
+            'fecha_actualizacion' => now(),
             'ci_voluntario_accion' => \Illuminate\Support\Facades\Auth::user()->ci ?? null, // Trazabilidad API Gateway
         ]);
 
@@ -155,7 +157,7 @@ class VoluntarioController extends Controller
 
         // 4. Reporte más reciente (para capacitaciones y necesidades)
         $reporteMasRecienteGeneral = $reportes[0] ?? null;
-        
+
         // 4.1 Reporte más reciente CON evaluaciones (para mostrar en la vista)
         $reporteMasReciente = null;
         foreach ($reportes as $reporte) {
@@ -241,7 +243,7 @@ class VoluntarioController extends Controller
                 ->orderBy('reporte.fecha_generado', 'desc')
                 ->get();
         }
-        
+
         if (empty($evaluaciones) || count($evaluaciones) == 0) {
             $reportesEvaluacion = DB::table('reporte')
                 ->join('historial_clinico', 'historial_clinico.id', '=', 'reporte.id_historial')
@@ -255,9 +257,9 @@ class VoluntarioController extends Controller
                 )
                 ->orderBy('reporte.fecha_generado', 'desc')
                 ->get();
-                
-            $evaluaciones = $reportesEvaluacion->map(function($reporte) {
-                return (object)[
+
+            $evaluaciones = $reportesEvaluacion->map(function ($reporte) {
+                return (object) [
                     'reporte_id' => $reporte->reporte_id,
                     'resumen_fisico' => $reporte->resumen_fisico,
                     'resumen_emocional' => $reporte->resumen_emocional,
@@ -284,7 +286,7 @@ class VoluntarioController extends Controller
         $capacitacionesAll = Capacitacion::orderBy('nombre')->get();
 
         $reportesVistos = session()->get('reportes_vistos', []);
-        
+
         $reportesNoVistos = [];
         foreach ($reportes as $reporte) {
             $reportesNoVistos[] = [
@@ -342,7 +344,7 @@ class VoluntarioController extends Controller
 
         $reportesVistos = session()->get('reportes_vistos', []);
         $key = $reporteId . '_' . $tipo;
-        
+
         if (!in_array($key, $reportesVistos)) {
             $reportesVistos[] = $key;
             session()->put('reportes_vistos', $reportesVistos);
@@ -380,12 +382,12 @@ class VoluntarioController extends Controller
                 ProgresoVoluntario::firstOrCreate(
                     [
                         'id_usuario' => $idUsuario,
-                        'id_etapa'   => $etapa->id,
+                        'id_etapa' => $etapa->id,
                     ],
                     [
-                        'estado'            => 'en_progreso',
-                        'fecha_inicio'      => now(),
-                        'fecha_finalizacion'=> null,
+                        'estado' => 'en_progreso',
+                        'fecha_inicio' => now(),
+                        'fecha_finalizacion' => null,
                     ]
                 );
             }
@@ -418,18 +420,18 @@ class VoluntarioController extends Controller
 
         // 2. Crear un nuevo reporte para registrar la necesidad
         $reporteId = DB::table('reporte')->insertGetId([
-            'id_historial'     => $historial->id,
-            'estado_general'   => 'Necesidad asignada',
-            'observaciones'    => 'Necesidad asignada manualmente desde el perfil del voluntario.',
-            'fecha_generado'   => now(),
+            'id_historial' => $historial->id,
+            'estado_general' => 'Necesidad asignada',
+            'observaciones' => 'Necesidad asignada manualmente desde el perfil del voluntario.',
+            'fecha_generado' => now(),
             'ci_voluntario_accion' => \Illuminate\Support\Facades\Auth::user()->ci ?? null, // Trazabilidad API Gateway
         ]);
 
         // 3. Asociar la necesidad al reporte
         DB::table('reporte_necesidad')->insert([
-            'id_reporte'    => $reporteId,
-            'id_necesidad'  => $request->necesidad_id,
-            'created_at'    => now(),
+            'id_reporte' => $reporteId,
+            'id_necesidad' => $request->necesidad_id,
+            'created_at' => now(),
             'ci_voluntario_accion' => \Illuminate\Support\Facades\Auth::user()->ci ?? null, // Trazabilidad API Gateway
         ]);
 
@@ -466,12 +468,12 @@ class VoluntarioController extends Controller
                 ProgresoVoluntario::firstOrCreate(
                     [
                         'id_usuario' => $idUsuario,
-                        'id_etapa'   => $etapa->id,
+                        'id_etapa' => $etapa->id,
                     ],
                     [
-                        'estado'            => 'no_iniciado',
-                        'fecha_inicio'      => null,
-                        'fecha_finalizacion'=> null,
+                        'estado' => 'no_iniciado',
+                        'fecha_inicio' => null,
+                        'fecha_finalizacion' => null,
                     ]
                 );
             }
@@ -562,9 +564,179 @@ class VoluntarioController extends Controller
     }
 
 
+    public function descargarCapacitacionesPDF($id)
+    {
+        // Obtener voluntario
+        $voluntario = DB::table('usuario')
+            ->join('rol', 'usuario.id_rol', '=', 'rol.id')
+            ->where('usuario.id_usuario', $id)
+            ->where('rol.nombre', 'Voluntario')
+            ->select('usuario.*')
+            ->first();
+
+        if (!$voluntario) {
+            abort(404, 'Voluntario no encontrado');
+        }
+
+        // Obtener capacitaciones con progreso
+        $capacitaciones = DB::select("
+        SELECT DISTINCT 
+            c.id AS capacitacion_id,
+            c.nombre AS capacitacion,
+            cu.id AS curso_id,
+            cu.nombre AS curso,
+            e.id AS etapa_id,
+            e.nombre AS etapa,
+            e.orden AS etapa_orden,
+            pv.estado,
+            pv.fecha_inicio,
+            pv.fecha_finalizacion
+        FROM progreso_voluntario pv
+        JOIN etapa e ON e.id = pv.id_etapa
+        JOIN curso cu ON cu.id = e.id_curso
+        JOIN capacitacion c ON c.id = cu.id_capacitacion
+        WHERE pv.id_usuario = ?
+        ORDER BY c.nombre, cu.nombre, e.orden
+    ", [$id]);
+
+        $pdf = PDF::loadView('voluntarios.capacitaciones-pdf', compact(
+            'voluntario',
+            'capacitaciones'
+        ));
+
+        $pdf->setPaper('letter', 'portrait');
+
+        $nombreArchivo = 'Capacitaciones_' . str_replace(' ', '_', $voluntario->nombres . '_' . $voluntario->apellidos) . '.pdf';
+
+        return $pdf->download($nombreArchivo);
+    }
+
+    /**
+     * Descargar PDF de Necesidades
+     */
+    public function descargarNecesidadesPDF($id)
+    {
+        // Obtener voluntario
+        $voluntario = DB::table('usuario')
+            ->join('rol', 'usuario.id_rol', '=', 'rol.id')
+            ->where('usuario.id_usuario', $id)
+            ->where('rol.nombre', 'Voluntario')
+            ->select('usuario.*')
+            ->first();
+
+        if (!$voluntario) {
+            abort(404, 'Voluntario no encontrado');
+        }
+
+        // Obtener necesidades
+        $necesidades = DB::table('reporte_necesidad')
+            ->join('reporte', 'reporte.id', '=', 'reporte_necesidad.id_reporte')
+            ->join('historial_clinico', 'historial_clinico.id', '=', 'reporte.id_historial')
+            ->join('necesidad', 'necesidad.id', '=', 'reporte_necesidad.id_necesidad')
+            ->where('historial_clinico.id_usuario', $id)
+            ->select('necesidad.tipo', 'necesidad.descripcion', 'reporte.fecha_generado')
+            ->orderBy('reporte.fecha_generado', 'desc')
+            ->get();
+
+        $pdf = PDF::loadView('voluntarios.necesidades-pdf', compact(
+            'voluntario',
+            'necesidades'
+        ));
+
+        $pdf->setPaper('letter', 'portrait');
+
+        $nombreArchivo = 'Necesidades_' . str_replace(' ', '_', $voluntario->nombres . '_' . $voluntario->apellidos) . '.pdf';
+
+        return $pdf->download($nombreArchivo);
+    }
 
 
-        /**
+    /**
+     * Listar voluntarios inactivos
+     */
+    public function inactivos(Request $request)
+    {
+        $query = DB::table('usuario')
+            ->join('rol', 'usuario.id_rol', '=', 'rol.id')
+            ->where('rol.nombre', 'Voluntario')
+            ->where('usuario.estado', 'ILIKE', 'inactivo')
+            ->select('usuario.*');
+
+        if ($request->filled('q')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('usuario.nombres', 'ILIKE', '%' . $request->q . '%')
+                    ->orWhere('usuario.apellidos', 'ILIKE', '%' . $request->q . '%');
+            });
+        }
+
+        if ($request->filled('ci')) {
+            $query->where('usuario.ci', 'LIKE', '%' . $request->ci . '%');
+        }
+
+        if ($request->filled('tipo_sangre')) {
+            $query->where('usuario.tipo_sangre', $request->tipo_sangre);
+        }
+
+        $voluntarios = $query->get();
+
+        return view('voluntarios.voluntarios_inactivos', compact('voluntarios'));
+    }
+
+    /**
+     * Cambiar estado del voluntario (activo/inactivo)
+     */
+    public function cambiarEstado(Request $request, $id)
+    {
+        $request->validate([
+            'estado' => 'required|in:activo,inactivo'
+        ]);
+
+        try {
+            $voluntario = DB::table('usuario')
+                ->where('id_usuario', $id)
+                ->first();
+
+            if (!$voluntario) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Voluntario no encontrado'
+                ], 404);
+            }
+
+            $nuevoEstado = $request->estado;
+
+            // Actualizar estado
+            DB::table('usuario')
+                ->where('id_usuario', $id)
+                ->update([
+                    'estado' => $nuevoEstado,
+                    'fecha_inactivacion' => $nuevoEstado === 'inactivo' ? now() : null,
+                    'updated_at' => now()
+                ]);
+
+            $mensaje = $nuevoEstado === 'inactivo'
+                ? 'Voluntario marcado como inactivo correctamente'
+                : 'Voluntario reactivado correctamente';
+
+            return response()->json([
+                'success' => true,
+                'message' => $mensaje
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al cambiar el estado: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+
+
+
+
+    /**
      * API: Obtener datos actualizados del voluntario para refresh automático
      */
     public function getDatosActualizados($id)
@@ -630,7 +802,7 @@ class VoluntarioController extends Controller
                     ->orderBy('reporte.fecha_generado', 'desc')
                     ->get();
 
-                $evaluaciones = $reportesEvaluacion->map(function($reporte) {
+                $evaluaciones = $reportesEvaluacion->map(function ($reporte) {
                     return [
                         'reporte_id' => $reporte->reporte_id,
                         'resumen_fisico' => $reporte->resumen_fisico,

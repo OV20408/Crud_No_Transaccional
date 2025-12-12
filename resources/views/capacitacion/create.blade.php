@@ -222,6 +222,10 @@
       <div id="cursosHiddenInputs"></div>
 
       <div class="card-body">
+        <div id="noCoursesMessage" class="text-danger d-none text-center w-100 mb-3" style="font-weight:600;">
+          <i class="bi bi-exclamation-circle-fill" style="margin-right:6px;"></i>
+            No se puede crear capacitación sin cursos
+        </div>
         <div class="form-group">
           <label for="nombre">Nombre</label>
           <input type="text" name="nombre" id="nombre" class="form-control" value="{{ old('nombre') }}" required>
@@ -613,6 +617,16 @@
         pasoActual = paso;
       }
 
+      function showNoCourses() {
+        const el = document.getElementById('noCoursesMessage');
+        if (el) el.classList.remove('d-none');
+      }
+
+      function hideNoCourses() {
+        const el = document.getElementById('noCoursesMessage');
+        if (el) el.classList.add('d-none');
+      }
+
       function getStepName(paso) {
         switch (paso) {
           case 1: return 'lista';
@@ -783,8 +797,12 @@
         if (cursoEditandoIndex !== null) {
           cursos[cursoEditandoIndex] = curso;
           cursoEditandoIndex = null; // Limpiar después de editar
+          // Ocultar mensaje de no cursos si estaba visible
+          hideNoCourses();
         } else {
           cursos.push(curso);
+          // Ocultar mensaje de no cursos cuando agregamos el primero
+          hideNoCourses();
         }
 
         // Preparar vista de etapas antes de ir al paso 3
@@ -944,6 +962,16 @@
       document.getElementById("formCapacitacion").addEventListener("submit", async function (e) {
         e.preventDefault(); // DETIENE ENVÍO AUTOMÁTICO
 
+        // Validar que exista al menos 1 curso antes de continuar
+        if (!Array.isArray(cursos) || cursos.length === 0) {
+          showNoCourses();
+          const msg = document.getElementById('noCoursesMessage');
+          if (msg) msg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return;
+        }
+
+        hideNoCourses();
+
         const container = document.getElementById("cursosHiddenInputs");
         container.innerHTML = "";
 
@@ -981,11 +1009,17 @@
       }
 
       document.getElementById("btnSubmitCapacitacion")
-        .addEventListener("click", function () {
-          document
-            .getElementById("formCapacitacion")
-            .dispatchEvent(new Event("submit"));
-        });
+      .addEventListener("click", function () {
+        if (!Array.isArray(cursos) || cursos.length === 0) {
+          showNoCourses();
+          document.getElementById('noCoursesMessage').scrollIntoView({behavior:'smooth', block:'center'});
+          return;
+        }
+        hideNoCourses();
+        document
+          .getElementById("formCapacitacion")
+          .dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+      });
 
 
 

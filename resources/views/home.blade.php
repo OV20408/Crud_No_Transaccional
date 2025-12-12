@@ -141,8 +141,10 @@
                        style="width:40px;height:40px;line-height:40px;font-weight:bold;">
                     {{ $iniciales }}
                   </div>
+
                   <div>
                     <strong>{{ $vol->nombres }} {{ $vol->apellidos }}</strong><br>
+
                     @if($estado === 'activo')
                       <small class="text-success font-weight-bold">
                         <i class="fas fa-check-circle"></i> Activo
@@ -154,7 +156,17 @@
                     @else
                       <small class="text-muted">Sin estado</small>
                     @endif
+
+                    @if(!empty($vol->created_at))
+                      <br>
+                      <small class="text-muted">
+                        <i class="far fa-calendar-alt"></i>
+                        Registrado el {{ \Carbon\Carbon::parse($vol->created_at)->format('d/m/Y H:i') }}
+                      </small>
+                    @endif
                   </div>
+
+
                 </li>
               @empty
                 <li class="list-group-item text-muted text-center">
