@@ -7,12 +7,37 @@ services:
     volumes:
       - .:/var/www
     environment:
+      # App
+      APP_NAME: GEVOPI
+      APP_ENV: production
+      APP_KEY: base64:KmtIWWc4RjhUdWRoSGtqMnBXNTZoQ0x2YjVQeXJZMnM=
+      APP_DEBUG: false
+      APP_URL: http://localhost
+      APP_LOCALE: es
+      APP_FALLBACK_LOCALE: es
+      
+      # Logging
+      LOG_CHANNEL: stack
+      LOG_LEVEL: error
+      
+      # Database
       DB_CONNECTION: pgsql
-      DB_HOST: db       # Nombre del servicio del contenedor de postgres
+      DB_HOST: db
       DB_PORT: 5432
       DB_DATABASE: gevopi_db
       DB_USERNAME: admin
       DB_PASSWORD: admin123
+      
+      # Session & Cache
+      SESSION_DRIVER: database
+      SESSION_LIFETIME: 120
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+      
+      # Broadcasting
+      BROADCAST_CONNECTION: reverb
+      
+      # Mail
       MAIL_MAILER: smtp
       MAIL_HOST: smtp.gmail.com
       MAIL_PORT: 587
@@ -21,18 +46,22 @@ services:
       MAIL_ENCRYPTION: tls
       MAIL_FROM_ADDRESS: oteran4812@gmail.com
       MAIL_FROM_NAME: "GEVOPI"
+      
+      # Reverb (WebSockets)
       REVERB_APP_ID: 885889
       REVERB_APP_KEY: ljtplxexpbq7atbjzrzp
       REVERB_APP_SECRET: yy9plhe0c7ffjltaidfh
-      REVERB_HOST: 192.168.0.4 #booooooooo
+      REVERB_HOST: 192.168.0.4
       REVERB_PORT: 8080
       REVERB_SCHEME: http
-
-      VITE_REVERB_APP_KEY: "${REVERB_APP_KEY}"
-      VITE_REVERB_HOST: "${REVERB_HOST}"
-      VITE_REVERB_PORT: "${REVERB_PORT}"
-      VITE_REVERB_SCHEME: "${REVERB_SCHEME}"
-
+      
+      # Vite (Frontend)
+      VITE_REVERB_APP_KEY: ljtplxexpbq7atbjzrzp
+      VITE_REVERB_HOST: 192.168.0.4
+      VITE_REVERB_PORT: 8080
+      VITE_REVERB_SCHEME: http
+      
+      # Google Gemini IA
       GOOGLE_GEMINI_API_KEY_CURSOS: AIzaSyBjF1jdPbK1w4B4lQtjmzMSqHaQ6qICu1A
       GOOGLE_GEMINI_API_KEY_NECESIDADES: AIzaSyAfToymW4Q_4WybjfbZIuE5wK2uLAoq33k
     depends_on:
