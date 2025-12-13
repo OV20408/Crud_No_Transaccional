@@ -199,7 +199,7 @@ class TrazabilidadController extends Controller
                     'ci_voluntarios_acudir',
                     'fecha_respondida',
                     'ci_voluntario_accion as ci_voluntario_solicita',
-                    'ci_voluntario_responde',
+                    DB::raw('null as ci_voluntario_responde'),
                     'created_at',
                     'updated_at'
                 )
