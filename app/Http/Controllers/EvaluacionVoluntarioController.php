@@ -186,17 +186,24 @@ class EvaluacionVoluntarioController extends Controller
             $historial->update(['fecha_actualizacion' => Carbon::now()]);
             
             // Crear evaluación (relacionada con el test de evaluación física/psicológica)
-            // Buscar o usar el primer test disponible
+            // Buscar o crear el test si no existe
             $test = Test::first();
-            if ($test) {
-                Evaluacion::create([
-                    'id_reporte' => $reporte->id,
-                    'id_test' => $test->id,
-                    'id_universidad' => null,
-                    'fecha' => Carbon::now(),
-                    'ci_voluntario_accion' => $voluntario->ci // Trazabilidad API Gateway
+            if (!$test) {
+                $test = Test::create([
+                    'nombre' => 'Evaluación Física y Emocional',
+                    'categoria' => 'mixto',
+                    'descripcion' => 'Evaluación integral de condición física y emocional del voluntario'
                 ]);
             }
+            
+            Evaluacion::create([
+                'id_reporte' => $reporte->id,
+                'id_test' => $test->id,
+                'id_universidad' => null,
+                'fecha' => Carbon::now(),
+                'ci_voluntario_accion' => $voluntario->ci // Trazabilidad API Gateway
+            ]);
+            
             
             // ========================================
             // GENERAR RECOMENDACIONES DE CURSOS CON GOOGLE GEMINI
