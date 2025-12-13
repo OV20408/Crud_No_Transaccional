@@ -3,11 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+
 
 class Consulta extends Model
 {
-    use SoftDeletes;
+
 
     protected $table = 'consultas'; // tabla real
     public $timestamps = true;    // porque NO tiene updated_at

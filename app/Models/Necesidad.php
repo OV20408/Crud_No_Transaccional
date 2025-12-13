@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+
 
 /**
  * Class Necesidad
@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Necesidad extends Model
 {
-    use SoftDeletes;
+
 
     protected $table = 'necesidad';
     public $timestamps = true;

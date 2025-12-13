@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+
 
 /**
  * Class ProgresoVoluntario
@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class ProgresoVoluntario extends Model
 {
-    use SoftDeletes;
+
 
     protected $table = 'progreso_voluntario';
     public $timestamps = false;

@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+
 
 /**
  * Class Universidad
@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Universidad extends Model
 {
-    use SoftDeletes;
+
 
     protected $table = 'universidad';
         protected $primaryKey = 'id'; // Agregar esta línea
