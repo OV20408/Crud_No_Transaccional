@@ -113,7 +113,15 @@ class VoluntarioController extends Controller
         ]);
 
         if (!empty($user->email)) {
-            Password::sendResetLink(['email' => $user->email]);
+            try {
+                Password::sendResetLink(['email' => $user->email]);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Error al enviar correo de bienvenida: ' . $e->getMessage());
+                return redirect()
+                    ->route('voluntarios.index')
+                    ->with('nuevo_voluntario_id', $user->id_usuario)
+                    ->with('warning', 'Voluntario creado, pero hubo un error al enviar el correo: ' . $e->getMessage());
+            }
         }
 
         // Guardar el ID del voluntario recién creado en la sesión
