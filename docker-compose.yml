@@ -64,6 +64,10 @@ services:
       # Google Gemini IA
       GOOGLE_GEMINI_API_KEY_CURSOS: AIzaSyBjF1jdPbK1w4B4lQtjmzMSqHaQ6qICu1A
       GOOGLE_GEMINI_API_KEY_NECESIDADES: AIzaSyAfToymW4Q_4WybjfbZIuE5wK2uLAoq33k
+      
+      # Helpdesk Widget
+      HELPDESK_API_URL: https://proyecto-de-ultimo-minuto.online
+      HELPDESK_API_KEY: ${HELPDESK_API_KEY:-CONFIGURAR_API_KEY_EN_ENV}
     depends_on:
       - db
     networks:

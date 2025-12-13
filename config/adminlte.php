@@ -414,6 +414,14 @@ return [
             'can' => 'gestionar_usuarios',
         ],
 
+        // Sección de Soporte - Helpdesk Widget
+        ['header' => 'SOPORTE'],
+        [
+            'text' => 'Centro de Soporte',
+            'url' => 'helpdesk',
+            'icon' => 'fas fa-fw fa-headset',
+        ],
+
 
 
 
