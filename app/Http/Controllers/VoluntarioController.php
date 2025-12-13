@@ -439,7 +439,7 @@ class VoluntarioController extends Controller
             'estado_general' => 'Necesidad asignada',
             'observaciones' => 'Necesidad asignada manualmente desde el perfil del voluntario.',
             'fecha_generado' => now(),
-            'ci_voluntario' => \Illuminate\Support\Facades\Auth::user()->ci ?? null, // Trazabilidad API Gateway
+            'ci_voluntario_accion' => \Illuminate\Support\Facades\Auth::user()->ci ?? null, // Trazabilidad API Gateway
         ]);
 
         // 3. Asociar la necesidad al reporte
@@ -447,7 +447,7 @@ class VoluntarioController extends Controller
             'id_reporte' => $reporteId,
             'id_necesidad' => $request->necesidad_id,
             'created_at' => now(),
-            'ci_voluntario' => \Illuminate\Support\Facades\Auth::user()->ci ?? null, // Trazabilidad API Gateway
+            'ci_voluntario_accion' => \Illuminate\Support\Facades\Auth::user()->ci ?? null, // Trazabilidad API Gateway
         ]);
 
         return redirect()
