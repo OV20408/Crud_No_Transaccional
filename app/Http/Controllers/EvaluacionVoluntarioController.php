@@ -119,6 +119,15 @@ class EvaluacionVoluntarioController extends Controller
         try {
             $voluntario = User::where('id_usuario', $tokenData->id_voluntario)->first();
             
+            // DEBUG: Log para verificar datos del voluntario
+            Log::info('DEBUG Voluntario obtenido', [
+                'id_voluntario_token' => $tokenData->id_voluntario,
+                'voluntario_encontrado' => $voluntario ? 'SI' : 'NO',
+                'voluntario_id' => $voluntario->id_usuario ?? 'NULL',
+                'voluntario_ci' => $voluntario->ci ?? 'NULL',
+                'voluntario_completo' => $voluntario ? $voluntario->toArray() : 'NULL'
+            ]);
+            
             // Obtener o crear historial clínico del voluntario
             $historial = HistorialClinico::firstOrCreate(
                 ['id_usuario' => $voluntario->id_usuario],
