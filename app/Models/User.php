@@ -51,9 +51,7 @@ class User extends Authenticatable
         'updated_at' => 'datetime',
     ];
 
-    /**
-     * Enviar notificación personalizada para reset de contraseña en español.
-     */
+    
     public function sendPasswordResetNotification($token)
     {
         $this->notify(new ResetPasswordNotification($token));
@@ -86,8 +84,6 @@ class User extends Authenticatable
         // Opción 1: Usar Gravatar
         return 'https://www.gravatar.com/avatar/' . md5(strtolower(trim($this->email))) . '?s=200&d=mp';
         
-        // Opción 2: Si tienes campo 'foto_perfil' en la BD:
-        // return $this->foto_perfil ?? asset('img/default-avatar.png');
     }
 
     public function adminlte_profile_url()
@@ -95,10 +91,7 @@ class User extends Authenticatable
         return route('home'); // O la ruta de tu perfil
     }
 
-    /**
-     *  Laravel siempre llama a $user->password, por lo que
-     *  este método es el que debe mapear a "contrasena".
-     */
+    
     public function setPasswordAttribute($value)
     {
         if (strlen($value) < 60) {
