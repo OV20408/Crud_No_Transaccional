@@ -88,47 +88,54 @@ class VoluntarioController extends Controller
 
         $passwordTemporal = Str::random(12);
 
-        $user = User::create([
-            'nombres' => $validated['nombres'],
-            'apellidos' => $validated['apellidos'],
-            'ci' => $validated['ci'],
-            'fecha_nacimiento' => $validated['fecha_nacimiento'] ?? null,
-            'genero' => $validated['genero'] ?? null,
-            'telefono' => $validated['telefono'] ?? null,
-            'email' => $validated['email'],
-            'direccion_domicilio' => $validated['direccion_domicilio'] ?? null,
-            'estado' => $validated['estado'] ?? 'activo',
-            'id_rol' => $rolVoluntarioId,
-            'nivel_entrenamiento' => $validated['nivel_entrenamiento'] ?? null,
-            'entidad_pertenencia' => $validated['entidad_pertenencia'] ?? null,
-            'tipo_sangre' => $validated['tipo_sangre'] ?? null,
-            'password' => $passwordTemporal,
-        ]);
+        try {
+            DB::beginTransaction();
 
-        DB::table('historial_clinico')->insert([
-            'id_usuario' => $user->id_usuario,
-            'fecha_inicio' => now(),
-            'fecha_actualizacion' => now(),
-            'ci_voluntario' => \Illuminate\Support\Facades\Auth::user()->ci ?? null, // Trazabilidad API Gateway
-        ]);
+            $user = User::create([
+                'nombres' => $validated['nombres'],
+                'apellidos' => $validated['apellidos'],
+                'ci' => $validated['ci'],
+                'fecha_nacimiento' => $validated['fecha_nacimiento'] ?? null,
+                'genero' => $validated['genero'] ?? null,
+                'telefono' => $validated['telefono'] ?? null,
+                'email' => $validated['email'],
+                'direccion_domicilio' => $validated['direccion_domicilio'] ?? null,
+                'estado' => $validated['estado'] ?? 'activo',
+                'id_rol' => $rolVoluntarioId,
+                'nivel_entrenamiento' => $validated['nivel_entrenamiento'] ?? null,
+                'entidad_pertenencia' => $validated['entidad_pertenencia'] ?? null,
+                'tipo_sangre' => $validated['tipo_sangre'] ?? null,
+                'password' => $passwordTemporal,
+            ]);
 
-        if (!empty($user->email)) {
-            try {
-                Password::sendResetLink(['email' => $user->email]);
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Error al enviar correo de bienvenida: ' . $e->getMessage());
-                return redirect()
-                    ->route('voluntarios.index')
-                    ->with('nuevo_voluntario_id', $user->id_usuario)
-                    ->with('warning', 'Voluntario creado, pero hubo un error al enviar el correo: ' . $e->getMessage());
+            DB::table('historial_clinico')->insert([
+                'id_usuario' => $user->id_usuario,
+                'fecha_inicio' => now(),
+                'fecha_actualizacion' => now(),
+            ]);
+
+            DB::commit();
+
+            if (!empty($user->email)) {
+                try {
+                    Password::sendResetLink(['email' => $user->email]);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('Error al enviar correo de bienvenida: ' . $e->getMessage());
+                    // No retornamos aquí para no interrumpir el flujo de éxito
+                    session()->flash('warning', 'Voluntario creado, pero hubo un error al enviar el correo: ' . $e->getMessage());
+                }
             }
-        }
 
-        // Guardar el ID del voluntario recién creado en la sesión
-        return redirect()
-            ->route('voluntarios.index')
-            ->with('nuevo_voluntario_id', $user->id_usuario)
-            ->with('success', 'Voluntario creado correctamente. Se envió un correo para que configure su contraseña.');
+            return redirect()
+                ->route('voluntarios.index')
+                ->with('nuevo_voluntario_id', $user->id_usuario)
+                ->with('success', 'Voluntario creado correctamente. Se envió un correo para que configure su contraseña.');
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Error crítico al crear voluntario: ' . $e->getMessage());
+            return back()->withInput()->withErrors(['error' => 'Error al crear voluntario (Sistema): ' . $e->getMessage()]);
+        }
     }
 
 
