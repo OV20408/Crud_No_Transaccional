@@ -43,7 +43,7 @@ class Reporte extends Model
         'resumen_fisico',
         'respuestas_fisico',
         'respuestas_emocional',
-        'ci_voluntario', // Trazabilidad API Gateway
+        'ci_voluntario_accion', // Trazabilidad API Gateway
     ];
 
     /**

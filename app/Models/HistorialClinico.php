@@ -17,6 +17,7 @@ class HistorialClinico extends Model
         'id_usuario',
         'fecha_inicio',
         'fecha_actualizacion',
+        'ci_voluntario_accion',
     ];
 
     protected $casts = [
