@@ -186,7 +186,7 @@ class TrazabilidadController extends Controller
 
             // 7. SOLICITUDES DE AYUDA - Emergencias/solicitudes  
             $solicitudesAyuda = DB::table('solicitudes_ayuda')
-                ->where('ci_voluntario_solicita', $ci)
+                ->where('ci_voluntario_accion', $ci)
                 ->select(
                     'id as id_solicitud',
                     'voluntario_id',
@@ -198,7 +198,7 @@ class TrazabilidadController extends Controller
                     'estado',
                     'ci_voluntarios_acudir',
                     'fecha_respondida',
-                    'ci_voluntario_solicita',
+                    'ci_voluntario_accion as ci_voluntario_solicita',
                     'ci_voluntario_responde',
                     'created_at',
                     'updated_at'
