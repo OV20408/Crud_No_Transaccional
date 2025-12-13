@@ -146,4 +146,27 @@ class User extends Authenticatable
 
         return mb_strtoupper($ini, 'UTF-8');
     }
+
+    /**
+     * Accessor para Helpdesk Widget - Primer nombre
+     * Mapea 'nombres' de GEVOPI a 'first_name' esperado por el widget
+     */
+    public function getFirstNameAttribute()
+    {
+        if (!empty($this->nombres)) {
+            // Si hay múltiples nombres, tomar solo el primero
+            $nombres = explode(' ', trim($this->nombres));
+            return $nombres[0] ?? '';
+        }
+        return '';
+    }
+
+    /**
+     * Accessor para Helpdesk Widget - Apellido
+     * Mapea 'apellidos' de GEVOPI a 'last_name' esperado por el widget
+     */
+    public function getLastNameAttribute()
+    {
+        return trim($this->apellidos ?? '');
+    }
 }
