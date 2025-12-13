@@ -61,14 +61,14 @@ class TrazabilidadController extends Controller
                 ->join('test', 'evaluacion.id_test', '=', 'test.id')
                 ->leftJoin('reporte', 'evaluacion.id_reporte', '=', 'reporte.id')
                 ->leftJoin('universidad', 'evaluacion.id_universidad', '=', 'universidad.id')
-                ->where('evaluacion.ci_voluntario', $ci)
+                ->where('evaluacion.ci_voluntario_accion', $ci)
                 ->select(
                     'evaluacion.id as id_evaluacion',
                     'evaluacion.id_test',
                     'evaluacion.id_reporte',
                     'evaluacion.id_universidad',
                     'evaluacion.fecha',
-                    'evaluacion.ci_voluntario',
+                    'evaluacion.ci_voluntario_accion as ci_voluntario',
                     'test.nombre as test_nombre',
                     'test.categoria as test_categoria',
                     'test.descripcion as test_descripcion',
@@ -83,13 +83,13 @@ class TrazabilidadController extends Controller
             $respuestas = DB::table('respuesta')
                 ->join('evaluacion', 'respuesta.id_evaluacion', '=', 'evaluacion.id')
                 ->join('test', 'evaluacion.id_test', '=', 'test.id')
-                ->where('respuesta.ci_voluntario', $ci)
+                ->where('respuesta.ci_voluntario_accion', $ci)
                 ->select(
                     'respuesta.id as id_respuesta',
                     'respuesta.id_evaluacion',
                     'respuesta.texto_pregunta',
                     'respuesta.respuesta_texto',
-                    'respuesta.ci_voluntario',
+                    'respuesta.ci_voluntario_accion as ci_voluntario',
                     'respuesta.created_at',
                     'evaluacion.fecha as evaluacion_fecha',
                     'test.nombre as test_nombre',
@@ -101,7 +101,7 @@ class TrazabilidadController extends Controller
             // 3. REPORTES - Reportes generados
             $reportes = DB::table('reporte')
                 ->leftJoin('historial_clinico', 'reporte.id_historial', '=', 'historial_clinico.id')
-                ->where('reporte.ci_voluntario', $ci)
+                ->where('reporte.ci_voluntario_accion', $ci)
                 ->select(
                     'reporte.id as id_reporte',
                     'reporte.estado_general',
@@ -113,7 +113,7 @@ class TrazabilidadController extends Controller
                     'reporte.respuestas_fisico',
                     'reporte.respuestas_emocional',
                     'reporte.id_historial',
-                    'reporte.ci_voluntario',
+                    'reporte.ci_voluntario_accion as ci_voluntario',
                     'historial_clinico.fecha_inicio as historial_fecha_inicio',
                     'historial_clinico.fecha_actualizacion as historial_fecha_actualizacion'
                 )
@@ -125,7 +125,7 @@ class TrazabilidadController extends Controller
                 ->join('etapa', 'progreso_voluntario.id_etapa', '=', 'etapa.id')
                 ->join('curso', 'etapa.id_curso', '=', 'curso.id')
                 ->join('capacitacion', 'curso.id_capacitacion', '=', 'capacitacion.id')
-                ->where('progreso_voluntario.ci_voluntario', $ci)
+                ->where('progreso_voluntario.ci_voluntario_accion', $ci)
                 ->select(
                     'progreso_voluntario.id as id_progreso',
                     'progreso_voluntario.id_usuario',
@@ -133,7 +133,7 @@ class TrazabilidadController extends Controller
                     'progreso_voluntario.estado',
                     'progreso_voluntario.fecha_inicio',
                     'progreso_voluntario.fecha_finalizacion',
-                    'progreso_voluntario.ci_voluntario',
+                    'progreso_voluntario.ci_voluntario_accion as ci_voluntario',
                     'etapa.id as etapa_id',
                     'etapa.nombre as etapa_nombre',
                     'etapa.orden as etapa_orden',
@@ -151,7 +151,7 @@ class TrazabilidadController extends Controller
             // 5. CONSULTAS - Consultas realizadas
             $consultas = DB::table('consultas')
                 ->leftJoin('necesidad', 'consultas.necesidad_id', '=', 'necesidad.id')
-                ->where('consultas.ci_voluntario', $ci)
+                ->where('consultas.ci_voluntario_accion', $ci)
                 ->select(
                     'consultas.id as id_consulta',
                     'consultas.voluntario_id',
@@ -159,7 +159,7 @@ class TrazabilidadController extends Controller
                     'consultas.mensaje',
                     'consultas.estado',
                     'consultas.respuesta_admin',
-                    'consultas.ci_voluntario',
+                    'consultas.ci_voluntario_accion as ci_voluntario',
                     'consultas.created_at',
                     'consultas.updated_at',
                     'necesidad.tipo as necesidad_tipo',
@@ -170,14 +170,14 @@ class TrazabilidadController extends Controller
 
             // 6. MENSAJES DE CHAT - Mensajes enviados
             $chatMensajes = DB::table('chat_mensajes')
-                ->where('ci_voluntario', $ci)
+                ->where('ci_voluntario_accion', $ci)
                 ->select(
                     'id as id_mensaje',
                     'voluntario_id',
                     'de',
                     'texto',
                     'leido_en',
-                    'ci_voluntario',
+                    'ci_voluntario_accion as ci_voluntario',
                     'created_at',
                     'updated_at'
                 )
@@ -211,7 +211,7 @@ class TrazabilidadController extends Controller
                 ->leftJoin('curso', 'curso_recomendaciones.id_curso', '=', 'curso.id')
                 ->leftJoin('capacitacion', 'curso.id_capacitacion', '=', 'capacitacion.id')
                 ->leftJoin('reporte', 'curso_recomendaciones.id_reporte', '=', 'reporte.id')
-                ->where('curso_recomendaciones.ci_voluntario', $ci)
+                ->where('curso_recomendaciones.ci_voluntario_accion', $ci)
                 ->select(
                     'curso_recomendaciones.id as id_recomendacion',
                     'curso_recomendaciones.id_voluntario',
@@ -220,7 +220,7 @@ class TrazabilidadController extends Controller
                     'curso_recomendaciones.mensaje_ia',
                     'curso_recomendaciones.razon',
                     'curso_recomendaciones.estado',
-                    'curso_recomendaciones.ci_voluntario',
+                    'curso_recomendaciones.ci_voluntario_accion as ci_voluntario',
                     'curso_recomendaciones.created_at',
                     'curso_recomendaciones.updated_at',
                     'curso.nombre as curso_nombre',
@@ -237,7 +237,7 @@ class TrazabilidadController extends Controller
             $aptitudNecesidades = DB::table('aptitud_necesidades')
                 ->leftJoin('necesidad', 'aptitud_necesidades.id_necesidad', '=', 'necesidad.id')
                 ->leftJoin('reporte', 'aptitud_necesidades.id_reporte', '=', 'reporte.id')
-                ->where('aptitud_necesidades.ci_voluntario', $ci)
+                ->where('aptitud_necesidades.ci_voluntario_accion', $ci)
                 ->select(
                     'aptitud_necesidades.id as id_aptitud',
                     'aptitud_necesidades.id_voluntario',
@@ -247,7 +247,7 @@ class TrazabilidadController extends Controller
                     'aptitud_necesidades.razon_ia',
                     'aptitud_necesidades.necesidades_recomendadas',
                     'aptitud_necesidades.estado',
-                    'aptitud_necesidades.ci_voluntario',
+                    'aptitud_necesidades.ci_voluntario_accion as ci_voluntario',
                     'aptitud_necesidades.created_at',
                     'aptitud_necesidades.updated_at',
                     'necesidad.tipo as necesidad_tipo',
@@ -288,7 +288,7 @@ class TrazabilidadController extends Controller
                     'necesidad.descripcion as necesidad_descripcion',
                     'reporte.estado_general as reporte_estado_general',
                     'reporte.fecha_generado as reporte_fecha_generado',
-                    'reporte.ci_voluntario'
+                    'reporte.ci_voluntario_accion as ci_voluntario'
                 )
                 ->orderBy('reporte.fecha_generado', 'desc')
                 ->get();
