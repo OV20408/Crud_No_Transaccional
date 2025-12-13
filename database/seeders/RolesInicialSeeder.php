@@ -228,8 +228,13 @@ class RolesInicialSeeder extends Seeder
             'responder_consultas',
             'chat_admin',
             'ver_ayudas_solicitadas',
+            // Permisos de evaluaciones (para acceso a /evaluacion y /evaluacion_pruebas)
+            'crear_evaluaciones',
+            'editar_evaluaciones',
+            'calificar_evaluaciones',
+            'ver_resultados',
         ]);
-        echo " Permisos asignados a: Administrador (10 permisos)\n";
+        echo " Permisos asignados a: Administrador (14 permisos)\n";
 
         // VOLUNTARIO - Permisos de app móvil
         $voluntarioRole = Role::findByName('Voluntario');
