@@ -170,7 +170,7 @@ class EvaluacionVoluntarioController extends Controller
                 'estado_general' => $estadoGeneral,
                 'observaciones' => $request->input('observaciones', ''),
                 'fecha_generado' => Carbon::now(),
-                'ci_voluntario_accion' => $voluntario->ci // Trazabilidad API Gateway
+                'ci_voluntario' => $voluntario->ci // Trazabilidad API Gateway
             ]);
             
             // Actualizar historial
@@ -185,7 +185,7 @@ class EvaluacionVoluntarioController extends Controller
                     'id_test' => $test->id,
                     'id_universidad' => null,
                     'fecha' => Carbon::now(),
-                    'ci_voluntario_accion' => $voluntario->ci // Trazabilidad API Gateway
+                    'ci_voluntario' => $voluntario->ci // Trazabilidad API Gateway
                 ]);
             }
             
@@ -243,7 +243,7 @@ class EvaluacionVoluntarioController extends Controller
                                 'mensaje_ia' => $cursoRec['nombre'],
                                 'razon' => $cursoRec['razon'] ?? '',
                                 'estado' => 'pendiente',
-                                'ci_voluntario_accion' => $voluntario->ci // Trazabilidad API Gateway
+                                'ci_voluntario' => $voluntario->ci // Trazabilidad API Gateway
                             ]);
 
                             Log::info('Recomendación de curso CREADA', [

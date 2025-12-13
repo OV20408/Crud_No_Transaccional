@@ -34,7 +34,7 @@ class Evaluacion extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = ['fecha', 'id_reporte', 'id_test', 'id_universidad', 'ci_voluntario_accion'];
+    protected $fillable = ['fecha', 'id_reporte', 'id_test', 'id_universidad', 'ci_voluntario'];
 
 
     /**

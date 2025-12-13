@@ -87,7 +87,7 @@ class SolicitudAyudaApiController extends Controller
             'longitud'          => $validated['longitud'],
             // ❌ QUITAR: 'direccion' => $validated['direccion'] ?? null,
             'estado'            => 'sin responder',
-            'ci_voluntario_accion' => \App\Models\User::where('id_usuario', $validated['voluntario_id'])->value('ci'), // Trazabilidad API Gateway
+            'ci_voluntario_solicita' => \App\Models\User::where('id_usuario', $validated['voluntario_id'])->value('ci'), // Trazabilidad API Gateway
         ];
 
         $solicitud = SolicitudAyuda::create($dataToCreate);
@@ -96,7 +96,7 @@ class SolicitudAyudaApiController extends Controller
             'voluntario_id' => $validated['voluntario_id'],
             'de' => 'voluntario',
             'texto' => "🚨 [EMERGENCIA #{$solicitud->id}] {$validated['descripcion']} - Nivel: {$nivelFinal}",
-            'ci_voluntario_accion' => \App\Models\User::where('id_usuario', $validated['voluntario_id'])->value('ci'), // Trazabilidad API Gateway
+            'ci_voluntario_solicita' => \App\Models\User::where('id_usuario', $validated['voluntario_id'])->value('ci'), // Trazabilidad API Gateway
         ]);
 
         return response()->json([

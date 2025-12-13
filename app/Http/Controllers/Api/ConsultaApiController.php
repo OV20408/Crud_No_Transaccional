@@ -36,7 +36,7 @@ class ConsultaApiController extends Controller
             'necesidad_id'  => 1,
             'mensaje'       => $validated['mensaje'],
             'estado'        => 'pendiente',
-            'ci_voluntario_accion' => \App\Models\User::where('id_usuario', $validated['voluntario_id'])->value('ci'), // Trazabilidad API Gateway
+            'ci_voluntario' => \App\Models\User::where('id_usuario', $validated['voluntario_id'])->value('ci'), // Trazabilidad API Gateway
         ]);
 
         // Cargamos el voluntario para tener sus datos en el evento

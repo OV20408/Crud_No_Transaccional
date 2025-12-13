@@ -18,7 +18,7 @@ class Consulta extends Model
         'mensaje',
         'estado',
         'respuesta_admin',
-        'ci_voluntario_accion', // Trazabilidad API Gateway
+        'ci_voluntario', // Trazabilidad API Gateway
     ];
 
     public function necesidad()

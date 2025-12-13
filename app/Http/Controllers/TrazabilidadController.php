@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\DB;
  * Controlador para el API Gateway de trazabilidad.
  * Devuelve todas las acciones realizadas por un voluntario en el sistema GEVOPI
  * basándose en el CI del voluntario.
+ * 
+ * VERSIÓN DETALLADA: Incluye la máxima cantidad de datos disponibles.
  */
 class TrazabilidadController extends Controller
 {
@@ -31,36 +33,66 @@ class TrazabilidadController extends Controller
             ], 400);
         }
 
+        // Obtener información del voluntario
+        $voluntario = DB::table('usuario')
+            ->where('ci', $ci)
+            ->select(
+                'id_usuario',
+                'nombres',
+                'apellidos',
+                'ci',
+                'fecha_nacimiento',
+                'genero',
+                'telefono',
+                'email',
+                'direccion_domicilio',
+                'estado',
+                'nivel_entrenamiento',
+                'entidad_pertenencia',
+                'tipo_sangre',
+                'created_at',
+                'updated_at'
+            )
+            ->first();
+
         // 1. EVALUACIONES - Tests/evaluaciones realizadas por el voluntario
         $evaluaciones = DB::table('evaluacion')
             ->join('test', 'evaluacion.id_test', '=', 'test.id')
             ->leftJoin('reporte', 'evaluacion.id_reporte', '=', 'reporte.id')
-            ->where('evaluacion.ci_voluntario_accion', $ci)
+            ->leftJoin('universidad', 'evaluacion.id_universidad', '=', 'universidad.id')
+            ->where('evaluacion.ci_voluntario', $ci)
             ->select(
-                'evaluacion.id',
+                'evaluacion.id as id_evaluacion',
+                'evaluacion.id_test',
+                'evaluacion.id_reporte',
+                'evaluacion.id_universidad',
                 'evaluacion.fecha',
-                'evaluacion.ci_voluntario_accion',
+                'evaluacion.ci_voluntario',
                 'test.nombre as test_nombre',
                 'test.categoria as test_categoria',
-                'reporte.estado_general',
-                'evaluacion.created_at'
+                'test.descripcion as test_descripcion',
+                'reporte.estado_general as reporte_estado_general',
+                'reporte.resumen_fisico as reporte_resumen_fisico',
+                'reporte.resumen_emocional as reporte_resumen_emocional'
             )
             ->orderBy('evaluacion.fecha', 'desc')
             ->get();
 
         // 2. RESPUESTAS - Respuestas a preguntas de evaluaciones
         $respuestas = DB::table('respuesta')
-            ->join('pregunta', 'respuesta.id_pregunta', '=', 'pregunta.id')
             ->join('evaluacion', 'respuesta.id_evaluacion', '=', 'evaluacion.id')
-            ->where('respuesta.ci_voluntario_accion', $ci)
+            ->join('test', 'evaluacion.id_test', '=', 'test.id')
+            ->where('respuesta.ci_voluntario', $ci)
             ->select(
-                'respuesta.id',
+                'respuesta.id as id_respuesta',
+                'respuesta.id_evaluacion',
+                'respuesta.texto_pregunta',
                 'respuesta.respuesta_texto',
-                'respuesta.ci_voluntario_accion',
-                'pregunta.texto as pregunta_texto',
-                'pregunta.tipo as pregunta_tipo',
-                'evaluacion.fecha as fecha_evaluacion',
-                'respuesta.created_at'
+                'respuesta.ci_voluntario',
+                'respuesta.created_at',
+                'evaluacion.fecha as evaluacion_fecha',
+                'test.nombre as test_nombre',
+                'test.categoria as test_categoria'
             )
             ->orderBy('respuesta.created_at', 'desc')
             ->get();
@@ -68,17 +100,21 @@ class TrazabilidadController extends Controller
         // 3. REPORTES - Reportes generados
         $reportes = DB::table('reporte')
             ->leftJoin('historial_clinico', 'reporte.id_historial', '=', 'historial_clinico.id')
-            ->where('reporte.ci_voluntario_accion', $ci)
+            ->where('reporte.ci_voluntario', $ci)
             ->select(
-                'reporte.id',
+                'reporte.id as id_reporte',
                 'reporte.estado_general',
                 'reporte.fecha_generado',
-                'reporte.ci_voluntario_accion',
-                'reporte.resumen_fisico',
-                'reporte.resumen_emocional',
                 'reporte.observaciones',
                 'reporte.recomendaciones',
-                'reporte.created_at'
+                'reporte.resumen_emocional',
+                'reporte.resumen_fisico',
+                'reporte.respuestas_fisico',
+                'reporte.respuestas_emocional',
+                'reporte.id_historial',
+                'reporte.ci_voluntario',
+                'historial_clinico.fecha_inicio as historial_fecha_inicio',
+                'historial_clinico.fecha_actualizacion as historial_fecha_actualizacion'
             )
             ->orderBy('reporte.fecha_generado', 'desc')
             ->get();
@@ -88,60 +124,72 @@ class TrazabilidadController extends Controller
             ->join('etapa', 'progreso_voluntario.id_etapa', '=', 'etapa.id')
             ->join('curso', 'etapa.id_curso', '=', 'curso.id')
             ->join('capacitacion', 'curso.id_capacitacion', '=', 'capacitacion.id')
-            ->where('progreso_voluntario.ci_voluntario_accion', $ci)
+            ->where('progreso_voluntario.ci_voluntario', $ci)
             ->select(
-                'progreso_voluntario.id',
+                'progreso_voluntario.id as id_progreso',
+                'progreso_voluntario.id_usuario',
+                'progreso_voluntario.id_etapa',
                 'progreso_voluntario.estado',
                 'progreso_voluntario.fecha_inicio',
                 'progreso_voluntario.fecha_finalizacion',
-                'progreso_voluntario.ci_voluntario_accion',
+                'progreso_voluntario.ci_voluntario',
+                'etapa.id as etapa_id',
                 'etapa.nombre as etapa_nombre',
                 'etapa.orden as etapa_orden',
+                'etapa.descripcion as etapa_descripcion',
+                'curso.id as curso_id',
                 'curso.nombre as curso_nombre',
+                'curso.descripcion as curso_descripcion',
+                'capacitacion.id as capacitacion_id',
                 'capacitacion.nombre as capacitacion_nombre',
-                'progreso_voluntario.created_at'
+                'capacitacion.descripcion as capacitacion_descripcion'
             )
-            ->orderBy('progreso_voluntario.created_at', 'desc')
+            ->orderBy('progreso_voluntario.fecha_inicio', 'desc')
             ->get();
 
         // 5. CONSULTAS - Consultas realizadas
         $consultas = DB::table('consultas')
             ->leftJoin('necesidad', 'consultas.necesidad_id', '=', 'necesidad.id')
-            ->where('consultas.ci_voluntario_accion', $ci)
+            ->where('consultas.ci_voluntario', $ci)
             ->select(
-                'consultas.id',
+                'consultas.id as id_consulta',
+                'consultas.voluntario_id',
+                'consultas.necesidad_id',
                 'consultas.mensaje',
                 'consultas.estado',
                 'consultas.respuesta_admin',
-                'consultas.ci_voluntario_accion',
-                'necesidad.descripcion as necesidad_descripcion',
+                'consultas.ci_voluntario',
+                'consultas.created_at',
+                'consultas.updated_at',
                 'necesidad.tipo as necesidad_tipo',
-                'consultas.created_at'
+                'necesidad.descripcion as necesidad_descripcion'
             )
             ->orderBy('consultas.created_at', 'desc')
             ->get();
 
         // 6. MENSAJES DE CHAT - Mensajes enviados
         $chatMensajes = DB::table('chat_mensajes')
-            ->where('ci_voluntario_accion', $ci)
+            ->where('ci_voluntario', $ci)
             ->select(
-                'id',
+                'id as id_mensaje',
+                'voluntario_id',
                 'de',
                 'texto',
                 'leido_en',
-                'ci_voluntario_accion',
-                'created_at'
+                'ci_voluntario',
+                'created_at',
+                'updated_at'
             )
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // 7. SOLICITUDES DE AYUDA - Emergencias/solicitudes
+        // 7. SOLICITUDES DE AYUDA - Emergencias/solicitudes  
         $solicitudesAyuda = DB::table('solicitudes_ayuda')
-            ->where('ci_voluntario_accion', $ci)
+            ->where('ci_voluntario_solicita', $ci)
             ->select(
-                'id',
+                'id as id_solicitud',
+                'voluntario_id',
                 'tipo',
-                'tipo_emergencia',
                 'nivel_emergencia',
                 'descripcion',
                 'latitud',
@@ -149,8 +197,10 @@ class TrazabilidadController extends Controller
                 'estado',
                 'ci_voluntarios_acudir',
                 'fecha_respondida',
-                'ci_voluntario_accion',
-                'created_at'
+                'ci_voluntario_solicita',
+                'ci_voluntario_responde',
+                'created_at',
+                'updated_at'
             )
             ->orderBy('created_at', 'desc')
             ->get();
@@ -159,16 +209,25 @@ class TrazabilidadController extends Controller
         $recomendacionesCursos = DB::table('curso_recomendaciones')
             ->leftJoin('curso', 'curso_recomendaciones.id_curso', '=', 'curso.id')
             ->leftJoin('capacitacion', 'curso.id_capacitacion', '=', 'capacitacion.id')
-            ->where('curso_recomendaciones.ci_voluntario_accion', $ci)
+            ->leftJoin('reporte', 'curso_recomendaciones.id_reporte', '=', 'reporte.id')
+            ->where('curso_recomendaciones.ci_voluntario', $ci)
             ->select(
-                'curso_recomendaciones.id',
+                'curso_recomendaciones.id as id_recomendacion',
+                'curso_recomendaciones.id_voluntario',
+                'curso_recomendaciones.id_curso',
+                'curso_recomendaciones.id_reporte',
                 'curso_recomendaciones.mensaje_ia',
                 'curso_recomendaciones.razon',
                 'curso_recomendaciones.estado',
-                'curso_recomendaciones.ci_voluntario_accion',
+                'curso_recomendaciones.ci_voluntario',
+                'curso_recomendaciones.created_at',
+                'curso_recomendaciones.updated_at',
                 'curso.nombre as curso_nombre',
+                'curso.descripcion as curso_descripcion',
                 'capacitacion.nombre as capacitacion_nombre',
-                'curso_recomendaciones.created_at'
+                'capacitacion.descripcion as capacitacion_descripcion',
+                'reporte.estado_general as reporte_estado_general',
+                'reporte.fecha_generado as reporte_fecha_generado'
             )
             ->orderBy('curso_recomendaciones.created_at', 'desc')
             ->get();
@@ -176,46 +235,59 @@ class TrazabilidadController extends Controller
         // 9. APTITUD DE NECESIDADES - Evaluaciones de aptitud
         $aptitudNecesidades = DB::table('aptitud_necesidades')
             ->leftJoin('necesidad', 'aptitud_necesidades.id_necesidad', '=', 'necesidad.id')
-            ->where('aptitud_necesidades.ci_voluntario_accion', $ci)
+            ->leftJoin('reporte', 'aptitud_necesidades.id_reporte', '=', 'reporte.id')
+            ->where('aptitud_necesidades.ci_voluntario', $ci)
             ->select(
-                'aptitud_necesidades.id',
+                'aptitud_necesidades.id as id_aptitud',
+                'aptitud_necesidades.id_voluntario',
+                'aptitud_necesidades.id_necesidad',
+                'aptitud_necesidades.id_reporte',
                 'aptitud_necesidades.nivel_aptitud',
                 'aptitud_necesidades.razon_ia',
                 'aptitud_necesidades.necesidades_recomendadas',
                 'aptitud_necesidades.estado',
-                'aptitud_necesidades.ci_voluntario_accion',
-                'necesidad.descripcion as necesidad_descripcion',
+                'aptitud_necesidades.ci_voluntario',
+                'aptitud_necesidades.created_at',
+                'aptitud_necesidades.updated_at',
                 'necesidad.tipo as necesidad_tipo',
-                'aptitud_necesidades.created_at'
+                'necesidad.descripcion as necesidad_descripcion',
+                'reporte.estado_general as reporte_estado_general',
+                'reporte.fecha_generado as reporte_fecha_generado'
             )
             ->orderBy('aptitud_necesidades.created_at', 'desc')
             ->get();
 
         // 10. HISTORIAL CLÍNICO - Cambios en historial
         $historialClinico = DB::table('historial_clinico')
-            ->where('ci_voluntario_accion', $ci)
+            ->join('usuario', 'historial_clinico.id_usuario', '=', 'usuario.id_usuario')
+            ->where('usuario.ci', $ci)
             ->select(
-                'id',
-                'fecha_inicio',
-                'fecha_actualizacion',
-                'ci_voluntario_accion',
-                'created_at'
+                'historial_clinico.id as id_historial',
+                'historial_clinico.id_usuario',
+                'historial_clinico.fecha_inicio',
+                'historial_clinico.fecha_actualizacion',
+                'usuario.ci as ci_usuario',
+                'usuario.nombres as usuario_nombres',
+                'usuario.apellidos as usuario_apellidos'
             )
-            ->orderBy('created_at', 'desc')
+            ->orderBy('historial_clinico.fecha_actualizacion', 'desc')
             ->get();
 
         // 11. ASIGNACIÓN DE NECESIDADES - Necesidades asignadas a reportes
         $necesidadesAsignadas = DB::table('reporte_necesidad')
             ->join('necesidad', 'reporte_necesidad.id_necesidad', '=', 'necesidad.id')
             ->join('reporte', 'reporte_necesidad.id_reporte', '=', 'reporte.id')
-            ->where('reporte_necesidad.ci_voluntario_accion', $ci)
+            ->where('reporte.ci_voluntario', $ci)
             ->select(
                 'reporte_necesidad.id_reporte',
                 'reporte_necesidad.id_necesidad',
-                'reporte_necesidad.ci_voluntario_accion',
-                'necesidad.descripcion as necesidad_descripcion',
+                'reporte_necesidad.created_at',
+                'reporte_necesidad.updated_at',
                 'necesidad.tipo as necesidad_tipo',
-                'reporte.fecha_generado'
+                'necesidad.descripcion as necesidad_descripcion',
+                'reporte.estado_general as reporte_estado_general',
+                'reporte.fecha_generado as reporte_fecha_generado',
+                'reporte.ci_voluntario'
             )
             ->orderBy('reporte.fecha_generado', 'desc')
             ->get();
@@ -225,6 +297,7 @@ class TrazabilidadController extends Controller
             'ci_consultado' => $ci,
             'fecha_consulta' => now()->timezone('America/La_Paz')->toDateTimeString(),
             'sistema' => 'GEVOPI - Sistema de Gestión de Voluntarios de Protección Integral',
+            'voluntario' => $voluntario,
             'total_acciones' => 
                 count($evaluaciones) + 
                 count($respuestas) + 
@@ -239,57 +312,57 @@ class TrazabilidadController extends Controller
                 count($necesidadesAsignadas),
             'acciones' => [
                 'evaluaciones' => [
-                    'descripcion' => 'Tests y evaluaciones físicas/emocionales completadas',
+                    'descripcion' => 'Tests y evaluaciones físicas/emocionales completadas por el voluntario',
                     'total' => count($evaluaciones),
                     'registros' => $evaluaciones
                 ],
                 'respuestas' => [
-                    'descripcion' => 'Respuestas a preguntas de evaluaciones',
+                    'descripcion' => 'Respuestas individuales a preguntas de tests y evaluaciones',
                     'total' => count($respuestas),
                     'registros' => $respuestas
                 ],
                 'reportes' => [
-                    'descripcion' => 'Reportes de evaluación generados',
+                    'descripcion' => 'Reportes generados automáticamente por el sistema basados en evaluaciones',
                     'total' => count($reportes),
                     'registros' => $reportes
                 ],
                 'progreso_capacitaciones' => [
-                    'descripcion' => 'Avance en etapas y cursos de capacitación',
+                    'descripcion' => 'Avance del voluntario en etapas, cursos y capacitaciones del sistema',
                     'total' => count($progresoCapacitaciones),
                     'registros' => $progresoCapacitaciones
                 ],
                 'consultas' => [
-                    'descripcion' => 'Consultas realizadas al sistema',
+                    'descripcion' => 'Consultas realizadas por el voluntario al sistema de ayuda',
                     'total' => count($consultas),
                     'registros' => $consultas
                 ],
                 'chat_mensajes' => [
-                    'descripcion' => 'Mensajes enviados en el chat',
+                    'descripcion' => 'Mensajes enviados por el voluntario en el sistema de chat',
                     'total' => count($chatMensajes),
                     'registros' => $chatMensajes
                 ],
                 'solicitudes_ayuda' => [
-                    'descripcion' => 'Solicitudes de ayuda/emergencia creadas',
+                    'descripcion' => 'Solicitudes de emergencia o ayuda realizadas por el voluntario',
                     'total' => count($solicitudesAyuda),
                     'registros' => $solicitudesAyuda
                 ],
                 'recomendaciones_cursos' => [
-                    'descripcion' => 'Cursos recomendados por IA y asignados',
+                    'descripcion' => 'Cursos recomendados al voluntario por el sistema de IA según evaluaciones',
                     'total' => count($recomendacionesCursos),
                     'registros' => $recomendacionesCursos
                 ],
                 'aptitud_necesidades' => [
-                    'descripcion' => 'Evaluaciones de aptitud para necesidades',
+                    'descripcion' => 'Evaluaciones de aptitud del voluntario para atender necesidades específicas',
                     'total' => count($aptitudNecesidades),
                     'registros' => $aptitudNecesidades
                 ],
                 'historial_clinico' => [
-                    'descripcion' => 'Modificaciones al historial clínico',
+                    'descripcion' => 'Modificaciones realizadas al historial clínico del voluntario',
                     'total' => count($historialClinico),
                     'registros' => $historialClinico
                 ],
                 'necesidades_asignadas' => [
-                    'descripcion' => 'Necesidades asignadas a reportes',
+                    'descripcion' => 'Necesidades de apoyo asignadas al voluntario en base a sus reportes',
                     'total' => count($necesidadesAsignadas),
                     'registros' => $necesidadesAsignadas
                 ]
