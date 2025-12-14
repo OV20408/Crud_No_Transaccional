@@ -164,7 +164,7 @@
                 <div class="card-header" style="background-color: #f8f9fa;">
                     <h3 class="seccion-titulo m-0">Universidad Asignada</h3>
                 </div>
-                <div class="card-body">
+                <div class="card-body py-2">
                     <div class="universidad-card text-center">
                         @php
                             $evaluacion = \App\Models\Evaluacion::where('id_reporte', $reporte->id)->first();
@@ -174,19 +174,17 @@
                         @endphp
                         
                         @if($universidadAsignada)
-                            <div class="mb-3">
-                                <i class="fas fa-university fa-3x text-primary mb-2"></i>
-                                <h5 class="text-primary font-weight-bold">{{ $universidadAsignada->nombre }}</h5>
+                            <div class="mb-2">
+                                <i class="fas fa-university fa-2x text-primary"></i>
+                                <h6 class="text-primary font-weight-bold mt-1 mb-0">{{ $universidadAsignada->nombre }}</h6>
                             </div>
                         @endif
                         
-                        <button type="button" class="btn text-white" style="background-color: #007bff;" data-toggle="modal" data-target="#modalAsignarUniversidad">
-                            <i class="fas fa-university"></i> {{ $universidadAsignada ? 'Cambiar Universidad' : 'Asignar Universidad' }}
+                        <button type="button" class="btn btn-sm text-white" style="background-color: #007bff;" data-toggle="modal" data-target="#modalAsignarUniversidad">
+                            <i class="fas fa-university"></i> {{ $universidadAsignada ? 'Cambiar' : 'Asignar' }}
                         </button>
                         @if(!$universidadAsignada)
-                            <p class="text-muted mt-3 mb-0">
-                                <small>Seleccione una universidad para asignar a este voluntario.</small>
-                            </p>
+                            <p class="text-muted mt-2 mb-0"><small>Seleccione una universidad.</small></p>
                         @endif
                     </div>
                 </div>
@@ -316,7 +314,7 @@
                 <div class="card-header" style="background-color: #f8f9fa;">
                     <h3 class="seccion-titulo m-0">Universidad Asignada</h3>
                 </div>
-                <div class="card-body">
+                <div class="card-body py-2">
                     <div class="universidad-card text-center">
                         @php
                             $evaluacion = $evaluacion ?? \App\Models\Evaluacion::where('id_reporte', $reporte->id)->first();
@@ -326,19 +324,17 @@
                         @endphp
                         
                         @if($universidadAsignada)
-                            <div class="mb-3">
-                                <i class="fas fa-university fa-3x text-primary mb-2"></i>
-                                <h5 class="text-primary font-weight-bold">{{ $universidadAsignada->nombre }}</h5>
+                            <div class="mb-2">
+                                <i class="fas fa-university fa-2x text-primary"></i>
+                                <h6 class="text-primary font-weight-bold mt-1 mb-0">{{ $universidadAsignada->nombre }}</h6>
                             </div>
                         @endif
                         
-                        <button type="button" class="btn text-white" style="background-color: #007bff;" data-toggle="modal" data-target="#modalAsignarUniversidad">
-                            <i class="fas fa-university"></i> {{ $universidadAsignada ? 'Cambiar Universidad' : 'Asignar Universidad' }}
+                        <button type="button" class="btn btn-sm text-white" style="background-color: #007bff;" data-toggle="modal" data-target="#modalAsignarUniversidad">
+                            <i class="fas fa-university"></i> {{ $universidadAsignada ? 'Cambiar' : 'Asignar' }}
                         </button>
                         @if(!$universidadAsignada)
-                            <p class="text-muted mt-3 mb-0">
-                                <small>Seleccione una universidad para asignar a este voluntario.</small>
-                            </p>
+                            <p class="text-muted mt-2 mb-0"><small>Seleccione una universidad.</small></p>
                         @endif
                     </div>
                 </div>
