@@ -221,6 +221,7 @@ PROMPT;
 
             // Llamar a la API de Google Gemini
             $response = Http::timeout(30)
+                ->withoutVerifying() // Solo para desarrollo local - remover en producción
                 ->withHeaders([
                     'Content-Type' => 'application/json',
                 ])
@@ -409,6 +410,7 @@ EJEMPLOS:
 PROMPT;
 
             $response = Http::timeout(30)
+                ->withoutVerifying() // Solo para desarrollo local - remover en producción
                 ->withHeaders([
                     'Content-Type' => 'application/json',
                 ])

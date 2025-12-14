@@ -20,6 +20,10 @@ use App\Http\Controllers\Auth\RegistroSimpleController;
 
 Route::get('registro/ci/{ci}', [RegistroSimpleController::class, 'showByCi']);
 
+// Asignar universidad a evaluación vía reporte
+Route::post('/evaluaciones/asignar-universidad/{reporteId}', [App\Http\Controllers\Api\EvaluacionApiController::class, 'asignarUniversidad']);
+
+
 Route::put('/usuarios/{id}/estado', [UsuarioApiController::class, 'updateEstado']);
 Route::post('/sync/cursos', [CursoSyncController::class, 'syncStore']);
 

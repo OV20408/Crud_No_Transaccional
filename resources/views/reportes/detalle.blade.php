@@ -164,14 +164,28 @@
                 <div class="card-header" style="background-color: #f8f9fa;">
                     <h3 class="seccion-titulo m-0">Universidad Asignada</h3>
                 </div>
-                <div class="card-body">
+                <div class="card-body py-2">
                     <div class="universidad-card text-center">
-                        <button type="button" class="btn text-white" style="background-color: #007bff;" data-toggle="modal" data-target="#modalAsignarUniversidad">
-                            <i class="fas fa-university"></i> Asignar Universidad
+                        @php
+                            $evaluacion = \App\Models\Evaluacion::where('id_reporte', $reporte->id)->first();
+                            $universidadAsignada = $evaluacion && $evaluacion->id_universidad 
+                                ? \App\Models\Universidad::find($evaluacion->id_universidad) 
+                                : null;
+                        @endphp
+                        
+                        @if($universidadAsignada)
+                            <div class="mb-2">
+                                <i class="fas fa-university fa-2x text-primary"></i>
+                                <h6 class="text-primary font-weight-bold mt-1 mb-0">{{ $universidadAsignada->nombre }}</h6>
+                            </div>
+                        @endif
+                        
+                        <button type="button" class="btn btn-sm text-white" style="background-color: #007bff;" data-toggle="modal" data-target="#modalAsignarUniversidad">
+                            <i class="fas fa-university"></i> {{ $universidadAsignada ? 'Cambiar' : 'Asignar' }}
                         </button>
-                        <p class="text-muted mt-3 mb-0">
-                            <small>Seleccione una universidad para asignar a este voluntario.</small>
-                        </p>
+                        @if(!$universidadAsignada)
+                            <p class="text-muted mt-2 mb-0"><small>Seleccione una universidad.</small></p>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -300,14 +314,28 @@
                 <div class="card-header" style="background-color: #f8f9fa;">
                     <h3 class="seccion-titulo m-0">Universidad Asignada</h3>
                 </div>
-                <div class="card-body">
-                    <div class="universidad-card">
-                        <button type="button" class="btn text-white" style="background-color: #007bff;" data-toggle="modal" data-target="#modalAsignarUniversidad">
-                            <i class="fas fa-university"></i> Asignar Universidad
+                <div class="card-body py-2">
+                    <div class="universidad-card text-center">
+                        @php
+                            $evaluacion = $evaluacion ?? \App\Models\Evaluacion::where('id_reporte', $reporte->id)->first();
+                            $universidadAsignada = $universidadAsignada ?? ($evaluacion && $evaluacion->id_universidad 
+                                ? \App\Models\Universidad::find($evaluacion->id_universidad) 
+                                : null);
+                        @endphp
+                        
+                        @if($universidadAsignada)
+                            <div class="mb-2">
+                                <i class="fas fa-university fa-2x text-primary"></i>
+                                <h6 class="text-primary font-weight-bold mt-1 mb-0">{{ $universidadAsignada->nombre }}</h6>
+                            </div>
+                        @endif
+                        
+                        <button type="button" class="btn btn-sm text-white" style="background-color: #007bff;" data-toggle="modal" data-target="#modalAsignarUniversidad">
+                            <i class="fas fa-university"></i> {{ $universidadAsignada ? 'Cambiar' : 'Asignar' }}
                         </button>
-                        <p class="text-muted mt-3 mb-0">
-                            <small>Seleccione una universidad para asignar a este voluntario.</small>
-                        </p>
+                        @if(!$universidadAsignada)
+                            <p class="text-muted mt-2 mb-0"><small>Seleccione una universidad.</small></p>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -357,9 +385,71 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn text-white" style="background-color: #007bff;">Asignar</button>
+                <button type="button" class="btn text-white" style="background-color: #007bff;" id="btnAsignarUniversidad">Asignar</button>
             </div>
         </div>
     </div>
 </div>
+
 @stop
+
+@section('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+$(document).ready(function() {
+    $('#btnAsignarUniversidad').click(function() {
+        const universidadId = $('#universidad_id').val();
+        const reporteId = {{ $reporte->id }};
+        
+        if (!universidadId) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atención',
+                text: 'Por favor seleccione una universidad'
+            });
+            return;
+        }
+        
+        // Mostrar loading
+        Swal.fire({
+            title: 'Procesando...',
+            text: 'Asignando universidad',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        // Hacer petición AJAX para asignar universidad a la evaluación
+        $.ajax({
+            url: `/api/evaluaciones/asignar-universidad/${reporteId}`,
+            method: 'POST',
+            data: {
+                universidad_id: universidadId,
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: 'Universidad asignada correctamente',
+                    confirmButtonColor: '#007bff'
+                }).then(() => {
+                    $('#modalAsignarUniversidad').modal('hide');
+                    location.reload();
+                });
+            },
+            error: function(xhr) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: xhr.responseJSON?.message || 'No se pudo asignar la universidad'
+                });
+            }
+        });
+    });
+});
+</script>
+@endsection
+
+
