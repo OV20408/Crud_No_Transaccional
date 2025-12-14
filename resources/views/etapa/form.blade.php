@@ -11,6 +11,11 @@
             <input type="text" name="orden" class="form-control @error('orden') is-invalid @enderror" value="{{ old('orden', $etapa?->orden) }}" id="orden" placeholder="Orden">
             {!! $errors->first('orden', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
         </div>
+        <div class="form-group mb-2 mb20">
+            <label for="descripcion" class="form-label">{{ __('Descripción') }}</label>
+            <textarea name="descripcion" class="form-control @error('descripcion') is-invalid @enderror" id="descripcion" placeholder="Descripción de la etapa" rows="3">{{ old('descripcion', $etapa?->descripcion) }}</textarea>
+            {!! $errors->first('descripcion', '<div class="invalid-feedback" role="alert"><strong>:message</strong></div>') !!}
+        </div>
 
         <div class="form-group mb-3">
             <label for="id_curso">{{ __('Curso') }}</label>
