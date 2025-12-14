@@ -357,9 +357,66 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn text-white" style="background-color: #007bff;">Asignar</button>
+                <button type="button" class="btn text-white" style="background-color: #007bff;" id="btnAsignarUniversidad">Asignar</button>
             </div>
         </div>
     </div>
 </div>
-@stop
+
+@section('js')
+<script>
+$(document).ready(function() {
+    $('#btnAsignarUniversidad').click(function() {
+        const universidadId = $('#universidad_id').val();
+        const reporteId = {{ $reporte->id }};
+        
+        if (!universidadId) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atención',
+                text: 'Por favor seleccione una universidad'
+            });
+            return;
+        }
+        
+        // Mostrar loading
+        Swal.fire({
+            title: 'Procesando...',
+            text: 'Asignando universidad',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        // Hacer petición AJAX para asignar universidad a la evaluación
+        $.ajax({
+            url: `/api/evaluaciones/asignar-universidad/${reporteId}`,
+            method: 'POST',
+            data: {
+                universidad_id: universidadId,
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: 'Universidad asignada correctamente'
+                }).then(() => {
+                    $('#modalAsignarUniversidad').modal('hide');
+                    location.reload();
+                });
+            },
+            error: function(xhr) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: xhr.responseJSON?.message || 'No se pudo asignar la universidad'
+                });
+            }
+        });
+    });
+});
+</script>
+@endsection
+
