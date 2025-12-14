@@ -18,7 +18,8 @@ class AptitudNecesidad extends Model
         'nivel_aptitud',
         'razon_ia',
         'necesidades_recomendadas',
-        'estado'
+        'estado',
+        'ci_voluntario_accion'
     ];
 
     protected $casts = [

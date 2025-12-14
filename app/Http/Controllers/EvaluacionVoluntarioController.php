@@ -327,7 +327,8 @@ class EvaluacionVoluntarioController extends Controller
                             'nivel_aptitud' => $evaluacionAptitud['nivel_aptitud'],
                             'razon_ia' => $evaluacionAptitud['razon'],
                             'necesidades_recomendadas' => json_encode($evaluacionAptitud['necesidades_aptas']),
-                            'estado' => 'activo'
+                            'estado' => 'activo',
+                            'ci_voluntario_accion' => $voluntario->ci // Trazabilidad API Gateway
                         ]);
 
                         Log::info('Aptitud de necesidades evaluada', [
