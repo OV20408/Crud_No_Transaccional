@@ -34,7 +34,7 @@ class ProgresoVoluntario extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = ['estado', 'fecha_finalizacion', 'fecha_inicio', 'id_etapa', 'id_usuario', 'ci_voluntario'];
+    protected $fillable = ['estado', 'fecha_finalizacion', 'fecha_inicio', 'id_etapa', 'id_usuario', 'ci_voluntario', 'ci_voluntario_accion'];
 
 
     /**
