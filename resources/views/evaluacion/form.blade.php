@@ -47,7 +47,7 @@
                 <option value="">Seleccione una universidad</option>
                 @foreach ($universidades as $uni)
                     <option value="{{ $uni->id }}"
-                        {{ old('id_universidad', $evaluacion->id_universidad ?? '') == $uni->nombre ? 'selected' : '' }}>
+                        {{ old('id_universidad', $evaluacion->id_universidad ?? '') == $uni->id ? 'selected' : '' }}>
                         {{ $uni->id }} - {{ $uni->nombre ?? 'Sin nombre' }}
                     </option>
                 @endforeach
