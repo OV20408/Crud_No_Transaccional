@@ -392,9 +392,12 @@ class VoluntarioController extends Controller
                 ->withErrors('La capacitación seleccionada no tiene etapas configuradas, no se puede asignar.');
         }
 
-        DB::transaction(function () use ($idUsuario, $etapas) {
+        // Obtener el CI del voluntario para trazabilidad
+        $voluntario = DB::table('usuario')->where('id_usuario', $idUsuario)->first();
+        
+        DB::transaction(function () use ($idUsuario, $etapas, $voluntario) {
             foreach ($etapas as $etapa) {
-                ProgresoVoluntario::firstOrCreate(
+                ProgresoVoluntario::updateOrCreate(
                     [
                         'id_usuario' => $idUsuario,
                         'id_etapa' => $etapa->id,
@@ -403,6 +406,7 @@ class VoluntarioController extends Controller
                         'estado' => 'en_progreso',
                         'fecha_inicio' => now(),
                         'fecha_finalizacion' => null,
+                        'ci_voluntario_accion' => $voluntario->ci, // CI del voluntario para trazabilidad
                     ]
                 );
             }
