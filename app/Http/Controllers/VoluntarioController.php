@@ -433,13 +433,21 @@ class VoluntarioController extends Controller
                 ->withErrors('El voluntario no tiene historial clínico configurado.');
         }
 
+        // 1.1. Obtener el CI del voluntario
+        $voluntario = DB::table('usuario')->where('id_usuario', $idUsuario)->first();
+        if (!$voluntario) {
+            return redirect()
+                ->back()
+                ->withErrors('Voluntario no encontrado.');
+        }
+
         // 2. Crear un nuevo reporte para registrar la necesidad
         $reporteId = DB::table('reporte')->insertGetId([
             'id_historial' => $historial->id,
             'estado_general' => 'Necesidad asignada',
             'observaciones' => 'Necesidad asignada manualmente desde el perfil del voluntario.',
             'fecha_generado' => now(),
-            'ci_voluntario_accion' => \Illuminate\Support\Facades\Auth::user()->ci ?? null, // Trazabilidad API Gateway
+            'ci_voluntario_accion' => $voluntario->ci, // CI del VOLUNTARIO, no del admin
         ]);
 
         // 3. Asociar la necesidad al reporte
@@ -447,7 +455,7 @@ class VoluntarioController extends Controller
             'id_reporte' => $reporteId,
             'id_necesidad' => $request->necesidad_id,
             'created_at' => now(),
-            'ci_voluntario_accion' => \Illuminate\Support\Facades\Auth::user()->ci ?? null, // Trazabilidad API Gateway
+            'ci_voluntario_accion' => $voluntario->ci, // CI del VOLUNTARIO
         ]);
 
         return redirect()
