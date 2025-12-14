@@ -25,6 +25,7 @@ class EtapaRequest extends FormRequest
 			'nombre' => 'string',
 			'orden' => 'required',
             'id_curso' => 'required|exists:curso,id', // ✅ validamos que exista
+            'descripcion' => 'nullable|string', // ✅ permitir descripción
 
         ];
     }
