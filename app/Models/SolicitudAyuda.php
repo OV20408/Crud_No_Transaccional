@@ -13,7 +13,7 @@ class SolicitudAyuda extends Model
 
     protected $fillable = [
         'voluntario_id',
-        'tipo',
+        'tipo',              // ← Campo en DB
         'nivel_emergencia',
         'descripcion',
         'latitud',
@@ -21,7 +21,7 @@ class SolicitudAyuda extends Model
         'estado',
         'ci_voluntarios_acudir',
         'fecha_respondida',
-        'ci_voluntario_accion', // Trazabilidad API Gateway (nombre correcto en BD)
+        'ci_voluntario_accion', // Trazabilidad API Gateway
     ];
 
     protected $casts = [
