@@ -85,7 +85,13 @@
             <p>Voluntarios Inactivos</p>
           </div>
           <div class="icon"><i class="fas fa-user-slash"></i></div>
-          <span class="small-box-footer">Inactivos</span>
+          @can('gestionar_usuarios')
+            <a href="{{ route('voluntarios.inactivos') }}" class="small-box-footer">
+              Ver más <i class="fas fa-arrow-circle-right"></i>
+            </a>
+          @else
+            <span class="small-box-footer">Inactivos</span>
+          @endcan
         </div>
       </div>
 
