@@ -487,7 +487,7 @@ class VoluntarioController extends Controller
                     ],
                     [
                         'estado' => 'no_iniciado',
-                        'fecha_inicio' => null,
+                        'fecha_inicio' => now(),
                         'fecha_finalizacion' => null,
                     ]
                 );
