@@ -491,7 +491,7 @@ class VoluntarioController extends Controller
         // Asignar las etapas del curso al voluntario
         DB::transaction(function () use ($idUsuario, $etapas, $voluntario) {
             foreach ($etapas as $etapa) {
-                ProgresoVoluntario::firstOrCreate(
+                ProgresoVoluntario::updateOrCreate(
                     [
                         'id_usuario' => $idUsuario,
                         'id_etapa' => $etapa->id,
