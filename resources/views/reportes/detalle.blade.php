@@ -166,12 +166,28 @@
                 </div>
                 <div class="card-body">
                     <div class="universidad-card text-center">
+                        @php
+                            $evaluacion = \App\Models\Evaluacion::where('id_reporte', $reporte->id)->first();
+                            $universidadAsignada = $evaluacion && $evaluacion->id_universidad 
+                                ? \App\Models\Universidad::find($evaluacion->id_universidad) 
+                                : null;
+                        @endphp
+                        
+                        @if($universidadAsignada)
+                            <div class="mb-3">
+                                <i class="fas fa-university fa-3x text-primary mb-2"></i>
+                                <h5 class="text-primary font-weight-bold">{{ $universidadAsignada->nombre }}</h5>
+                            </div>
+                        @endif
+                        
                         <button type="button" class="btn text-white" style="background-color: #007bff;" data-toggle="modal" data-target="#modalAsignarUniversidad">
-                            <i class="fas fa-university"></i> Asignar Universidad
+                            <i class="fas fa-university"></i> {{ $universidadAsignada ? 'Cambiar Universidad' : 'Asignar Universidad' }}
                         </button>
-                        <p class="text-muted mt-3 mb-0">
-                            <small>Seleccione una universidad para asignar a este voluntario.</small>
-                        </p>
+                        @if(!$universidadAsignada)
+                            <p class="text-muted mt-3 mb-0">
+                                <small>Seleccione una universidad para asignar a este voluntario.</small>
+                            </p>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -301,13 +317,29 @@
                     <h3 class="seccion-titulo m-0">Universidad Asignada</h3>
                 </div>
                 <div class="card-body">
-                    <div class="universidad-card">
+                    <div class="universidad-card text-center">
+                        @php
+                            $evaluacion = $evaluacion ?? \App\Models\Evaluacion::where('id_reporte', $reporte->id)->first();
+                            $universidadAsignada = $universidadAsignada ?? ($evaluacion && $evaluacion->id_universidad 
+                                ? \App\Models\Universidad::find($evaluacion->id_universidad) 
+                                : null);
+                        @endphp
+                        
+                        @if($universidadAsignada)
+                            <div class="mb-3">
+                                <i class="fas fa-university fa-3x text-primary mb-2"></i>
+                                <h5 class="text-primary font-weight-bold">{{ $universidadAsignada->nombre }}</h5>
+                            </div>
+                        @endif
+                        
                         <button type="button" class="btn text-white" style="background-color: #007bff;" data-toggle="modal" data-target="#modalAsignarUniversidad">
-                            <i class="fas fa-university"></i> Asignar Universidad
+                            <i class="fas fa-university"></i> {{ $universidadAsignada ? 'Cambiar Universidad' : 'Asignar Universidad' }}
                         </button>
-                        <p class="text-muted mt-3 mb-0">
-                            <small>Seleccione una universidad para asignar a este voluntario.</small>
-                        </p>
+                        @if(!$universidadAsignada)
+                            <p class="text-muted mt-3 mb-0">
+                                <small>Seleccione una universidad para asignar a este voluntario.</small>
+                            </p>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -402,7 +434,8 @@ $(document).ready(function() {
                 Swal.fire({
                     icon: 'success',
                     title: '¡Éxito!',
-                    text: 'Universidad asignada correctamente'
+                    text: 'Universidad asignada correctamente',
+                    confirmButtonColor: '#007bff'
                 }).then(() => {
                     $('#modalAsignarUniversidad').modal('hide');
                     location.reload();

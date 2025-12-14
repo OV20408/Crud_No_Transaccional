@@ -48,12 +48,12 @@ class HomeController extends Controller
 
 
         // Datos chart
-        //Voluntarios por universidad
+        //Voluntarios por universidad (basado en evaluaciones asignadas)
         $universidadesData = Universidad::select(
-        'universidad.nombre as label',
-            DB::raw('COUNT(usuario.id_usuario) as total')
+            'universidad.nombre as label',
+            DB::raw('COUNT(evaluacion.id) as total')
         )
-        ->leftJoin('usuario', 'usuario.entidad_pertenencia', '=', 'universidad.nombre')
+        ->leftJoin('evaluacion', 'evaluacion.id_universidad', '=', 'universidad.id')
         ->groupBy('universidad.nombre')
         ->get();
 
