@@ -16,7 +16,7 @@ class ChatMensaje extends Model
         'de',
         'texto',
         'leido_en',
-        'ci_voluntario', // Trazabilidad API Gateway
+        'ci_voluntario_accion',
     ];
 
     public function voluntario()
