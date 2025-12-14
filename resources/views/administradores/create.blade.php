@@ -446,6 +446,84 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 });
+
+// ========== AUTOCOMPLETADO GATEWAY ==========
+@php
+    $gatewayLookupUrl = rtrim(env('GATEWAY_REGISTRO_SIMPLE_URL', ''), '/');
+@endphp
+
+@if($gatewayLookupUrl)
+(function() {
+    const ciInput       = document.getElementById('ci');
+    const nombreInput   = document.getElementById('nombre');
+    const apellidoInput = document.getElementById('apellido');
+    const telefonoInput = document.getElementById('telefono');
+
+    const lookupBaseUrl = @json($gatewayLookupUrl);
+
+    if (!ciInput || !lookupBaseUrl) {
+        return;
+    }
+
+    let lastLookupCi = null;
+    let isFetching   = false;
+
+    ciInput.addEventListener('blur', async function () {
+        const ci = (ciInput.value || '').trim();
+
+        // Evitar llamadas con CI muy corto o repetidas
+        if (ci.length < 5 || ci === lastLookupCi || isFetching) {
+            return;
+        }
+
+        lastLookupCi = ci;
+        isFetching   = true;
+
+        try {
+            const url = `${lookupBaseUrl}/${encodeURIComponent(ci)}`;
+
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Client-System': 'SEGUIMIENTO_DE_VOLUNTARIOS',
+                },
+            });
+
+            if (!response.ok) {
+                console.warn('Gateway lookup failed with status', response.status);
+                return;
+            }
+
+            const json = await response.json();
+
+            if (!json.success || !json.found || !json.data) {
+                return;
+            }
+
+            const data = json.data;
+
+            // Solo rellenar campos vacíos
+            if (nombreInput && !nombreInput.value.trim() && data.nombre) {
+                nombreInput.value = data.nombre;
+                document.getElementById('contadorNombre').textContent = data.nombre.length;
+            }
+            if (apellidoInput && !apellidoInput.value.trim() && data.apellido) {
+                apellidoInput.value = data.apellido;
+                document.getElementById('contadorApellido').textContent = data.apellido.length;
+            }
+            if (telefonoInput && !telefonoInput.value.trim() && data.telefono) {
+                telefonoInput.value = data.telefono;
+            }
+
+        } catch (error) {
+            console.error('Error llamando al gateway para autocompletar', error);
+        } finally {
+            isFetching = false;
+        }
+    });
+})();
+@endif
 </script>
 @endsection
 
