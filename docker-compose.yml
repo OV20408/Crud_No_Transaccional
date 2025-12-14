@@ -39,11 +39,11 @@ services:
       REVERB_APP_KEY: ljtplxexpbq7atbjzrzp
       REVERB_APP_SECRET: yy9plhe0c7ffjltaidfh
       REVERB_HOST: gevopi.dasalas.shop
-      REVERB_PORT: 8080
+      REVERB_PORT: 8085
       REVERB_SCHEME: http
       VITE_REVERB_APP_KEY: ljtplxexpbq7atbjzrzp
       VITE_REVERB_HOST: gevopi.dasalas.shop
-      VITE_REVERB_PORT: 8080
+      VITE_REVERB_PORT: 8085
       VITE_REVERB_SCHEME: http
       GOOGLE_GEMINI_API_KEY_CURSOS: AIzaSyBjF1jdPbK1w4B4lQtjmzMSqHaQ6qICu1A
       GOOGLE_GEMINI_API_KEY_NECESIDADES: AIzaSyAfToymW4Q_4WybjfbZIuE5wK2uLAoq33k
@@ -75,7 +75,7 @@ services:
     entrypoint: []
     command: ["sh", "-c", "cd /var/www && php artisan reverb:start --host=0.0.0.0 --port=8080"]
     ports:
-      - "8080:8080"
+      - "8085:8080"
     volumes:
       - .:/var/www
     environment:
