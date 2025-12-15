@@ -26,4 +26,4 @@ Thumbs.db
 # Helpdesk API Key (sensible)
 .env.helpdesk
 
-docker-compose.yml
+/docker-compose.yml
