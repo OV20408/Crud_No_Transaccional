@@ -80,6 +80,7 @@ Route::prefix('voluntario')->group(function () {
 
 // Endpoints adicionales de voluntarios
 Route::get('/voluntarios', [VoluntarioApiController::class, 'index']);
+Route::get('/users/ci', [VoluntarioApiController::class, 'listarCis']); // Lista de CIs para API Gateway
 Route::get('/voluntarios/{id}', [VoluntarioApiController::class, 'show']);
 Route::post('/voluntarios', [VoluntarioApiController::class, 'store']);
 

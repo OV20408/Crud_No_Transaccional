@@ -84,5 +84,23 @@ class VoluntarioApiController extends Controller
         }
     }
 
+    /**
+     * Listar todos los CIs de voluntarios inscritos
+     * GET /api/users/ci
+     * Requerido por el API Gateway
+     */
+    public function listarCis()
+    {
+        $cis = User::where('id_rol', 2)
+            ->where('estado', 'activo')
+            ->whereNotNull('ci')
+            ->pluck('ci')
+            ->toArray();
+
+        return response()->json([
+            'lista_ci' => $cis,
+            'total'    => count($cis),
+        ]);
+    }
 
 }
